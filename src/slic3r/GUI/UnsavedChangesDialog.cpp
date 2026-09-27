@@ -1774,8 +1774,8 @@ void UnsavedChangesDialog::update_tree(Preset::Type type, PresetCollection* pres
 
         auto variant_key      = Preset::get_iot_type_string(type) + "_extruder_variant";
         auto id_key           = Preset::get_iot_type_string(type) + "_extruder_id";
-        auto extruder_variant = dynamic_cast<ConfigOptionStrings const *>(old_config.option(variant_key));
-        auto extruder_id      = dynamic_cast<ConfigOptionInts const *>(old_config.option(id_key));
+        auto extruder_variant = dynamic_cast<ConfigOptionStrings const *>(new_config.option(variant_key));
+        auto extruder_id      = dynamic_cast<ConfigOptionInts const *>(new_config.option(id_key));
 
         for (const std::string& opt_key : dirty_options) {
             int variant_index = -2;
@@ -1792,11 +1792,26 @@ void UnsavedChangesDialog::update_tree(Preset::Type type, PresetCollection* pres
                     variant_index /= 2;
                 if (boost::nowide::narrow(category).find("Extruder ") == 0)
                     category = category.substr(0, 8);
-                if (extruder_id)
-                    category = category + (wxString(" {") + (extruder_id->values[variant_index] == 1 ? _L("Left: ") : _L("Right: "))
-                            + L(extruder_variant->values[variant_index]) + "}");
-                else
-                    category = category + (wxString(" {") + L(extruder_variant->values[variant_index]) + "}");
+
+                if (!extruder_variant || variant_index >= static_cast<int>(extruder_variant->values.size())) {
+                    BOOST_LOG_TRIVIAL(warning) << __FUNCTION__ << ": variant_index " << variant_index
+                            << " out of range for extruder_variant (size="
+                            << (extruder_variant ? extruder_variant->values.size() : 0)
+                            << ") on opt_key=" << opt_key << "; skip variant suffix";
+                } else {
+                    const bool valid_extruder_id = extruder_id && variant_index < static_cast<int>(extruder_id->values.size());
+                    if (extruder_id && !valid_extruder_id) {
+                        BOOST_LOG_TRIVIAL(warning) << __FUNCTION__ << ": variant_index " << variant_index
+                                << " out of range for extruder_id (size=" << extruder_id->values.size()
+                                << ") on opt_key=" << opt_key << "; omit side label";
+                    }
+
+                    if (valid_extruder_id)
+                        category = category + (wxString(" {") + (extruder_id->values[variant_index] == 1 ? _L("Left: ") : _L("Right: "))
+                                + L(extruder_variant->values[variant_index]) + "}");
+                    else
+                        category = category + (wxString(" {") + L(extruder_variant->values[variant_index]) + "}");
+                }
             }
 
             /*m_tree->Append(opt_key, type, option.category_local, option.group_local, option.label_local,
