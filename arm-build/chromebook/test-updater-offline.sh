@@ -104,11 +104,14 @@ for _ in $(seq 50); do
 done
 
 # ---------------------------------------------------------------- stubs --
-# Fake flatpak state lives in $T/fp: installed(0/1) origin url running deploydir
+# Fake flatpak state lives in $T/fp: installed(0/1) origin url disabled(0/1)
+# running deploydir; optional: fail_install, fail_install_net, shared_origin.
+# Messages mirror real flatpak 1.14.6 output (LC_ALL=C).
 cat >"$T/bin/flatpak" <<'SH'
 #!/usr/bin/env bash
 fp="$FAKE_FP"
-echo "flatpak $*" >>"$fp/calls"
+echo "LC_ALL=${LC_ALL:-} flatpak $*" >>"$fp/calls"
+dep="$fp/deploy/files/share/orcastudio-arm/BUILD_INFO"
 case "$1" in
   info)
     [[ "$2" == "--system" ]] && exit 1
@@ -117,15 +120,35 @@ case "$1" in
       --show-location) echo "$fp/deploy" ;;
       --show-origin) cat "$fp/origin" ;;
     esac ;;
-  remote-list) printf '%s\t%s\n' flathub https://dl.flathub.org/repo/ "$(cat "$fp/origin")" "$(cat "$fp/url")" ;;
+  remote-list)
+    printf '%s\t%s\t%s\n' flathub https://dl.flathub.org/repo/ ""
+    if [[ "$(cat "$fp/installed")" == 1 ]]; then
+      opts=no-enumerate
+      { [[ "$(cat "$fp/disabled")" == 1 || ! -s "$fp/url" ]]; } && opts="disabled,$opts"
+      printf '%s\t%s\t%s\n' "$(cat "$fp/origin")" "$(cat "$fp/url")" "$opts"
+    fi ;;
+  list)
+    printf 'org.gnome.Platform/aarch64/50\tflathub\n'
+    [[ "$(cat "$fp/installed")" == 1 ]] && printf 'com.orcaslicer.OrcaStudio/aarch64/master\t%s\n' "$(cat "$fp/origin")"
+    [[ -f "$fp/shared_origin" ]] && printf 'org.example.Other/aarch64/master\t%s\n' "$(cat "$fp/origin")"
+    exit 0 ;;
+  remote-modify) [[ "$*" == *--disable* ]] && echo 1 >"$fp/disabled" ;;
   ps) [[ "$(cat "$fp/running")" == 1 ]] && printf 'com.orcaslicer.OrcaStudio\n'; exit 0 ;;
-  uninstall)  # next bundle install will get a fresh bundle origin (empty URL)
-    echo 0 >"$fp/installed"; rm -rf "$fp/deploy"; echo orcastudio-origin >"$fp/origin"; : >"$fp/url" ;;
+  uninstall) echo 0 >"$fp/installed"; rm -rf "$fp/deploy" ;;
   install)
-    [[ -f "$fp/fail_install" ]] && exit 1
     bundle="${*: -1}"
-    mkdir -p "$fp/deploy/files/share/orcastudio-arm"
-    cp "$bundle" "$fp/deploy/files/share/orcastudio-arm/BUILD_INFO"
+    if [[ -f "$fp/fail_install_net" ]]; then
+      echo "error: Can't load dependent file https://dl.flathub.org/repo/flathub.flatpakrepo: While fetching https://dl.flathub.org/repo/flathub.flatpakrepo: [6] Could not resolve hostname" >&2
+      exit 1
+    fi
+    if [[ -f "$fp/fail_install" ]]; then echo "error: No space left on device" >&2; exit 1; fi
+    if [[ "$(cat "$fp/installed")" == 1 ]] && cmp -s "$bundle" "$dep"; then   # same commit
+      echo "Error: Failed to install bundle com.orcaslicer.OrcaStudio: com.orcaslicer.OrcaStudio already installed" >&2
+      exit 1
+    fi
+    if [[ "$(cat "$fp/installed")" != 1 ]]; then echo orcastudio-origin >"$fp/origin"; : >"$fp/url"; fi
+    mkdir -p "$(dirname "$dep")"
+    cp "$bundle" "$dep"
     echo 1 >"$fp/installed" ;;
 esac
 SH
@@ -137,6 +160,7 @@ reset_fp() {  # reset_fp <installed 0/1> <installed-tag|-> <origin> <url> <runni
     rm -rf "$T/fp" "$T/home/.local/state"; mkdir -p "$T/fp"
     echo "$1" >"$T/fp/installed"
     echo "$3" >"$T/fp/origin"; printf '%s' "$4" >"$T/fp/url"; echo "$5" >"$T/fp/running"
+    echo 0 >"$T/fp/disabled"
     : >"$T/fp/calls"
     if [[ "$1" == 1 ]]; then
         mkdir -p "$T/fp/deploy/files/share/orcastudio-arm"
@@ -183,17 +207,40 @@ grep -q 'flatpak uninstall' "$T/fp/calls" && bad "unexpected uninstall" || ok "n
 grep -q -- 'install --user --noninteractive --reinstall --bundle' "$T/fp/calls" && ok "install flags" || bad "install flags"
 
 reset_fp 1 - local-repo "file:///home/u/orca/repo" 0; run
-expect "local-repo origin + no BUILD_INFO -> migrate" 0 "$RC" "migrating .* off remote 'local-repo'"
-grep -q 'flatpak uninstall --user --noninteractive com.orcaslicer.OrcaStudio' "$T/fp/calls" \
-    && ok "migration uninstall keeps data (no --delete-data)" || bad "migration uninstall"
-grep -q -- '--delete-data' "$T/fp/calls" && bad "delete-data used" || true
+expect "local-repo origin + no BUILD_INFO -> disable origin, install" 0 "$RC" "disabling remote 'local-repo'.*nothing is uninstalled"
+grep -q 'flatpak uninstall' "$T/fp/calls" && bad "URL origin: uninstall called" || ok "URL origin: never uninstalls"
+grep -q 'flatpak remote-modify --user --disable local-repo' "$T/fp/calls" && ok "URL origin: remote disabled" || bad "URL origin: remote-modify"
+[[ "$(installed_tag)" == "$NEW_TAG" ]] && ok "URL origin: new BUILD_INFO" || bad "URL origin: BUILD_INFO"
+grep -q 'LC_ALL=C flatpak install' "$T/fp/calls" && ok "install runs with LC_ALL=C" || bad "install locale"
+
+reset_fp 1 "$OLD_TAG" local-repo "file:///x" 0; echo 1 >"$T/fp/disabled"; run
+expect "already-disabled URL origin: just install" 0 "$RC" "installed $NEW_TAG"
+grep -q 'remote-modify' "$T/fp/calls" && bad "disabled origin modified again" || ok "disabled origin left alone"
+
+reset_fp 1 "$OLD_TAG" shared-remote "https://example.org/repo" 0; touch "$T/fp/shared_origin"; run
+expect "shared URL origin: not disabled" 0 "$RC" "remote 'shared-remote' is shared"
+grep -q 'remote-modify' "$T/fp/calls" && bad "shared remote disabled" || ok "shared remote left enabled"
+rm -f "$T/fp/shared_origin"
 
 reset_fp 1 "$OLD_TAG" local-repo "file:///x" 0; touch "$T/fp/fail_install"; run
-expect "migration install failure -> restore attempt, rc1" 1 "$RC" "trying to restore from 'local-repo'"
+expect "install failure (URL origin) -> rc1" 1 "$RC" "installed version unchanged"
+[[ "$(installed_tag)" == "$OLD_TAG" ]] && ok "install failure: old version still installed" || bad "install failure removed app"
+grep -q 'flatpak uninstall' "$T/fp/calls" && bad "install failure: uninstall called" || ok "install failure: no uninstall"
 rm -f "$T/fp/fail_install"
 
+reset_fp 1 "$OLD_TAG" local-repo "file:///x" 0; touch "$T/fp/fail_install_net"; run
+expect "Flathub fetch failure during install -> rc75 (systemd retries)" 75 "$RC" "network fetch.*will retry"
+[[ "$(installed_tag)" == "$OLD_TAG" ]] && ok "network install failure: old version still installed" || bad "network failure removed app"
+reset_fp 0 - "" "" 0; touch "$T/fp/fail_install_net"; run
+expect "Flathub fetch failure on fresh install -> rc75" 75 "$RC" "network fetch"
+rm -f "$T/fp/fail_install_net"
+
 reset_fp 1 "$NEW_TAG" orcastudio-origin "" 0; run --force
-expect "--force reinstalls same tag" 0 "$RC" "installed $NEW_TAG"
+expect "--force, same tag, different commit -> reinstalls" 0 "$RC" "installed $NEW_TAG"
+
+reset_fp 1 "$NEW_TAG" orcastudio-origin "" 0; cp "$BUNDLE" "$T/fp/deploy/files/share/orcastudio-arm/BUILD_INFO"; run --force
+expect "--force, identical commit -> already installed, rc0" 0 "$RC" "already installed, nothing to do"
+grep -q 'ERROR' "$T/home/.local/state/orcastudio-update.log" && bad "--force identical: logged an error" || ok "--force identical: no error logged"
 
 release_json "sha256:$(printf '0%.0s' $(seq 64))" >"$T/srv/release.json"
 reset_fp 1 "$OLD_TAG" orcastudio-origin "" 0; run

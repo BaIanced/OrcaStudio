@@ -8,7 +8,7 @@ Files: `arm-build/obn-module.yml` (flatpak-builder module), `arm-build/orcastudi
 
 | Step | Where |
 | --- | --- |
-| `data_dir` = `$XDG_CONFIG_HOME/BambuStudio_OrcaSlicer` (`~/.config` fallback); `--datadir` overrides | `GUI_App.cpp:2816` (`SetAppName("BambuStudio_OrcaSlicer")`), `:2856`; `OrcaSlicer.cpp:7309` |
+| `data_dir` = `$XDG_CONFIG_HOME/BambuStudio_OrcaSlicer` (`~/.config` fallback); `--datadir`/`-datadir` (space or `=` form, not after `--`) overrides | `GUI_App.cpp:2816` (`SetAppName("BambuStudio_OrcaSlicer")`), `:2856`; `OrcaSlicer.cpp:7309`; `Config.cpp:1740-1753` (`read_cli`) |
 | App conf = `<data_dir>/OrcaStudio.conf` (JSON + trailing `# MD5 checksum`; Linux load is `ifs >> j`, no checksum check) | `AppConfig.cpp:1733-1737`, `:688`; `version.inc:5` (`SLIC3R_APP_KEY "OrcaStudio"`) |
 | Plugin loaded only if `app.installed_networking` is true | `GUI_App.cpp:4256` |
 | That flag also adds the `bbl` cloud provider | `NetworkAgentFactory.cpp:202` |
@@ -37,7 +37,9 @@ not set. Its ELF check also accepts only x86_64 (`:41`).
   `network_plugin_version` (`PresetUpdater.cpp:980`, `GUI_App.cpp:3525,4027-4235`).
 - The user can also click "download plug-in" in the UI.
 - Any of these drops a numbered stock file that `migrate_network_plugin_config` would rename over
-  ours. The launcher undoes all of them on every start (see section 3).
+  ours. The launcher undoes all of them on every start (see section 3). The `OrcaStudio.conf`
+  keys, by contrast, are set only once per bundled plugin version, so a later Preferences change
+  (plug-in disabled, other version picked) is kept.
 
 ## 2. ABI match (obn v2.2.0 vs OrcaStudio 02.08.01.55)
 - obn ships `tools/abi_snapshot/v02.08.01` taken from Bambu Studio `v02.08.01.55`, the same
@@ -62,11 +64,11 @@ It mirrors obn `packaging/install.sh` (Orca branch, lines 178-375), with these d
 | --- | --- | --- |
 | copies `libbambu_networking_<ver>.99.so` | symlink `plugins/libbambu_networking_<series>.so` -> `/app/lib/obn/libbambu_networking.so` | OrcaStudio renames `.99` onto the series name every start (`GUI_App.cpp:2022`). A symlink into `/app` follows app updates. dlopen, `exists` and `is_regular_file(status)` all follow symlinks. Verified. |
 | copies `libBambuSource.so` | symlink | same reason |
-| `liblive555.so` stub unless the existing file is >64 KiB (`:279`) | same rule, symlink | |
+| `liblive555.so` stub unless the existing file is >64 KiB (`:279`) | same rule, symlink, but the kept file must also be an aarch64 ELF (`e_machine` 183, read with `od`) | Bambu ships no aarch64 Linux build, so a large file here is usually x86_64 from a copied data dir and could not be loaded. A non-aarch64 one is displaced like the stock plugin. |
 | `network_plugin_version = <ver>.99` | `= <series>` (`02.08.01`) | This is what OrcaStudio itself stores. It makes `migrate_network_plugin_config` a no-op and avoids rewriting the conf on every launch. |
-| sets `installed_networking`/`network_plugin_remind_later` = `"true"`, strips the version from `network_plugin_skipped_versions`, backup `.obn-bak`, zero MD5 line (`:344-375`) | same, and strips both `<series>` and `<series>.99` | It treats an existing JSON `true` as already set, so it does not rewrite the conf on every start. The write is atomic (tmp + `os.replace`). |
+| sets `installed_networking`/`network_plugin_remind_later` = `"true"`, strips the version from `network_plugin_skipped_versions`, backup `.obn-bak`, zero MD5 line (`:344-375`) | same, and strips both `<series>` and `<series>.99`; no MD5 line; also sets the marker `app.obn_flatpak_patched = <series>.99` | **Once per bundled plugin version:** if the marker already equals the bundled version, the conf is not touched, so Preferences changes stick. `AppConfig::load`/`save` keep unknown string keys of `app`, so the marker survives OrcaStudio's saves; a reset or recreated conf has no marker and is patched again. **Write:** unique `mkstemp` temp file in the same dir, `fsync`, mode copied, `os.replace`, dir `fsync`. Two launchers starting together never share a temp file (the old fixed `.obn-tmp` name let one truncate the file the other had just renamed into place; reproduced as partial reads, which OrcaStudio treats as a corrupted config and resets). `.obn-bak` holds the exact bytes that were parsed, also written atomically. Unparsable or non-UTF-8 conf: left unchanged. |
 | no conf: abort | no conf: skip with one stderr line | On first launch OrcaStudio has not written `OrcaStudio.conf` yet. The plugin is active from the second launch. |
-| not done | moves numbered same-series files (`libbambu_networking_02.08.01.NN.so`, stock downloads) to `plugins/obn-displaced/` and removes `ota/plugins` | stops the stock plugin replacing obn (section 1) |
+| not done | moves numbered same-series files (`libbambu_networking_02.08.01.NN.so`, stock downloads) to `<data_dir>/obn-displaced/` (name `<file>.<timestamp>.<pid>`, never deleted) and removes `ota/plugins` | stops the stock plugin replacing obn (section 1). The directory is outside `plugins/` because `GUI_App::install_plugin` copies all of `plugins/` into `plugins/backup` and `restore_plugin_backup` deletes everything in `plugins/` except `backup/` (`GUI_App.cpp:1302-1312`). A `plugins/obn-displaced/` left by an older launcher is moved there once. |
 
 `obn.conf` is seeded only if absent, from `/app/share/obn/obn.conf.default`. That file is obn's
 `packaging/obn.conf.in`, byte-for-byte, except `block_cloud = 0` and `client_name = BambuStudio`.
@@ -139,10 +141,23 @@ and `/usr/bin/python3` 3.13 present in the Platform):
 - **Fresh start:** creates the 3 symlinks, the stamp and `obn.conf`, then execs the entrypoint
   with the arguments intact (including one with spaces).
 - **Existing install:** stock `02.08.01.55` and series files displaced, the `_custom` build kept,
-  a 70 KB `liblive555.so` kept, `ota/plugins` removed. The conf was patched and the skipped list
+  a 70 KB `liblive555.so` kept (that test predates the aarch64 ELF check; a non-aarch64 file is
+  now displaced), `ota/plugins` removed. The conf was patched and the skipped list
   stripped. The pem files and an existing obn.conf were unchanged (sha256 identical).
 - **Re-run, including after the app saves booleans:** the conf is not rewritten (mtime unchanged).
 - **`--datadir DIR` and `--datadir=DIR`:** both honoured.
+- **Review fixes (2026-10-02, launcher copy with `/app` paths redirected to a scratch dir,
+  dash, 20/20 checks):** a >64 KiB x86_64 `liblive555.so` is displaced and linked, an aarch64
+  one kept, a small stub replaced; an old `plugins/obn-displaced/` is moved to
+  `<data_dir>/obn-displaced/`; `.obn-bak` is byte-identical to the original (CRLF kept); keys
+  and marker set; no temp files left; after a simulated OrcaStudio save with the plug-in
+  disabled, the next start leaves the conf alone (mtime and inode unchanged); a recreated conf
+  without the marker, or a new bundled plugin version, is patched again; malformed and non-UTF-8
+  confs are untouched and the app still starts; `--datadir X`, `-datadir X`, `--datadir=X`,
+  `-datadir=X` all honoured; options after `--` are ignored (as `DynamicConfig::read_cli`).
+- **Concurrent starts (2026-10-02):** 3 launchers at once, 25 rounds, 1 MB conf, a reader
+  re-parsing the conf throughout: 0 partial reads of ~5000 (the previous launcher: 71-437
+  partial reads in the same test). Symlink creation races are tolerated.
 
 **Loader emulation:** a C++ test inside the sandbox mimics BBLNetworkPlugin. Through the symlinks
 it showed: scan found `02.08.01`, dlopen worked, `get_version` gave `02.08.01.99` and was

@@ -46,9 +46,11 @@ Chromebook, daily 13:30 local (+0–20 min), Persistent=true  → orcastudio-upd
    ├─ download SHA256SUMS.txt + bundle to ~/.cache/orcastudio-update.XXXXXX (size checked)
    ├─ sha256 vs SHA256SUMS.txt (exactly one entry) and vs GitHub asset "digest" when present
    ├─ re-check flatpak ps
-   ├─ origin has a URL (old local flatpak-builder repo)? → flatpak uninstall --user (keeps ~/.var/app data)
-   ├─ flatpak install --user --noninteractive --reinstall --bundle <file>
-   │     failure after migration → try reinstall from the old origin, exit 1
+   ├─ origin has a URL (old local flatpak-builder repo) and only this app uses it?
+   │     → flatpak remote-modify --user --disable <origin>   (never uninstalls)
+   ├─ LC_ALL=C flatpak install --user --noninteractive --reinstall --bundle <file>
+   │     failure → installed version unchanged; network fetch error (Flathub) → exit 75
+   │     (systemd retries), other → exit 1; "already installed" + same tag → exit 0
    └─ re-read BUILD_INFO: must equal the new tag; log + notify
 ```
 
@@ -163,14 +165,32 @@ trixie arm64 Packages and sources.debian.org; read from the flatpak 1.16.6 tag s
 - Origin mismatch doesn't actually error for bundles.
   `flatpak_dir_ensure_bundle_remote()` reuses the *existing deployment's origin* when the
   app is already installed. So a bundle installed over the user's local-repo install
-  keeps that local remote as origin. `flatpak update` could then "update" back to the
-  old local build. `--reinstall` for bundles only matters when the same commit is
-  installed. So the updater migrates once: if the origin remote has a non-empty URL, it
-  runs `flatpak uninstall --user` (no `--delete-data`, so `~/.var/app/…` with the pem
-  files is kept), then installs the bundle. That creates a fresh `orcastudio-origin`
-  remote with an empty URL (B's build-bundle passes no `--repo-url`). Empty URL =
-  remote disabled, so `flatpak update` skips it ("Remote %s disabled, ignoring %s
-  update", `flatpak-transaction.c`). Only this updater updates the app after that.
+  keeps that local remote as origin. `flatpak update` could then "update" back to a
+  newer local build (it refuses an *older* commit: "Update is older than current
+  version", checked with 1.14.6). So, if the origin remote has a non-empty URL and no
+  other installed ref uses it, the updater runs `flatpak remote-modify --user --disable
+  <origin>` and then installs the bundle onto it. A disabled remote is skipped by
+  `flatpak update` ("Remote %s disabled, ignoring %s update", `flatpak-transaction.c`;
+  checked with 1.14.6: "Nothing to do."), and a bundle installs fine onto a disabled
+  origin, even with the old repo directory deleted (checked). A remote shared with other
+  refs (e.g. a real repo) is left enabled. Fresh installs get an `orcastudio-origin`
+  remote with an empty URL (B's build-bundle passes no `--repo-url`), which flatpak
+  lists as disabled.
+- **The app is never uninstalled.** An earlier version uninstalled first and, on
+  failure, tried to reinstall from the old origin. That cannot work: `flatpak uninstall`
+  prunes an unused `*-origin` `noenumerate` remote (the kind `flatpak install ./repo` /
+  `flatpak-builder --install` create), so the restore fails with "No remote refs found",
+  leaving no app (reproduced with 1.14.6). With `--runtime-repo` in the bundle, every
+  `flatpak install --bundle` fetches `flathub.flatpakrepo` first, even when the runtime
+  and the flathub remote are already present (reproduced), so a Flathub outage was
+  enough to trigger it.
+- **Install failures.** flatpak runs with `LC_ALL=C` so its messages can be matched. A
+  failed install leaves the installed deployment as it was. Output matching a network
+  fetch (`While fetching`, `While pulling`, curl resolve/connect/timeout errors) → exit
+  75, which the unit retries (`RestartPreventExitStatus=1 2`); anything else → exit 1.
+  `--reinstall --bundle` of the identical commit fails with "<app-id> already installed"
+  (1.14.6); if the installed tag then equals the release tag, the updater logs
+  "already installed, nothing to do" and exits 0 (relevant for `--force`).
 - `flatpak ps --columns=application`, `flatpak remote-list --show-disabled
   --columns=name,url` exist. Non-tty output is tab-separated (`flatpak-table-printer.c`;
   checked live with flatpak 1.14.6 here).
@@ -199,9 +219,13 @@ is from the checkout README.
   `-o all` leaves only style SC2250 and intentional SC2310/SC2312 notes.
 - `systemd-analyze verify` (255) on service + timer: clean. A negative test (typo,
   missing ExecStart) is reported.
-- `test-updater-offline.sh`: 34/34. Covers fresh install, up to date, `--check`, app
-  running, bundle-origin update, local-repo migration (no `--delete-data`), restore
-  attempt on failed install, `--force`, digest mismatch, SHA256SUMS mismatch, rate-limit
+- `test-updater-offline.sh`: 48/48 (2026-10-02). Covers fresh install, up to date,
+  `--check`, app running, bundle-origin update, URL origin (remote disabled, never
+  uninstalled, flatpak run with `LC_ALL=C`), already-disabled origin left alone, shared
+  remote left enabled, failed install keeps the old version (exit 1), Flathub fetch
+  failure → exit 75 (update and fresh install), `--force` same tag/different commit,
+  `--force` identical commit → "already installed, nothing to do" exit 0, digest
+  mismatch, SHA256SUMS mismatch, rate-limit
   redirect fallback, 404 no release, disabled workflow, failed last run, non-aarch64,
   malicious tag, BUILD_INFO with CRLF and padding, `*name` sums, duplicate sums,
   python3/jq parsers equal, prerelease rejected.
@@ -233,8 +257,15 @@ is from the checkout README.
   checks and prints `sudo apt install jq`.
 - I need to verify [that org.gnome.Platform//50 aarch64 resolves from the user's Flathub
   remote during `--noninteractive` bundle install] for [first install]. B's bundle
-  carries `--runtime-repo` (flathub.flatpakrepo). If the runtime can't be resolved,
-  install fails *after* the migration uninstall, and the updater then tries to reinstall
-  from the old origin.
+  carries `--runtime-repo` (flathub.flatpakrepo). If it can't be fetched or resolved,
+  the install fails, the installed version (if any) stays, and a network error exits 75
+  for a systemd retry.
+- I need to verify [that flatpak 1.16.6 also refuses `--reinstall --bundle` of the
+  identical commit] for [the `--force` no-op]. Seen with 1.14.6; the 1.16.6 source
+  (`common/flatpak-dir.c`, `flatpak-transaction.c`) still words every such error
+  "... already installed", and keeps "Can't load dependent file", "While fetching"
+  (`flatpak-utils-http.c`) and "While pulling", so the matching should hold. If 1.16
+  simply reinstalls, `--force` succeeds normally. Any unmatched failure is exit 1 with
+  the installed version unchanged.
 - I need to verify [`notify-send` delivery through cros-notificationd] for [desktop
   alerts]. libnotify-bin isn't installed by default, so the installer only suggests it.

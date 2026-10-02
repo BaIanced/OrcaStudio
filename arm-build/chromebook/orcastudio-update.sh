@@ -12,8 +12,13 @@
 #   --force  reinstall even if the installed release tag equals the latest
 #   --quiet  log to the log file only (stderr stays silent unless error)
 #
-# Exit: 0 ok (updated, up to date, or skipped because app is running)
-#       1 error   2 usage   75 temporary failure (network / rate limit)
+# Exit: 0 ok (updated, up to date, already installed, or skipped because app is running)
+#       1 error   2 usage
+#       75 temporary failure (network / rate limit, incl. a failed Flathub fetch
+#          during `flatpak install --bundle`); systemd retries it
+#
+# The installed app is never uninstalled: if an install fails, the previous
+# version stays installed.
 #
 # Log: ${XDG_STATE_HOME:-~/.local/state}/orcastudio-update.log
 
@@ -209,8 +214,8 @@ find_latest_release_via_redirect() {
 
 # ------------------------------------------------------- installed state --
 # Sets INSTALLED_TAG ("" if not installed, "unknown" if no BUILD_INFO),
-# INSTALLED_ORIGIN, INSTALLED_ORIGIN_URL.
-INSTALLED_TAG=""; INSTALLED_ORIGIN=""; INSTALLED_ORIGIN_URL=""
+# INSTALLED_ORIGIN, INSTALLED_ORIGIN_URL, INSTALLED_ORIGIN_DISABLED (0/1).
+INSTALLED_TAG=""; INSTALLED_ORIGIN=""; INSTALLED_ORIGIN_URL=""; INSTALLED_ORIGIN_DISABLED=0
 read_build_info_tag() {  # read_build_info_tag <BUILD_INFO path>
     [[ -r "$1" ]] || return 1
     awk -F= '$1=="release_tag"{sub(/^[^=]*=/, ""); gsub(/[ \t\r]+$/, ""); print; exit}' "$1"
@@ -224,8 +229,14 @@ read_installed_state() {
     fi
     INSTALLED_ORIGIN="$(flatpak info --user --show-origin "$APP_ID")" \
         || die 1 "flatpak info --show-origin failed"
-    INSTALLED_ORIGIN_URL="$(flatpak remote-list --user --show-disabled --columns=name,url \
-        | awk -F'\t' -v o="$INSTALLED_ORIGIN" '$1==o{print $2; exit}')"
+    # Non-tty output is tab-separated; empty trailing cells may be omitted, so
+    # read fields with awk (missing field = "").
+    local remotes
+    remotes="$(LC_ALL=C flatpak remote-list --user --show-disabled --columns=name,url,options)"
+    INSTALLED_ORIGIN_URL="$(awk -F'\t' -v o="$INSTALLED_ORIGIN" '$1==o{print $2; exit}' <<<"$remotes")"
+    INSTALLED_ORIGIN_DISABLED="$(awk -F'\t' -v o="$INSTALLED_ORIGIN" \
+        '$1==o{print ((","$3",") ~ /,disabled,/) ? 1 : 0; exit}' <<<"$remotes")"
+    INSTALLED_ORIGIN_DISABLED="${INSTALLED_ORIGIN_DISABLED:-0}"
     INSTALLED_TAG="$(read_build_info_tag "$loc/$BUILD_INFO_REL" || true)"
     [[ -n "$INSTALLED_TAG" ]] || INSTALLED_TAG="unknown"
 }
@@ -287,27 +298,48 @@ check_watch_workflow() {
 }
 
 # ---------------------------------------------------------------- install --
+# flatpak error text (LC_ALL=C) that means "a network fetch failed": the
+# bundle's --runtime-repo .flatpakrepo (fetched on EVERY bundle install) or a
+# runtime pull from Flathub. Those are retried (exit 75); anything else is 1.
+FLATPAK_NET_RE='While fetching|While pulling|Could not resolve|Couldn.t resolve|Couldn.t connect|Failed to connect|Timeout was reached|Connection (reset|refused|timed out)|Network is unreachable|Temporary failure in name resolution|\[(5|6|7|28|35|52|56)\]'
+
 install_bundle() {  # install_bundle <bundle>
-    local bundle="$1" migrate=0
+    local bundle="$1" out="$WORK_DIR/install.out" users
     # A bundle install onto an existing deployment reuses that deployment's
     # origin remote (flatpak 1.16 common/flatpak-dir.c ensure_bundle_remote).
     # If the app came from a URL remote (e.g. a local flatpak-builder repo),
-    # `flatpak update` could later "update" it back to that build, so move it
-    # to a bundle origin once: uninstall WITHOUT --delete-data, then install.
-    if [[ -n "$INSTALLED_TAG" && -n "$INSTALLED_ORIGIN_URL" ]]; then
-        migrate=1
-        log "migrating $APP_ID off remote '$INSTALLED_ORIGIN' ($INSTALLED_ORIGIN_URL); user data in ~/.var/app/$APP_ID is kept"
-        flatpak uninstall --user --noninteractive "$APP_ID" >>"$LOG_FILE" 2>&1 \
-            || die 1 "flatpak uninstall failed (see log)"
-    fi
-    if ! flatpak install --user --noninteractive --reinstall --bundle "$bundle" >>"$LOG_FILE" 2>&1; then
-        if [[ "$migrate" -eq 1 ]]; then
-            log "bundle install failed after uninstall; trying to restore from '$INSTALLED_ORIGIN'"
-            flatpak install --user --noninteractive "$INSTALLED_ORIGIN" "$APP_ID" >>"$LOG_FILE" 2>&1 \
-                || log "restore from '$INSTALLED_ORIGIN' failed too; reinstall manually"
+    # disable that remote so `flatpak update` leaves the app to this updater.
+    # Never uninstall: flatpak prunes unused '*-origin' remotes on uninstall,
+    # so a failed install afterwards would leave no app and nothing to restore.
+    if [[ -n "$INSTALLED_TAG" && -n "$INSTALLED_ORIGIN_URL" && "$INSTALLED_ORIGIN_DISABLED" -eq 0 ]]; then
+        users="$(LC_ALL=C flatpak list --user --all --columns=ref,origin \
+            | awk -F'\t' -v o="$INSTALLED_ORIGIN" '$2==o' | wc -l)" || users=0
+        if [[ "$users" -eq 1 ]]; then
+            log "disabling remote '$INSTALLED_ORIGIN' ($INSTALLED_ORIGIN_URL) so 'flatpak update' leaves $APP_ID to this updater; nothing is uninstalled"
+            LC_ALL=C flatpak remote-modify --user --disable "$INSTALLED_ORIGIN" >>"$LOG_FILE" 2>&1 \
+                || die 1 "flatpak remote-modify --disable '$INSTALLED_ORIGIN' failed (see $LOG_FILE); nothing changed"
+        else
+            log "remote '$INSTALLED_ORIGIN' is shared with other refs (or could not be checked); leaving it enabled (flatpak update refuses older commits)"
         fi
-        die 1 "flatpak install --bundle failed (see $LOG_FILE)"
     fi
+    if LC_ALL=C flatpak install --user --noninteractive --reinstall --bundle "$bundle" >"$out" 2>&1; then
+        cat "$out" >>"$LOG_FILE"
+        return 0
+    fi
+    cat "$out" >>"$LOG_FILE"
+    # --force with the identical commit already deployed: flatpak refuses with
+    # "<app-id> already installed" even with --reinstall (seen with 1.14.6).
+    if grep -q 'already installed' "$out"; then
+        read_installed_state
+        if [[ "$INSTALLED_TAG" == "$LATEST_TAG" ]]; then
+            log "$APP_ID $LATEST_TAG already installed, nothing to do"
+            exit 0
+        fi
+    fi
+    if grep -Eq "$FLATPAK_NET_RE" "$out"; then
+        die "$EX_TEMPFAIL" "flatpak install --bundle failed on a network fetch (Flathub); installed version unchanged, will retry (see $LOG_FILE)"
+    fi
+    die 1 "flatpak install --bundle failed (see $LOG_FILE); installed version unchanged"
 }
 
 # ------------------------------------------------------------------- main --

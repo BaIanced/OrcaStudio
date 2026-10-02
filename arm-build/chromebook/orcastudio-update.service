@@ -10,8 +10,10 @@ StartLimitBurst=4
 [Service]
 Type=oneshot
 ExecStart=%h/.local/bin/orcastudio-update.sh --quiet
-# Retry only temporary failures (75 = network / rate limit). Exit 1
-# (checksum mismatch, failed install) and 2 (usage) are not retried.
+# Retry only temporary failures (75 = network / rate limit, including a
+# failed Flathub fetch during `flatpak install --bundle`). Exit 1 (checksum
+# mismatch, non-network install failure) and 2 (usage) are not retried.
+# A failed install never removes the installed version.
 Restart=on-failure
 RestartSec=20min
 RestartPreventExitStatus=1 2

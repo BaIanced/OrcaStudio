@@ -5,25 +5,32 @@
 # execs the upstream entrypoint. Every step is best-effort: a failure prints
 # one stderr line and the app still starts.
 #
-#   1. data_dir = $XDG_CONFIG_HOME/BambuStudio_OrcaSlicer (or --datadir DIR),
-#      exactly as GUI_App::init_app_config() computes it. Inside the Flatpak,
-#      XDG_CONFIG_HOME=$HOME/.var/app/com.orcaslicer.OrcaStudio/config, and
-#      $HOME is the same path on the host, so the path printed here is also
+#   1. data_dir = $XDG_CONFIG_HOME/BambuStudio_OrcaSlicer (or --datadir DIR,
+#      -datadir DIR, --datadir=DIR, -datadir=DIR; options end at "--"),
+#      exactly as GUI_App::init_app_config() / DynamicConfig::read_cli() compute
+#      it. Inside the Flatpak, XDG_CONFIG_HOME=$HOME/.var/app/com.orcaslicer.OrcaStudio/config,
+#      and $HOME is the same path on the host, so the path printed here is also
 #      the host path.
 #   2. <data_dir>/plugins/libbambu_networking_<series>.so, libBambuSource.so and
 #      liblive555.so become symlinks into /app/lib/obn (follow app updates).
 #      Same-series numbered builds (e.g. a stock 02.08.01.55 download) are
-#      moved to <data_dir>/plugins/obn-displaced/, because OrcaStudio's
+#      moved to <data_dir>/obn-displaced/ (outside plugins/, which OrcaStudio's
+#      plug-in installer backs up, wipes and restores), because OrcaStudio's
 #      migrate_network_plugin_config() would rename the newest one over ours.
+#      An existing liblive555.so is kept only if it is a >64 KiB aarch64 ELF.
 #   3. <data_dir>/ota/plugins (pending stock-plugin OTA download) is removed.
 #   4. <data_dir>/OrcaStudio.conf (only if it exists) gets the same keys obn's
 #      installer sets for Orca: installed_networking, network_plugin_version,
 #      network_plugin_remind_later, and the version stripped from
-#      network_plugin_skipped_versions.
+#      network_plugin_skipped_versions. This happens ONCE per bundled plugin
+#      version: the marker key app.obn_flatpak_patched (kept by AppConfig like
+#      any string key) records it, so later Preferences changes are respected.
+#      The write is atomic (unique temp file + fsync + rename); the previous
+#      bytes are saved to OrcaStudio.conf.obn-bak.
 #   5. <data_dir>/obn.conf is seeded ONLY if absent (block_cloud = 0,
 #      client_name = BambuStudio). slicer_*.pem files are never touched.
 #
-# POSIX sh; tools used (python3, readlink, ln, mv, wc) are in org.gnome.Platform//50.
+# POSIX sh; tools used (python3, readlink, ln, mv, wc, od) are in org.gnome.Platform//50.
 
 me=orcastudio-arm-launcher
 OBN_LIB=/app/lib/obn
@@ -39,11 +46,14 @@ warn() { printf '%s: %s\n' "$me" "$*" >&2; }
 data_dir=""
 prev=""
 for arg in "$@"; do
-    if [ "$prev" = "--datadir" ]; then
-        data_dir=$arg
-    fi
+    # read_cli(): one or two leading dashes, "--key=value" form, "--" ends options.
+    case $prev in
+        --datadir|-datadir) data_dir=$arg; prev=""; continue ;;
+    esac
     case $arg in
+        --) break ;;
         --datadir=*) data_dir=${arg#--datadir=} ;;
+        -datadir=*) data_dir=${arg#-datadir=} ;;
     esac
     prev=$arg
 done
@@ -52,7 +62,9 @@ if [ -z "$data_dir" ]; then
 fi
 
 plugins="$data_dir/plugins"
-displaced="$plugins/obn-displaced"
+# Outside plugins/: GUI_App::install_plugin() copies plugins/ into plugins/backup
+# and restore_plugin_backup() deletes everything in plugins/ except backup/.
+displaced="$data_dir/obn-displaced"
 
 # --- bundled plugin metadata ------------------------------------------------
 obn_tag=""
@@ -79,7 +91,7 @@ stamp() { date +%Y%m%d%H%M%S; }
 # Move a non-symlink file out of the way (never deletes user files).
 displace() {
     mkdir -p "$displaced" || return 1
-    mv -f "$1" "$displaced/$(basename "$1").$(stamp)" || return 1
+    mv -f "$1" "$displaced/$(basename "$1").$(stamp).$$" || return 1
     warn "moved $1 to $displaced/"
 }
 
@@ -91,11 +103,21 @@ ensure_link() {
     elif [ -e "$1" ]; then
         displace "$1" || return 1
     fi
-    ln -s "$2" "$1"
+    # A launcher started at the same moment may have created it already.
+    ln -s "$2" "$1" 2>/dev/null || [ "$(readlink "$1")" = "$2" ]
 }
 
 if [ "$sync_ok" = 1 ]; then
     if mkdir -p "$plugins"; then
+        # Older launchers kept displaced files in plugins/obn-displaced.
+        if [ -d "$plugins/obn-displaced" ] && [ ! -L "$plugins/obn-displaced" ] && [ ! -e "$displaced" ]; then
+            if mv "$plugins/obn-displaced" "$displaced"; then
+                warn "moved $plugins/obn-displaced to $displaced"
+            else
+                warn "could not move $plugins/obn-displaced to $displaced"
+            fi
+        fi
+
         # Numbered same-series builds would be renamed over the series file by
         # GUI_App::migrate_network_plugin_config(); custom names (with letters,
         # '-' or '_') are left alone, matching is_series_managed_version().
@@ -115,12 +137,21 @@ if [ "$sync_ok" = 1 ]; then
             || warn "could not link $plugins/libBambuSource.so"
 
         # obn installer rule: keep an existing live555 larger than 64 KiB
-        # (a vendor build, not obn's stub).
+        # (a vendor build, not obn's stub) - but only if it can load here.
+        # Bambu ships no aarch64 Linux build, so a big file is usually x86_64
+        # (copied data dir); check ELF e_machine (offset 18, LE) = 183 (b7 00).
         live="$plugins/liblive555.so"
         keep_live=0
         if [ -f "$live" ] && [ ! -L "$live" ]; then
             size=$(wc -c < "$live" | tr -d ' ')
-            [ "$size" -gt 65536 ] && keep_live=1
+            if [ "${size:-0}" -gt 65536 ] 2>/dev/null; then
+                machine=$(od -An -tx1 -j18 -N2 "$live" 2>/dev/null | tr -d ' \n')
+                if [ "$machine" = "b700" ]; then
+                    keep_live=1
+                else
+                    warn "existing $live is not an aarch64 library (e_machine bytes '$machine'); replacing it"
+                fi
+            fi
         fi
         if [ "$keep_live" = 0 ]; then
             ensure_link "$live" "$OBN_LIB/liblive555.so" || warn "could not link $live"
@@ -150,23 +181,32 @@ if [ "$sync_ok" = 1 ]; then
     elif [ ! -x "$PYTHON" ]; then
         warn "$PYTHON not found; cannot patch $conf"
     else
-        "$PYTHON" - "$conf" "$series" "$plugin_ver" <<'PYEOF' || warn "patching $conf failed"
-import json, os, re, shutil, sys
+        "$PYTHON" - "$conf" "$series" "$plugin_ver" <<'PYEOF' || warn "patching $conf failed; $CONF_NAME left unchanged"
+import json, os, re, shutil, sys, tempfile
 
 conf_path, series, plugin_ver = sys.argv[1], sys.argv[2], sys.argv[3]
 me = "orcastudio-arm-launcher"
+MARKER = "obn_flatpak_patched"   # app.<MARKER> = plugin_ver once patched
 
-with open(conf_path, "r", encoding="utf-8") as f:
-    raw = f.read()
-raw_json = re.sub(r"[\r\n]+# MD5 checksum[^\r\n]*[\r\n]*$", "", raw)
+with open(conf_path, "rb") as f:
+    raw_bytes = f.read()
 try:
+    raw = raw_bytes.decode("utf-8")
+    raw_json = re.sub(r"[\r\n]+# MD5 checksum[^\r\n]*[\r\n]*$", "", raw)
     conf = json.loads(raw_json)
-except json.JSONDecodeError:
+except (UnicodeDecodeError, json.JSONDecodeError):
     print(f"{me}: cannot parse {conf_path} as JSON, not patched", file=sys.stderr)
     sys.exit(0)
-app = conf.get("app")
+app = conf.get("app") if isinstance(conf, dict) else None
 if not isinstance(app, dict):
     print(f"{me}: no 'app' object in {conf_path}, not patched", file=sys.stderr)
+    sys.exit(0)
+
+# Patch once per bundled plugin version. AppConfig::load/save keep unknown
+# string keys of "app", so the marker survives; if the user later disables the
+# plug-in or picks another version in Preferences, that choice is kept. A reset
+# or recreated OrcaStudio.conf has no marker and is patched again.
+if app.get(MARKER) == plugin_ver:
     sys.exit(0)
 
 def norm(v):
@@ -178,32 +218,51 @@ def norm(v):
         return "false"
     return v
 
-changed = False
 for key, val in (("installed_networking", "true"),
                  ("network_plugin_version", series),
                  ("network_plugin_remind_later", "true")):
     if norm(app.get(key)) != val:
         app[key] = val
-        changed = True
 
 skipped = app.get("network_plugin_skipped_versions", "")
 if isinstance(skipped, str) and skipped:
     parts = [v for v in skipped.split(";") if v and v not in (series, plugin_ver)]
-    new_skipped = ";".join(parts)
-    if new_skipped != skipped:
-        app["network_plugin_skipped_versions"] = new_skipped
-        changed = True
+    app["network_plugin_skipped_versions"] = ";".join(parts)
+app[MARKER] = plugin_ver
 
-if not changed:
-    sys.exit(0)
+conf_dir = os.path.dirname(os.path.abspath(conf_path))
 
-shutil.copy2(conf_path, conf_path + ".obn-bak")
-tmp = conf_path + ".obn-tmp"
-with open(tmp, "w", encoding="utf-8") as f:
-    f.write(json.dumps(conf, indent=4, ensure_ascii=False))
-    f.write("\n# MD5 checksum 00000000000000000000000000000000\n")
-os.replace(tmp, conf_path)
-print(f"{me}: patched {conf_path} for obn (backup: {conf_path}.obn-bak)", file=sys.stderr)
+def atomic_write(path, data):
+    # Unique temp name: two launchers starting at once never share a file, so
+    # a reader only ever sees the old or the new complete content.
+    fd, tmp = tempfile.mkstemp(prefix=os.path.basename(path) + ".obn-", dir=conf_dir)
+    try:
+        with os.fdopen(fd, "wb") as f:
+            f.write(data)
+            f.flush()
+            os.fsync(f.fileno())
+        shutil.copymode(conf_path, tmp)
+        os.replace(tmp, path)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+
+# Backup = the exact bytes that were parsed (not a re-read of a file that may
+# have changed since).
+atomic_write(conf_path + ".obn-bak", raw_bytes)
+atomic_write(conf_path, (json.dumps(conf, indent=4, ensure_ascii=False) + "\n").encode("utf-8"))
+try:
+    dfd = os.open(conf_dir, os.O_RDONLY)
+    try:
+        os.fsync(dfd)
+    finally:
+        os.close(dfd)
+except OSError:
+    pass
+print(f"{me}: patched {conf_path} for obn {plugin_ver} (backup: {conf_path}.obn-bak)", file=sys.stderr)
 PYEOF
     fi
 fi
