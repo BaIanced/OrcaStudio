@@ -1,0 +1,502 @@
+# Builds an aarch64 Flatpak bundle of OrcaStudio (+ open-bamboo-networking plugin) on
+# GitHub-hosted ubuntu-24.04-arm runners and publishes it as a GitHub release.
+# Design, limits and timing: arm-build/NOTES-ci.md.
+#
+#   deps    : flatpak-builder --stop-at=OrcaStudio (all modules before the app), state cached
+#             with actions/cache under a key derived from the generated manifest's dependency
+#             part (+ local dep sources). Exact cache hit => build skipped.
+#   app     : restores that state, builds OrcaStudio + obn + integration module, exports,
+#             build-bundle (--runtime-repo=Flathub), smoke-checks the bundle, uploads artifact.
+#   release : publishes arm64-<orcastudio_tag>-obn-<obn_tag>-r<run_number>, keeps newest 3.
+#   prune-caches : deletes superseded deps/ccache cache entries.
+name: arm64 Flatpak
+
+on:
+  workflow_dispatch:
+    inputs:
+      clean_cache:
+        description: "Ignore all build caches (full rebuild)"
+        type: boolean
+        default: false
+      ci_ref:
+        description: "Commit/branch of this repo providing arm-build/ (default: the triggering commit)"
+        type: string
+        default: ""
+  workflow_call:
+    inputs:
+      clean_cache:
+        description: "Ignore all build caches (full rebuild)"
+        type: boolean
+        default: false
+        required: false
+      ci_ref:
+        description: "Commit/branch of this repo providing arm-build/ (default: github.sha of the caller)"
+        type: string
+        default: ""
+        required: false
+    outputs:
+      release_tag:
+        description: "Tag of the published release"
+        value: ${{ jobs.deps.outputs.release_tag }}
+
+permissions: {}
+
+concurrency:
+  group: orcastudio-arm64-flatpak
+  cancel-in-progress: false
+
+env:
+  ARCH: aarch64
+  # Fixed (not nproc) so cache keys are reproducible; ubuntu-24.04-arm (public repo) = 4 vCPU / 16 GB.
+  JOBS: "4"
+  FB_BRANCH: master
+  FLATHUB_REPO_FILE: https://dl.flathub.org/repo/flathub.flatpakrepo
+  BUNDLE_RUNTIME_REPO: https://flathub.org/repo/flathub.flatpakrepo
+  STATE_DIR: .fb-state
+  MANIFEST: src/scripts/flatpak/com.orcaslicer.OrcaStudio.arm.yml
+
+jobs:
+  deps:
+    name: Build dependencies (modules before OrcaStudio)
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 350
+    permissions:
+      contents: read
+    outputs:
+      ci_sha: ${{ steps.ver.outputs.ci_sha }}
+      release_tag: ${{ steps.ver.outputs.release_tag }}
+      os_repo: ${{ steps.ver.outputs.os_repo }}
+      os_tag: ${{ steps.ver.outputs.os_tag }}
+      os_commit: ${{ steps.ver.outputs.os_commit }}
+      obn_tag: ${{ steps.ver.outputs.obn_tag }}
+      obn_commit: ${{ steps.ver.outputs.obn_commit }}
+      deps_hash: ${{ steps.key.outputs.deps_hash }}
+      deps_cache_key: ${{ steps.key.outputs.deps_cache_key }}
+      fb_version: ${{ steps.key.outputs.fb_version }}
+    steps:
+      - name: Check out this repository (arm-build/)
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ci_ref || github.sha }}
+          path: ci
+          persist-credentials: false
+
+      - name: Read and validate versions.json, derive release tag
+        id: ver
+        env:
+          RUN_NUMBER: ${{ github.run_number }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          v=ci/arm-build/versions.json
+          os_repo=$(jq -er '.orcastudio.repo' "$v"); os_tag=$(jq -er '.orcastudio.tag' "$v")
+          os_commit=$(jq -er '.orcastudio.commit' "$v")
+          obn_repo=$(jq -er '.obn.repo' "$v"); obn_tag=$(jq -er '.obn.tag' "$v")
+          obn_commit=$(jq -er '.obn.commit' "$v")
+          for r in "$os_repo" "$obn_repo"; do
+            [[ "$r" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]] || { echo "::error::bad repo '$r'"; exit 1; }
+          done
+          for t in "$os_tag" "$obn_tag"; do
+            [[ "$t" =~ ^[A-Za-z0-9][A-Za-z0-9._+-]{0,100}$ ]] || { echo "::error::bad tag '$t'"; exit 1; }
+          done
+          for c in "$os_commit" "$obn_commit"; do
+            [[ "$c" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::bad commit '$c'"; exit 1; }
+          done
+          # Pinned tags must still point at the pinned commits (annotated tags: peeled ^{}).
+          check_tag() {
+            local repo=$1 tag=$2 want=$3 got
+            got=$(git ls-remote --tags "https://github.com/$repo" "refs/tags/$tag" "refs/tags/$tag^{}" \
+                  | awk '{print $1}' | tail -n 1)
+            [ "$got" = "$want" ] || { echo "::error::$repo tag $tag -> '$got', versions.json pins $want"; exit 1; }
+          }
+          check_tag "$os_repo" "$os_tag" "$os_commit"
+          check_tag "$obn_repo" "$obn_tag" "$obn_commit"
+          release_tag="arm64-${os_tag}-obn-${obn_tag}-r${RUN_NUMBER}"
+          if git ls-remote --exit-code --tags "https://github.com/${GITHUB_REPOSITORY}" "refs/tags/${release_tag}" >/dev/null; then
+            if [ "$RUN_ATTEMPT" = "1" ]; then
+              echo "::error::release tag ${release_tag} already exists (run_number collision with another workflow?)"
+              exit 1
+            fi
+            echo "::warning::${release_tag} exists; re-run attempt ${RUN_ATTEMPT} will replace its assets"
+          fi
+          {
+            echo "ci_sha=$(git -C ci rev-parse HEAD)"
+            echo "release_tag=$release_tag"
+            echo "os_repo=$os_repo"; echo "os_tag=$os_tag"; echo "os_commit=$os_commit"
+            echo "obn_tag=$obn_tag"; echo "obn_commit=$obn_commit"
+          } >> "$GITHUB_OUTPUT"
+          echo "release tag: $release_tag"
+
+      - name: Check out OrcaStudio source at the pinned commit
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ steps.ver.outputs.os_repo }}
+          ref: ${{ steps.ver.outputs.os_commit }}
+          path: src
+          persist-credentials: false
+
+      - name: Install flatpak, flatpak-builder, PyYAML (Ubuntu archive)
+        run: |
+          set -euo pipefail
+          sudo apt-get update -q
+          sudo apt-get install -y -q --no-install-recommends flatpak flatpak-builder python3-yaml
+          uname -m; nproc; free -h; df -h /
+          flatpak --version; flatpak-builder --version
+
+      - name: Generate manifest and dependency cache key
+        id: key
+        env:
+          RELEASE_TAG: ${{ steps.ver.outputs.release_tag }}
+          CLEAN_CACHE: ${{ format('{0}', inputs.clean_cache) }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          [ "$(uname -m)" = aarch64 ] || { echo "::error::runner is not aarch64"; exit 1; }
+          [ ! -e src/arm-build ] || { echo "::error::upstream now has arm-build/; refusing to overlay"; exit 1; }
+          cp -a ci/arm-build src/arm-build
+          gen=(python3 src/arm-build/make-manifest.py --jobs "$JOBS" --no-debug-info --ccache-launcher)
+          "${gen[@]}"
+          deps_hash=$("${gen[@]}" --print-deps-key)
+          fb_version=$(flatpak-builder --version | sed -n 's/^flatpak-builder[- ]//p')
+          [[ "$fb_version" =~ ^[0-9.]+$ ]] || { echo "::error::cannot parse flatpak-builder version"; exit 1; }
+          key="fb-deps-${ARCH}-fb${fb_version}-${deps_hash}"
+          if [ "$CLEAN_CACHE" = "true" ]; then key="${key}-clean-${RUN_ID}"; fi
+          {
+            echo "deps_hash=$deps_hash"; echo "fb_version=$fb_version"
+            echo "deps_cache_key=$key"; echo "restore_prefix=fb-deps-${ARCH}-fb${fb_version}-"
+          } >> "$GITHUB_OUTPUT"
+          echo "deps cache key: $key"
+
+      - name: Restore dependency build state
+        id: restore
+        if: ${{ format('{0}', inputs.clean_cache) != 'true' }}
+        uses: actions/cache/restore@v6
+        with:
+          path: |
+            ${{ env.STATE_DIR }}/cache
+            ${{ env.STATE_DIR }}/downloads
+            ${{ env.STATE_DIR }}/git
+          key: ${{ steps.key.outputs.deps_cache_key }}
+          restore-keys: ${{ steps.key.outputs.restore_prefix }}
+
+      - name: Prepare runner (disk, swap, user namespaces, Flathub)
+        if: steps.restore.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          df -h /
+          # Large preinstalled toolchains this build never uses (paths from the arm64 image readme).
+          sudo rm -rf /usr/share/dotnet /usr/share/swift /usr/local/share/powershell \
+                      /usr/local/lib/android /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL || true
+          df -h /
+          if [ -z "$(swapon --show --noheadings)" ]; then
+            avail_kb=$(df --output=avail -k / | tail -n 1)
+            if [ "$avail_kb" -gt $((40 * 1024 * 1024)) ]; then
+              sudo fallocate -l 8G /swapfile.fb && sudo chmod 600 /swapfile.fb
+              sudo mkswap /swapfile.fb >/dev/null && sudo swapon /swapfile.fb
+            fi
+          fi
+          swapon --show || true; free -h
+          # Ubuntu 24.04 may restrict unprivileged user namespaces via AppArmor; bwrap needs them.
+          if [ -e /proc/sys/kernel/apparmor_restrict_unprivileged_userns ]; then
+            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          fi
+          bwrap --ro-bind / / --dev /dev --proc /proc true
+          flatpak remote-add --user --if-not-exists flathub "$FLATHUB_REPO_FILE"
+
+      - name: Build modules before OrcaStudio
+        id: build
+        if: steps.restore.outputs.cache-hit != 'true'
+        timeout-minutes: 300
+        run: |
+          set -euo pipefail
+          flatpak-builder --user --arch="$ARCH" --install-deps-from=flathub \
+            --state-dir="$STATE_DIR" --disable-rofiles-fuse --force-clean \
+            --jobs="$JOBS" --default-branch="$FB_BRANCH" \
+            --stop-at=OrcaStudio \
+            build-dir "$MANIFEST"
+          rm -rf build-dir "$STATE_DIR/build"
+          du -sh "$STATE_DIR"/* || true
+          df -h /
+
+      - name: Save dependency build state
+        if: steps.build.outcome == 'success'
+        uses: actions/cache/save@v6
+        with:
+          path: |
+            ${{ env.STATE_DIR }}/cache
+            ${{ env.STATE_DIR }}/downloads
+            ${{ env.STATE_DIR }}/git
+          key: ${{ steps.key.outputs.deps_cache_key }}
+
+      - name: Save partial dependency state (failure/timeout; a re-run resumes from it)
+        if: ${{ always() && (steps.build.outcome == 'failure' || steps.build.outcome == 'cancelled') }}
+        uses: actions/cache/save@v6
+        with:
+          path: |
+            ${{ env.STATE_DIR }}/cache
+            ${{ env.STATE_DIR }}/downloads
+            ${{ env.STATE_DIR }}/git
+          key: ${{ steps.key.outputs.deps_cache_key }}-partial-${{ github.run_id }}-${{ github.run_attempt }}
+
+  app:
+    name: Build OrcaStudio + obn, bundle
+    needs: deps
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 350
+    permissions:
+      contents: read
+    steps:
+      - name: Check out this repository (arm-build/) at the deps job's commit
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.deps.outputs.ci_sha }}
+          path: ci
+          persist-credentials: false
+
+      - name: Check out OrcaStudio source at the pinned commit
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ needs.deps.outputs.os_repo }}
+          ref: ${{ needs.deps.outputs.os_commit }}
+          path: src
+          persist-credentials: false
+
+      - name: Install flatpak, flatpak-builder, PyYAML (Ubuntu archive)
+        run: |
+          set -euo pipefail
+          sudo apt-get update -q
+          sudo apt-get install -y -q --no-install-recommends flatpak flatpak-builder python3-yaml
+          flatpak --version; flatpak-builder --version
+
+      - name: Generate manifest, verify it matches the deps job
+        env:
+          RELEASE_TAG: ${{ needs.deps.outputs.release_tag }}
+          WANT_HASH: ${{ needs.deps.outputs.deps_hash }}
+          WANT_FB: ${{ needs.deps.outputs.fb_version }}
+        run: |
+          set -euo pipefail
+          [ ! -e src/arm-build ] || { echo "::error::upstream now has arm-build/; refusing to overlay"; exit 1; }
+          cp -a ci/arm-build src/arm-build
+          gen=(python3 src/arm-build/make-manifest.py --jobs "$JOBS" --no-debug-info --ccache-launcher)
+          "${gen[@]}"
+          got=$("${gen[@]}" --print-deps-key)
+          [ "$got" = "$WANT_HASH" ] || { echo "::error::deps key differs from deps job ($got != $WANT_HASH)"; exit 1; }
+          fb=$(flatpak-builder --version | sed -n 's/^flatpak-builder[- ]//p')
+          [ "$fb" = "$WANT_FB" ] || { echo "::error::flatpak-builder $fb != deps job's $WANT_FB"; exit 1; }
+
+      - name: Prepare runner (disk, swap, user namespaces, Flathub)
+        run: |
+          set -euo pipefail
+          df -h /
+          # Large preinstalled toolchains this build never uses (paths from the arm64 image readme).
+          sudo rm -rf /usr/share/dotnet /usr/share/swift /usr/local/share/powershell \
+                      /usr/local/lib/android /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL || true
+          df -h /
+          if [ -z "$(swapon --show --noheadings)" ]; then
+            avail_kb=$(df --output=avail -k / | tail -n 1)
+            if [ "$avail_kb" -gt $((40 * 1024 * 1024)) ]; then
+              sudo fallocate -l 8G /swapfile.fb && sudo chmod 600 /swapfile.fb
+              sudo mkswap /swapfile.fb >/dev/null && sudo swapon /swapfile.fb
+            fi
+          fi
+          swapon --show || true; free -h
+          # Ubuntu 24.04 may restrict unprivileged user namespaces via AppArmor; bwrap needs them.
+          if [ -e /proc/sys/kernel/apparmor_restrict_unprivileged_userns ]; then
+            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          fi
+          bwrap --ro-bind / / --dev /dev --proc /proc true
+          flatpak remote-add --user --if-not-exists flathub "$FLATHUB_REPO_FILE"
+
+      - name: Restore dependency build state (exact key required)
+        id: restore
+        uses: actions/cache/restore@v6
+        with:
+          path: |
+            ${{ env.STATE_DIR }}/cache
+            ${{ env.STATE_DIR }}/downloads
+            ${{ env.STATE_DIR }}/git
+          key: ${{ needs.deps.outputs.deps_cache_key }}
+          fail-on-cache-miss: true
+
+      - name: Require an exact dependency cache match
+        if: steps.restore.outputs.cache-hit != 'true'
+        run: |
+          echo "::error::dependency cache restored from a different key; refusing to rebuild deps in this job"
+          exit 1
+
+      - name: Restore ccache
+        id: ccache
+        if: ${{ format('{0}', inputs.clean_cache) != 'true' }}
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ env.STATE_DIR }}/ccache
+          key: ccache-${{ env.ARCH }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: ccache-${{ env.ARCH }}-
+
+      - name: Configure ccache
+        run: |
+          set -euo pipefail
+          mkdir -p "$STATE_DIR/ccache"
+          # Read by the SDK's ccache inside the sandbox via CCACHE_DIR=/run/ccache.
+          printf '%s\n' 'max_size = 2G' 'compression = true' \
+            'sloppiness = pch_defines,time_macros,include_file_mtime,include_file_ctime' \
+            > "$STATE_DIR/ccache/ccache.conf"
+
+      - name: Build OrcaStudio, obn, integration; export to repo
+        id: build
+        timeout-minutes: 300
+        run: |
+          set -euo pipefail
+          flatpak-builder --user --arch="$ARCH" --install-deps-from=flathub \
+            --state-dir="$STATE_DIR" --disable-rofiles-fuse --force-clean --ccache \
+            --jobs="$JOBS" --default-branch="$FB_BRANCH" \
+            --repo=repo \
+            build-dir "$MANIFEST"
+          df -h /
+
+      - name: ccache statistics
+        if: ${{ always() && steps.build.outcome != 'skipped' }}
+        continue-on-error: true
+        run: |
+          flatpak run --user --filesystem="$PWD/$STATE_DIR/ccache" --env=CCACHE_DIR="$PWD/$STATE_DIR/ccache" \
+            --command=ccache org.gnome.Sdk//50 -s
+
+      - name: Save ccache
+        if: ${{ always() && steps.build.outcome != 'skipped' }}
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ env.STATE_DIR }}/ccache
+          key: ccache-${{ env.ARCH }}-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Create bundle
+        run: |
+          set -euo pipefail
+          flatpak build-bundle --arch="$ARCH" --runtime-repo="$BUNDLE_RUNTIME_REPO" \
+            repo OrcaStudio-aarch64.flatpak com.orcaslicer.OrcaStudio "$FB_BRANCH"
+          ls -l OrcaStudio-aarch64.flatpak
+
+      - name: Smoke-check the bundle (install on the runner, inspect files)
+        env:
+          WANT_INFO: |-
+            orcastudio_tag=${{ needs.deps.outputs.os_tag }}
+            obn_tag=${{ needs.deps.outputs.obn_tag }}
+            release_tag=${{ needs.deps.outputs.release_tag }}
+        run: |
+          set -euo pipefail
+          flatpak install --user -y --noninteractive --bundle OrcaStudio-aarch64.flatpak
+          ref="com.orcaslicer.OrcaStudio/${ARCH}/${FB_BRANCH}"
+          flatpak info --user "$ref"
+          flatpak info --user --show-metadata "$ref" | grep -Eq '^command *= *orcastudio-arm-launcher$'
+          d="$(flatpak info --user --show-location "$ref")"
+          diff <(printf '%s\n' "$WANT_INFO") "$d/files/share/orcastudio-arm/BUILD_INFO"
+          test -x "$d/files/bin/orcastudio-arm-launcher"
+          test -x "$d/files/bin/entrypoint"
+          grep -q '^Exec=.*--command=orcastudio-arm-launcher' \
+            "$d/export/share/applications/com.orcaslicer.OrcaStudio.desktop"
+          file -L "$d/files/bin/orca-studio" | grep -q 'ARM aarch64'
+          # Credentials must never ship in the bundle (security rule).
+          if find "$d/files" \( -name 'slicer_cert*' -o -name 'slicer_key*' -o -name 'slicer_crl*' \) | grep -q .; then
+            echo "::error::credential-like files found in bundle"; exit 1
+          fi
+
+      - name: Checksums
+        run: sha256sum OrcaStudio-aarch64.flatpak | tee SHA256SUMS.txt
+
+      - name: Upload bundle artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: orcastudio-aarch64-flatpak
+          path: |
+            OrcaStudio-aarch64.flatpak
+            SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 3
+          compression-level: 0
+
+  release:
+    name: Publish release
+    needs: [deps, app]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      TAG: ${{ needs.deps.outputs.release_tag }}
+      TARGET: ${{ needs.deps.outputs.ci_sha }}
+      OS_REPO: ${{ needs.deps.outputs.os_repo }}
+      OS_TAG: ${{ needs.deps.outputs.os_tag }}
+      OS_COMMIT: ${{ needs.deps.outputs.os_commit }}
+      OBN_TAG: ${{ needs.deps.outputs.obn_tag }}
+      OBN_COMMIT: ${{ needs.deps.outputs.obn_commit }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - name: Download bundle artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: orcastudio-aarch64-flatpak
+          path: dist
+
+      - name: Verify checksums
+        working-directory: dist
+        run: sha256sum -c SHA256SUMS.txt
+
+      - name: Create or update release (marked latest)
+        run: |
+          set -euo pipefail
+          notes=$(printf '%s\n' \
+            "aarch64 Flatpak bundle of OrcaStudio ${OS_TAG} (${OS_REPO}@${OS_COMMIT})" \
+            "with open-bamboo-networking ${OBN_TAG} (${OBN_COMMIT})." \
+            "" \
+            "App id: com.orcaslicer.OrcaStudio, branch ${FB_BRANCH}, runtime org.gnome.Platform//50 (pulled from Flathub)." \
+            "Install: flatpak install --user --bundle OrcaStudio-aarch64.flatpak" \
+            "Built by ${RUN_URL}")
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" dist/OrcaStudio-aarch64.flatpak dist/SHA256SUMS.txt --clobber
+            gh release edit "$TAG" --latest
+          else
+            gh release create "$TAG" dist/OrcaStudio-aarch64.flatpak dist/SHA256SUMS.txt \
+              --target "$TARGET" --title "$TAG" --notes "$notes" --latest
+          fi
+
+      - name: Keep only the newest 3 arm64-* releases
+        run: |
+          set -euo pipefail
+          gh release list --limit 200 --json tagName,createdAt \
+            --jq '[.[] | select(.tagName | startswith("arm64-"))] | sort_by(.createdAt) | reverse | .[3:] | .[].tagName' \
+          | while IFS= read -r old; do
+              [ -n "$old" ] || continue
+              [ "$old" != "$TAG" ] || continue
+              echo "deleting release + tag $old"
+              gh release delete "$old" --cleanup-tag --yes
+            done
+
+  prune-caches:
+    name: Prune superseded caches
+    needs: [deps, app, release]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      actions: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      KEEP_DEPS: ${{ needs.deps.outputs.deps_cache_key }}
+      KEEP_CCACHE: ccache-aarch64-${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - name: Delete older deps and ccache entries
+        run: |
+          set -euo pipefail
+          prune() {
+            local prefix=$1 keep=$2
+            gh cache list --key "$prefix" --limit 100 --json id,key \
+              --jq ".[] | select(.key != \"$keep\") | .id" \
+            | while IFS= read -r id; do
+                [ -n "$id" ] || continue
+                echo "deleting cache $id ($prefix*)"
+                gh cache delete "$id"
+              done
+          }
+          prune "fb-deps-aarch64-" "$KEEP_DEPS"
+          prune "ccache-aarch64-" "$KEEP_CCACHE"

@@ -1,0 +1,171 @@
+# flatpak-builder module list: open-bamboo-networking (obn) for the OrcaStudio
+# aarch64 Flatpak. Owned by arm-build (Agent A); spliced into the generated
+# manifest scripts/flatpak/com.orcaslicer.OrcaStudio.arm.yml by make-manifest.py.
+#
+# Placeholders substituted by make-manifest.py (from arm-build/versions.json):
+#   @OBN_TAG@     obn release tag, e.g. v2.2.0
+#   @OBN_COMMIT@  full commit sha that tag points to
+#
+# Path sources are relative to the GENERATED manifest's directory
+# (scripts/flatpak/), the same convention the upstream manifest uses
+# (../../src, ../../deps ...).
+#
+# Toolchain: inherits the manifest-level build-options (clang/clang++ from
+# org.freedesktop.Sdk.Extension.llvm21, -fuse-ld=lld). Using the exact
+# compiler + libstdc++ that builds orca-studio keeps the std::string /
+# std::function / std::map types that cross the plugin ABI identical.
+#
+# Network: none needed. obn's CMake FetchContent deps (eclipse/mosquitto,
+# DaveGamble/cJSON) are pre-fetched below as pinned git sources and handed
+# to CMake via FETCHCONTENT_SOURCE_DIR_* with FETCHCONTENT_FULLY_DISCONNECTED.
+# libcurl / OpenSSL / zlib come from org.gnome.Sdk//50 (shared, present in
+# org.gnome.Platform//50 at runtime). /app is excluded from all dependency
+# lookups because orca_deps installs a static OpenSSL 1.1.1w + curl 7.75 there.
+#
+# Install layout:
+#   /app/lib/obn/libbambu_networking.so, libBambuSource.so, liblive555.so
+#   /app/bin/orcastudio-arm-launcher
+#   /app/share/obn/VERSION          obn tag (e.g. v2.2.0)
+#   /app/share/obn/COMMIT           obn commit sha
+#   /app/share/obn/PLUGIN_VERSION   value reported by bambu_network_get_version()
+#                                   (<OrcaStudio ABI series>.99, e.g. 02.08.01.99)
+#   /app/share/obn/obn.conf.default obn's packaging/obn.conf.in with
+#                                   block_cloud = 0, client_name = BambuStudio
+
+- name: open-bamboo-networking
+  buildsystem: simple
+  build-commands:
+    - |
+      set -eu
+
+      # Symbols OrcaStudio may resolve but obn legitimately does not export
+      # (only used on the Windows/macOS "Linux runtime" bridge path, which is
+      # compiled out on native Linux: SlicerLinuxRuntimeConfig.cpp enabled()).
+      OPTIONAL_SYMS="bambu_network_get_last_error_msg"
+
+      # 1. ABI series OrcaStudio loads (BAMBU_NETWORK_AGENT_VERSION, AA.BB.CC).
+      series=$(sed -n 's/^#define BAMBU_NETWORK_AGENT_VERSION "\([0-9][0-9]\.[0-9][0-9]\.[0-9][0-9]\)"[[:space:]]*$/\1/p' \
+        orca-abi/bambu_networking.hpp)
+      if [ -z "$series" ]; then
+        echo "obn: cannot parse BAMBU_NETWORK_AGENT_VERSION from OrcaStudio bambu_networking.hpp" >&2
+        exit 1
+      fi
+      if [ ! -d "tools/abi_snapshot/v${series}" ]; then
+        echo "obn: @OBN_TAG@ has no ABI snapshot for OrcaStudio's series ${series}" >&2
+        ls tools/abi_snapshot >&2
+        exit 1
+      fi
+      # Same rule as obn's packaging/install.sh (PLUGIN_VER="${ABI_PREFIX}.99"):
+      # .99 also keeps OrcaStudio's OTA sync from treating any stock build of
+      # the series as newer (PresetUpdater.cpp sync_resources: current < online).
+      plugin_ver="${series}.99"
+      echo "obn: building @OBN_TAG@ (@OBN_COMMIT@) as plugin version ${plugin_ver}"
+
+      # 2. The pre-fetched vendored deps must match what this obn tag pins.
+      grep -q '^set(OBN_MOSQUITTO_GIT_TAG "v2.1.2"$' CMakeLists.txt || {
+        echo "obn: @OBN_TAG@ changed OBN_MOSQUITTO_GIT_TAG; update the mosquitto source in arm-build/obn-module.yml" >&2
+        grep -n 'OBN_MOSQUITTO_GIT_TAG "' CMakeLists.txt >&2; exit 1; }
+      grep -q '^set(OBN_CJSON_GIT_TAG "v1.7.18"$' CMakeLists.txt || {
+        echo "obn: @OBN_TAG@ changed OBN_CJSON_GIT_TAG; update the cJSON source in arm-build/obn-module.yml" >&2
+        grep -n 'OBN_CJSON_GIT_TAG "' CMakeLists.txt >&2; exit 1; }
+
+      # 3. Configure + build against the SDK only (never /app). The Flatpak
+      #    build env puts /app/include first (C_INCLUDE_PATH/CPLUS_INCLUDE_PATH),
+      #    adds -L/app/lib and /app/lib/pkgconfig; when this module runs after
+      #    orca_deps those hold OpenSSL 1.1.1w / curl 7.75 headers + static libs.
+      unset C_INCLUDE_PATH CPLUS_INCLUDE_PATH CPATH LIBRARY_PATH PKG_CONFIG_PATH
+      LDFLAGS=$(printf '%s' "${LDFLAGS:-}" | sed 's#-L/app/lib[^[:space:]]*##g')
+      export LDFLAGS
+      echo "obn: LDFLAGS='${LDFLAGS}'"
+      cmake -S . -B build -G Ninja \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/app/lib/obn \
+        -DCMAKE_FIND_USE_INSTALL_PREFIX=OFF \
+        -DCMAKE_IGNORE_PREFIX_PATH=/app \
+        -DOPENSSL_ROOT_DIR=/usr \
+        -DOBN_VERSION="${plugin_ver}" \
+        -DOBN_CLIENT_TYPE=orca_slicer \
+        -DOBN_PATCH_CLIENT_CONF=OFF \
+        -DOBN_RELEASE=ON \
+        -DOBN_BUILD_TESTS=ON \
+        -DFETCHCONTENT_FULLY_DISCONNECTED=ON \
+        -DFETCHCONTENT_SOURCE_DIR_ECLIPSE_MOSQUITTO="$PWD/_vendor/mosquitto" \
+        -DFETCHCONTENT_SOURCE_DIR_CJSON="$PWD/_vendor/cjson"
+      if grep -E '^(OPENSSL_[A-Z_]*|CURL_[A-Z_]*|ZLIB_[A-Z_]*):[A-Z]*=/app' build/CMakeCache.txt; then
+        echo "obn: a dependency resolved into /app (see above); refusing to build" >&2
+        exit 1
+      fi
+      cmake --build build --parallel "${FLATPAK_BUILDER_N_JOBS:-2}" \
+        --target bambu_networking BambuSource live555 probe_plugin
+
+      # 4. Checks on the built artefacts.
+      if grep -rl --include='*.d' '/app/include' build; then
+        echo "obn: objects above were compiled against headers from /app/include" >&2
+        exit 1
+      fi
+      for so in libbambu_networking.so libBambuSource.so liblive555.so; do
+        echo "obn: $so NEEDED:"; readelf -d "build/$so" | grep -E 'NEEDED|RPATH|RUNPATH'
+      done
+      ./build/probe_plugin "$PWD/build/libbambu_networking.so"
+      nm -D --defined-only build/libbambu_networking.so | awk '{print $NF}' | sort -u > exported.txt
+      grep -o 'get_function("bambu_network_[a-z0-9_]*")' orca-abi/BBLNetworkPlugin.cpp \
+        | sed 's/^get_function("//; s/")$//' | sort -u > orca-wanted.txt
+      grep -o 'sym_lookup<[a-z_]*>(networking_, "ft_[a-z0-9_]*")' orca-abi/FileTransferUtils.cpp \
+        | sed 's/.*"\(ft_[a-z0-9_]*\)")$/\1/' | sort -u >> orca-wanted.txt
+      test "$(wc -l < orca-wanted.txt)" -gt 50
+      missing=""
+      for sym in $(cat orca-wanted.txt); do
+        grep -qx "$sym" exported.txt && continue
+        case " $OPTIONAL_SYMS " in *" $sym "*) echo "obn: optional symbol not exported: $sym"; continue ;; esac
+        missing="$missing $sym"
+      done
+      if [ -n "$missing" ]; then
+        echo "obn: symbols OrcaStudio resolves but obn does not export:$missing" >&2
+        exit 1
+      fi
+
+      # 5. Install.
+      install -Dm755 build/libbambu_networking.so /app/lib/obn/libbambu_networking.so
+      install -Dm755 build/libBambuSource.so      /app/lib/obn/libBambuSource.so
+      install -Dm755 build/liblive555.so          /app/lib/obn/liblive555.so
+      install -Dm755 orcastudio-arm-launcher      /app/bin/orcastudio-arm-launcher
+      install -d /app/share/obn
+      printf '%s\n' "@OBN_TAG@"    > /app/share/obn/VERSION
+      printf '%s\n' "@OBN_COMMIT@" > /app/share/obn/COMMIT
+      printf '%s\n' "${plugin_ver}" > /app/share/obn/PLUGIN_VERSION
+      sed -e 's/^block_cloud = 1$/block_cloud = 0/' \
+          -e 's/^client_name = OpenBambooNetworking$/client_name = BambuStudio/' \
+          packaging/obn.conf.in > obn.conf.default
+      grep -qx 'block_cloud = 0' obn.conf.default
+      grep -qx 'client_name = BambuStudio' obn.conf.default
+      install -Dm644 obn.conf.default /app/share/obn/obn.conf.default
+      install -Dm644 LICENSE "/app/share/licenses/${FLATPAK_ID}/open-bamboo-networking-LICENSE"
+  sources:
+    - type: git
+      url: https://github.com/ClusterM/open-bamboo-networking.git
+      tag: "@OBN_TAG@"
+      commit: "@OBN_COMMIT@"
+    # FetchContent deps pinned by obn's CMakeLists.txt (OBN_MOSQUITTO_GIT_TAG,
+    # OBN_CJSON_GIT_TAG). Build step 2 fails if a new obn tag changes them.
+    - type: git
+      url: https://github.com/eclipse/mosquitto.git
+      tag: v2.1.2
+      commit: 99fa50f30e325609394c324c8ff71cfbbe95d8ab
+      dest: _vendor/mosquitto
+    - type: git
+      url: https://github.com/DaveGamble/cJSON.git
+      tag: v1.7.18
+      commit: acc76239bee01d8e9c858ae2cab296704e52d916
+      dest: _vendor/cjson
+    # OrcaStudio's own ABI definitions: ABI series + the symbol lists it resolves.
+    - type: file
+      path: ../../src/slic3r/Utils/bambu_networking.hpp
+      dest: orca-abi
+    - type: file
+      path: ../../src/slic3r/Utils/BBLNetworkPlugin.cpp
+      dest: orca-abi
+    - type: file
+      path: ../../src/slic3r/Utils/FileTransferUtils.cpp
+      dest: orca-abi
+    - type: file
+      path: ../../arm-build/orcastudio-arm-launcher

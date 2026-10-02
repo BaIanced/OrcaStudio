@@ -1,0 +1,213 @@
+# Daily: detect new upstream release tags (OrcaStudio, open-bamboo-networking),
+# record the pins in arm-build/versions.json, best-effort merge the new
+# OrcaStudio tag into this fork's main (housekeeping; the build uses the pinned
+# upstream commit directly),
+# push, then build the aarch64 Flatpak by calling
+# arm-flatpak.yml as a reusable workflow. See arm-build/NOTES-updates.md.
+name: ARM upstream watch
+
+on:
+  schedule:
+    # 10:41 UTC daily (04:41 MDT / 03:41 MST). Off the top of the hour on
+    # purpose: GitHub documents delays for schedules under high load.
+    - cron: '41 10 * * *'
+  workflow_dispatch:
+    inputs:
+      force_build:
+        description: Build even if no upstream tag changed
+        type: boolean
+        default: false
+      dry_run:
+        description: Detect and merge locally only; do not push or build
+        type: boolean
+        default: false
+
+# Deny everything by default; each job asks for what it needs.
+permissions: {}
+
+concurrency:
+  # Unique literal on purpose: the called arm-flatpak.yml must not use the
+  # same group string (caller/callee sharing a group deadlocks/cancels).
+  group: arm-upstream-watch-singleton
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Detect and merge upstream tags
+    # Never act in forks of this fork.
+    if: github.repository == 'BaIanced/orcastudio'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write   # push merge + versions.json commit to main
+      actions: write    # best-effort keepalive: PUT .../workflows/{id}/enable
+    outputs:
+      build: ${{ steps.decide.outputs.build }}
+      sha: ${{ steps.decide.outputs.sha }}
+    env:
+      HAVE_PAT: ${{ secrets.ARM_SYNC_PAT != '' }}
+    steps:
+      - name: Check out main (full history, needed for merge-base)
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+          # GITHUB_TOKEN cannot push commits that touch .github/workflows/
+          # (no `workflows` permission exists for it). If upstream changes its
+          # workflow files, a fine-grained PAT (this repo only; Contents RW +
+          # Workflows RW) stored as secret ARM_SYNC_PAT is used instead.
+          token: ${{ secrets.ARM_SYNC_PAT || github.token }}
+
+      - name: Self-test tag ordering
+        run: python3 arm-build/bump-versions.py --self-test
+
+      - name: Look up newest upstream tags
+        id: bump
+        run: python3 arm-build/bump-versions.py --write
+
+      - name: Commit versions.json
+        if: steps.bump.outputs.changed == 'true'
+        env:
+          O_TAG: ${{ steps.bump.outputs.orcastudio_tag }}
+          B_TAG: ${{ steps.bump.outputs.obn_tag }}
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add arm-build/versions.json
+          git commit -m "arm: pin OrcaStudio ${O_TAG}, open-bamboo-networking ${B_TAG}"
+
+      # Housekeeping only: arm-flatpak.yml builds from the upstream repo at the
+      # pinned commit, not from this fork's tree. So a merge that cannot be done
+      # (workflow files without ARM_SYNC_PAT, conflicts) is skipped with a warning
+      # and the versions.json bump + build still go ahead.
+      - name: Merge upstream OrcaStudio tag (best effort)
+        if: steps.bump.outputs.orcastudio_changed == 'true'
+        env:
+          REPO: ${{ steps.bump.outputs.orcastudio_repo }}
+          TAG: ${{ steps.bump.outputs.orcastudio_tag }}
+          COMMIT: ${{ steps.bump.outputs.orcastudio_commit }}
+          PREV: ${{ steps.bump.outputs.orcastudio_prev_tag }}
+        run: |
+          set -euo pipefail
+          fail() {
+            {
+              echo "## :x: Upstream tag check for \`${TAG}\` failed"
+              echo
+              echo "$1"
+              echo
+              echo "Nothing was pushed. main is unchanged. Previous pin: \`${PREV}\`."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::error title=Upstream tag check failed::${1%%$'\n'*}"
+            exit 1
+          }
+          skip() {
+            {
+              echo "## :warning: Fork sync with \`${TAG}\` skipped (build continues)"
+              echo
+              echo "$1"
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning title=Fork sync skipped::${1%%$'\n'*}"
+            exit 0
+          }
+          # --no-tags: do not create local tags (and never push any).
+          git fetch --no-tags "https://github.com/${REPO}.git" "refs/tags/${TAG}"
+          fetched="$(git rev-parse 'FETCH_HEAD^{commit}')"
+          [ "$fetched" = "$COMMIT" ] || fail "Tag ${TAG} resolved to ${fetched}, but ls-remote reported ${COMMIT} (tag moved during the run?). Re-run later."
+
+          base="$(git merge-base HEAD "$COMMIT")" || skip "No common history between main and ${TAG}."
+          wf_changes="$(git diff --name-only "$base" "$COMMIT" -- .github/workflows)"
+          if [ -n "$wf_changes" ] && [ "$HAVE_PAT" != "true" ]; then
+            skip "Upstream ${PREV}..${TAG} modifies workflow files, which GITHUB_TOKEN is not allowed to push:
+          $(printf '%s\n' "$wf_changes" | sed 's/^/- /')
+
+          Fix: add a fine-grained PAT (repository BaIanced/orcastudio only; permissions Contents: Read and write, Workflows: Read and write) as repository secret ARM_SYNC_PAT, then the next upstream tag merges automatically. Or merge the tag manually from a local clone and push."
+          fi
+
+          if ! git merge --no-ff --no-edit -m "Merge upstream OrcaStudio ${TAG}" "$COMMIT"; then
+            conflicts="$(git diff --name-only --diff-filter=U || true)"
+            git merge --abort || true
+            skip "Merge conflict. Conflicting paths:
+          $(printf '%s\n' "$conflicts" | sed 's/^/- /')
+
+          Resolve manually: git fetch https://github.com/${REPO}.git refs/tags/${TAG} && git merge --no-ff FETCH_HEAD, fix, push to main. (The aarch64 build does not depend on this merge.)"
+          fi
+
+          # Invariant: main must equal the upstream tag except for our own files.
+          extra="$(git diff --name-only "$COMMIT" HEAD -- . ':(exclude)arm-build' ':(exclude).github/workflows/arm-*.yml')"
+          if [ -n "$extra" ]; then
+            {
+              echo "### :warning: main differs from upstream ${TAG} outside arm-build/ and arm-*.yml"
+              printf '%s\n' "$extra" | sed 's/^/- /'
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning title=Fork divergence::main differs from ${TAG} in $(printf '%s\n' "$extra" | wc -l) path(s); see summary"
+          fi
+
+      - name: Push to main
+        if: steps.bump.outputs.changed == 'true' && inputs.dry_run != true
+        run: |
+          set -euo pipefail
+          # Non-force push: if main moved during this run, fail; next run retries.
+          if ! git push origin HEAD:refs/heads/main; then
+            echo "## :x: Push to main rejected (main moved, or token lacks permission)" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+      - name: Decide whether to build
+        id: decide
+        env:
+          CHANGED: ${{ steps.bump.outputs.changed }}
+          FORCE: ${{ inputs.force_build == true }}
+          DRY: ${{ inputs.dry_run == true }}
+          O_PREV: ${{ steps.bump.outputs.orcastudio_prev_tag }}
+          O_TAG: ${{ steps.bump.outputs.orcastudio_tag }}
+          B_PREV: ${{ steps.bump.outputs.obn_prev_tag }}
+          B_TAG: ${{ steps.bump.outputs.obn_tag }}
+        run: |
+          set -euo pipefail
+          sha="$(git rev-parse HEAD)"
+          build=false
+          if [ "$DRY" != "true" ] && { [ "$CHANGED" = "true" ] || [ "$FORCE" = "true" ]; }; then
+            build=true
+          fi
+          {
+            echo "build=${build}"
+            echo "sha=${sha}"
+          } >> "$GITHUB_OUTPUT"
+          {
+            echo "## ARM upstream watch"
+            echo "| component | pinned before | now |"
+            echo "|---|---|---|"
+            echo "| OrcaStudio | \`${O_PREV}\` | \`${O_TAG}\` |"
+            echo "| open-bamboo-networking | \`${B_PREV}\` | \`${B_TAG}\` |"
+            echo
+            echo "changed=${CHANGED} force_build=${FORCE} dry_run=${DRY} -> build=${build} at \`${sha}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Keepalive (best effort)
+        # Scheduled workflows in public repos are auto-disabled after 60 days
+        # without repository activity. Re-enabling an already-enabled workflow
+        # is claimed (not documented by GitHub) to reset that counter. It can
+        # only help while the workflow still runs; the Chromebook updater also
+        # checks this workflow's state daily and warns if it is disabled.
+        if: inputs.dry_run != true
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: gh api -X PUT "repos/${REPO}/actions/workflows/arm-upstream-watch.yml/enable"
+
+  build:
+    name: Build aarch64 Flatpak
+    needs: sync
+    if: needs.sync.outputs.build == 'true'
+    # Must cover every job-level permission inside arm-flatpak.yml
+    # (deps/app: contents read; release: contents write; prune-caches: actions write).
+    permissions:
+      contents: write
+      actions: write
+    uses: ./.github/workflows/arm-flatpak.yml
+    with:
+      # Required: in a called workflow github.sha is the CALLER's commit (main
+      # before this run's merge/bump). The build must check out this SHA.
+      ci_ref: ${{ needs.sync.outputs.sha }}

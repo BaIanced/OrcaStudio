@@ -1,0 +1,4 @@
+{
+  "orcastudio": {"repo": "jarczakpawel/OrcaStudio", "tag": "v02.08.01.55-p6", "commit": "bef044f40bb957bd0967378705fc24ae20655c45"},
+  "obn": {"repo": "ClusterM/open-bamboo-networking", "tag": "v2.2.0", "commit": "5e6a359c71a0c07476f5d372bf7ad0f2b43efe94"}
+}

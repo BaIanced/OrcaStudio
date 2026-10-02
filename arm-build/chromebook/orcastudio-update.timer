@@ -1,0 +1,14 @@
+[Unit]
+Description=Daily check for a new aarch64 OrcaStudio Flatpak release
+
+[Timer]
+# CI (arm-upstream-watch.yml) runs 10:41 UTC and a build takes hours, so check
+# mid-day local time. Persistent=true runs a missed check as soon as the Linux
+# container (and with it the systemd user manager) starts again.
+OnCalendar=*-*-* 13:30
+RandomizedDelaySec=20min
+Persistent=true
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target

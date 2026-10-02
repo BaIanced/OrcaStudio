@@ -1,0 +1,20 @@
+[Unit]
+Description=Install the newest aarch64 OrcaStudio Flatpak from BaIanced/orcastudio releases
+Documentation=https://github.com/BaIanced/orcastudio/blob/main/arm-build/NOTES-updates.md
+# A user manager cannot order itself after the system's network-online.target.
+# The script retries network access itself (curl --retry 5, 30 s apart) and
+# exits 75 if the network stays down; Restart= below tries again later.
+StartLimitIntervalSec=6h
+StartLimitBurst=4
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/orcastudio-update.sh --quiet
+# Retry only temporary failures (75 = network / rate limit). Exit 1
+# (checksum mismatch, failed install) and 2 (usage) are not retried.
+Restart=on-failure
+RestartSec=20min
+RestartPreventExitStatus=1 2
+Nice=10
+IOSchedulingClass=idle
+TimeoutStartSec=2h

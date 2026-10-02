@@ -1,0 +1,234 @@
+#!/bin/sh
+# orcastudio-arm-launcher -- runs INSIDE the Flatpak sandbox as the app command.
+#
+# Makes OrcaStudio load the bundled open-bamboo-networking (obn) plugin, then
+# execs the upstream entrypoint. Every step is best-effort: a failure prints
+# one stderr line and the app still starts.
+#
+#   1. data_dir = $XDG_CONFIG_HOME/BambuStudio_OrcaSlicer (or --datadir DIR),
+#      exactly as GUI_App::init_app_config() computes it. Inside the Flatpak,
+#      XDG_CONFIG_HOME=$HOME/.var/app/com.orcaslicer.OrcaStudio/config, and
+#      $HOME is the same path on the host, so the path printed here is also
+#      the host path.
+#   2. <data_dir>/plugins/libbambu_networking_<series>.so, libBambuSource.so and
+#      liblive555.so become symlinks into /app/lib/obn (follow app updates).
+#      Same-series numbered builds (e.g. a stock 02.08.01.55 download) are
+#      moved to <data_dir>/plugins/obn-displaced/, because OrcaStudio's
+#      migrate_network_plugin_config() would rename the newest one over ours.
+#   3. <data_dir>/ota/plugins (pending stock-plugin OTA download) is removed.
+#   4. <data_dir>/OrcaStudio.conf (only if it exists) gets the same keys obn's
+#      installer sets for Orca: installed_networking, network_plugin_version,
+#      network_plugin_remind_later, and the version stripped from
+#      network_plugin_skipped_versions.
+#   5. <data_dir>/obn.conf is seeded ONLY if absent (block_cloud = 0,
+#      client_name = BambuStudio). slicer_*.pem files are never touched.
+#
+# POSIX sh; tools used (python3, readlink, ln, mv, wc) are in org.gnome.Platform//50.
+
+me=orcastudio-arm-launcher
+OBN_LIB=/app/lib/obn
+OBN_SHARE=/app/share/obn
+ENTRYPOINT=/app/bin/entrypoint
+PYTHON=/usr/bin/python3
+APP_DIR_NAME=BambuStudio_OrcaSlicer   # GUI_App.cpp: SetAppName("BambuStudio_OrcaSlicer")
+CONF_NAME=OrcaStudio.conf             # AppConfig::config_path(): SLIC3R_APP_KEY ".conf"
+
+warn() { printf '%s: %s\n' "$me" "$*" >&2; }
+
+# --- data_dir ---------------------------------------------------------------
+data_dir=""
+prev=""
+for arg in "$@"; do
+    if [ "$prev" = "--datadir" ]; then
+        data_dir=$arg
+    fi
+    case $arg in
+        --datadir=*) data_dir=${arg#--datadir=} ;;
+    esac
+    prev=$arg
+done
+if [ -z "$data_dir" ]; then
+    data_dir="${XDG_CONFIG_HOME:-${HOME:-}/.config}/$APP_DIR_NAME"
+fi
+
+plugins="$data_dir/plugins"
+displaced="$plugins/obn-displaced"
+
+# --- bundled plugin metadata ------------------------------------------------
+obn_tag=""
+plugin_ver=""
+[ -r "$OBN_SHARE/VERSION" ] && obn_tag=$(cat "$OBN_SHARE/VERSION")
+[ -r "$OBN_SHARE/PLUGIN_VERSION" ] && plugin_ver=$(cat "$OBN_SHARE/PLUGIN_VERSION")
+
+sync_ok=1
+case $plugin_ver in
+    [0-9][0-9].[0-9][0-9].[0-9][0-9].[0-9][0-9]) ;;
+    *) warn "bundled obn metadata missing or invalid ($OBN_SHARE/PLUGIN_VERSION='$plugin_ver'); skipping plugin setup"
+       sync_ok=0 ;;
+esac
+for f in libbambu_networking.so libBambuSource.so liblive555.so; do
+    if [ ! -f "$OBN_LIB/$f" ]; then
+        warn "bundled $OBN_LIB/$f missing; skipping plugin setup"
+        sync_ok=0
+    fi
+done
+series=$(printf '%s' "$plugin_ver" | cut -c1-8)
+
+stamp() { date +%Y%m%d%H%M%S; }
+
+# Move a non-symlink file out of the way (never deletes user files).
+displace() {
+    mkdir -p "$displaced" || return 1
+    mv -f "$1" "$displaced/$(basename "$1").$(stamp)" || return 1
+    warn "moved $1 to $displaced/"
+}
+
+# ensure_link <link path> <target>
+ensure_link() {
+    if [ -L "$1" ]; then
+        [ "$(readlink "$1")" = "$2" ] && return 0
+        rm -f "$1" || return 1
+    elif [ -e "$1" ]; then
+        displace "$1" || return 1
+    fi
+    ln -s "$2" "$1"
+}
+
+if [ "$sync_ok" = 1 ]; then
+    if mkdir -p "$plugins"; then
+        # Numbered same-series builds would be renamed over the series file by
+        # GUI_App::migrate_network_plugin_config(); custom names (with letters,
+        # '-' or '_') are left alone, matching is_series_managed_version().
+        for f in "$plugins"/libbambu_networking_"$series".*.so; do
+            [ -e "$f" ] || [ -L "$f" ] || continue
+            sfx=${f#"$plugins"/libbambu_networking_"$series".}
+            sfx=${sfx%.so}
+            case $sfx in
+                ''|*[!0-9.]*) continue ;;
+            esac
+            if [ -L "$f" ]; then rm -f "$f"; else displace "$f"; fi
+        done
+
+        ensure_link "$plugins/libbambu_networking_$series.so" "$OBN_LIB/libbambu_networking.so" \
+            || warn "could not link $plugins/libbambu_networking_$series.so"
+        ensure_link "$plugins/libBambuSource.so" "$OBN_LIB/libBambuSource.so" \
+            || warn "could not link $plugins/libBambuSource.so"
+
+        # obn installer rule: keep an existing live555 larger than 64 KiB
+        # (a vendor build, not obn's stub).
+        live="$plugins/liblive555.so"
+        keep_live=0
+        if [ -f "$live" ] && [ ! -L "$live" ]; then
+            size=$(wc -c < "$live" | tr -d ' ')
+            [ "$size" -gt 65536 ] && keep_live=1
+        fi
+        if [ "$keep_live" = 0 ]; then
+            ensure_link "$live" "$OBN_LIB/liblive555.so" || warn "could not link $live"
+        fi
+
+        new_stamp="obn_tag=$obn_tag plugin_version=$plugin_ver"
+        old_stamp=""
+        [ -r "$plugins/.obn-flatpak-stamp" ] && old_stamp=$(cat "$plugins/.obn-flatpak-stamp")
+        if [ "$old_stamp" != "$new_stamp" ]; then
+            printf '%s\n' "$new_stamp" > "$plugins/.obn-flatpak-stamp"
+            warn "obn plugin ${obn_tag:-?} (${plugin_ver}) linked into $plugins"
+        fi
+    else
+        warn "cannot create $plugins"
+    fi
+
+    # Pending stock-plugin OTA download (PresetUpdater::sync_plugins writes it,
+    # GUI_App::install_network_plugin_from_ota installs it on next start).
+    if [ -d "$data_dir/ota/plugins" ]; then
+        rm -rf "$data_dir/ota/plugins" && warn "removed stock plugin OTA cache $data_dir/ota/plugins"
+    fi
+
+    # --- OrcaStudio.conf (same keys as obn packaging/install.sh, Orca branch)
+    conf="$data_dir/$CONF_NAME"
+    if [ ! -f "$conf" ]; then
+        warn "$conf not found yet (first launch); the obn plugin is activated on the next launch"
+    elif [ ! -x "$PYTHON" ]; then
+        warn "$PYTHON not found; cannot patch $conf"
+    else
+        "$PYTHON" - "$conf" "$series" "$plugin_ver" <<'PYEOF' || warn "patching $conf failed"
+import json, os, re, shutil, sys
+
+conf_path, series, plugin_ver = sys.argv[1], sys.argv[2], sys.argv[3]
+me = "orcastudio-arm-launcher"
+
+with open(conf_path, "r", encoding="utf-8") as f:
+    raw = f.read()
+raw_json = re.sub(r"[\r\n]+# MD5 checksum[^\r\n]*[\r\n]*$", "", raw)
+try:
+    conf = json.loads(raw_json)
+except json.JSONDecodeError:
+    print(f"{me}: cannot parse {conf_path} as JSON, not patched", file=sys.stderr)
+    sys.exit(0)
+app = conf.get("app")
+if not isinstance(app, dict):
+    print(f"{me}: no 'app' object in {conf_path}, not patched", file=sys.stderr)
+    sys.exit(0)
+
+def norm(v):
+    # OrcaStudio saves "true"/"false" as JSON booleans (AppConfig::save);
+    # AppConfig::load maps both forms to the same string.
+    if v is True:
+        return "true"
+    if v is False:
+        return "false"
+    return v
+
+changed = False
+for key, val in (("installed_networking", "true"),
+                 ("network_plugin_version", series),
+                 ("network_plugin_remind_later", "true")):
+    if norm(app.get(key)) != val:
+        app[key] = val
+        changed = True
+
+skipped = app.get("network_plugin_skipped_versions", "")
+if isinstance(skipped, str) and skipped:
+    parts = [v for v in skipped.split(";") if v and v not in (series, plugin_ver)]
+    new_skipped = ";".join(parts)
+    if new_skipped != skipped:
+        app["network_plugin_skipped_versions"] = new_skipped
+        changed = True
+
+if not changed:
+    sys.exit(0)
+
+shutil.copy2(conf_path, conf_path + ".obn-bak")
+tmp = conf_path + ".obn-tmp"
+with open(tmp, "w", encoding="utf-8") as f:
+    f.write(json.dumps(conf, indent=4, ensure_ascii=False))
+    f.write("\n# MD5 checksum 00000000000000000000000000000000\n")
+os.replace(tmp, conf_path)
+print(f"{me}: patched {conf_path} for obn (backup: {conf_path}.obn-bak)", file=sys.stderr)
+PYEOF
+    fi
+fi
+
+# --- obn.conf: seed only if absent ------------------------------------------
+obn_conf="$data_dir/obn.conf"
+if [ ! -e "$obn_conf" ] && [ -f "$OBN_SHARE/obn.conf.default" ]; then
+    if mkdir -p "$data_dir" && cp "$OBN_SHARE/obn.conf.default" "$obn_conf"; then
+        warn "created $obn_conf (block_cloud = 0, client_name = BambuStudio)"
+    else
+        warn "could not create $obn_conf"
+    fi
+fi
+
+# --- slicer credentials: report only, never touch ---------------------------
+# obn reads slicer_key_pem from obn.conf; empty means <data_dir>/slicer_key.pem.
+key_path=""
+if [ -f "$obn_conf" ]; then
+    key_path=$(sed -n 's/^[[:space:]]*slicer_key_pem[[:space:]]*=[[:space:]]*//p' "$obn_conf" \
+        | tail -n 1 | sed 's/[[:space:]]*$//')
+fi
+if [ -n "$key_path" ]; then
+    [ -f "$key_path" ] || warn "slicer_key_pem in $obn_conf points to $key_path, which does not exist; obn cloud mode (no Developer Mode) will not work. LAN/Developer-Mode printing works without it."
+elif [ ! -f "$data_dir/slicer_key.pem" ]; then
+    warn "slicer_key.pem not found: for obn cloud mode (no Developer Mode) put slicer_cert.pem, slicer_key.pem and slicer_crl.pem in $data_dir/ (same path on the host). LAN/Developer-Mode printing works without them."
+fi
+
+exec "$ENTRYPOINT" "$@"
