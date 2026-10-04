@@ -230,3 +230,22 @@ This is above the 14 GB spec but well under the measured ~46 GB free. Cleanup re
 - The SDK aarch64 `defaults.json` flags. Only the x86_64 file was inspected; `-g` is assumed to be present and is neutralised by `-g0` either way.
 - Whether workflow-level `concurrency` in a called workflow is honoured under `workflow_call`. The docs do not say, hence the caller-side recommendation in section 6.
 - Whether artifact storage in a public repo counts toward the 500 MB quota.
+
+## 8. Fixes from the first real run (36987073337, 2026-10-02)
+
+- **orca_deps was never cached.** flatpak-builder 1.4.2 checksums every `type: dir` source with
+  `builder_cache_checksum_random()` (`src/builder-source-dir.c`: "We can't realistically checksum a
+  directory, so always rebuild"). Upstream's orca_deps uses `type: dir path: ../../deps`, so the app
+  job rebuilt all deps despite an exact cache restore. make-manifest.py now replaces it with a
+  byte-reproducible tar (`scripts/flatpak/orca-deps-src.tar`, `type: archive` + sha256) and refuses any
+  uncacheable source before OrcaStudio. Verified locally (flatpak-builder 1.4.2, GNOME 50 SDK): a module
+  with such an archive source gets "Cache hit" on a second invocation that uses the app job's flags
+  (`--ccache --repo=…`) after the deps job's `--stop-at`, with all source mtimes touched in between.
+  Deps-key schema bumped to v2.
+- **Upstream manifest omits `shared/`.** `SlicerLinuxRuntimeForwarderExports.cpp` includes
+  `../../../../shared/slicer_linux_runtime_core/RuntimeCoreJson.hpp`, so the app failed at the end of
+  compilation. make-manifest.py adds `shared/` as a source of the OrcaStudio module (skipped if upstream
+  adds it). A scan of every `#include "../…"` in src/ found no other out-of-tree path; the `tools/`
+  references in src/CMakeLists.txt are inside `if (WIN32)`.
+- **Measured on ubuntu-24.04-arm (public repo):** 4 vCPU, 15 GiB RAM, 118 GB free after cleanup;
+  orca_deps ≈ 26 min, OrcaStudio app ≈ 41 min (failed at the `shared/` include near the end).

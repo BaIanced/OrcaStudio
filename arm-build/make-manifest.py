@@ -7,7 +7,8 @@ Inputs (paths default relative to the repository root = parent of this script's 
   arm-build/obn-module.yml                         obn module(s), with @OBN_TAG@/@OBN_COMMIT@
 Output:
   scripts/flatpak/com.orcaslicer.OrcaStudio.arm.yml (same directory as the upstream
-  manifest, so every relative `path:` in upstream and obn-module.yml stays valid).
+  manifest, so every relative `path:` in upstream and obn-module.yml stays valid), and
+  scripts/flatpak/orca-deps-src.tar (see e). --check / --print-deps-key write nothing.
 
 Always-applied transformations (semantic changes):
   a) orca_deps: add the FFmpeg source archive (URL + SHA256 parsed from
@@ -16,6 +17,16 @@ Always-applied transformations (semantic changes):
   c) command: orcastudio-arm-launcher; a final module rewrites the desktop file
      Exec to "orcastudio-arm-launcher %U" (upstream's post-install sets "entrypoint %U").
   d) final module "orcastudio-arm-integration" writes /app/share/orcastudio-arm/BUILD_INFO.
+  e) orca_deps: the `type: dir, path: ../../deps` source is replaced by a deterministic
+     local tar of deps/ (scripts/flatpak/orca-deps-src.tar, `type: archive` + sha256,
+     strip-components 1, same dest). flatpak-builder 1.4.x checksums every `dir` source
+     with builder_cache_checksum_random() (src/builder-source-dir.c), so a module with a
+     dir source can never be a cache hit; an archive's checksum is its url/sha256/strip
+     (src/builder-source-archive.c). Every module before OrcaStudio is then checked for
+     sources that cannot be cached reproducibly (dir, unpinned git, url without hash,
+     local archive without sha256) and the script fails if one is found.
+  f) OrcaStudio: add shared/ as a source (upstream omits it, but the app includes a header
+     from it). Skipped if upstream adds it.
 Optional CI-resource transformations (do not change what the app does):
   --jobs N          cap orca_deps parallelism (top-level `cmake --build --parallel`
                     is otherwise unbounded `make -j`; see arm-build/NOTES-ci.md).
@@ -38,8 +49,11 @@ import json
 import os
 import re
 import shutil
+import io
+import stat
 import subprocess
 import sys
+import tarfile
 import tempfile
 
 try:
@@ -66,7 +80,11 @@ BUILD_INFO_PATH = "/app/share/orcastudio-arm/BUILD_INFO"
 DEPS_BUILD_CMD_RE = re.compile(r"^cmake --build \$BUILD_DIR --parallel\s*$")
 TAG_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$")
 SHA1_RE = re.compile(r"^[0-9a-f]{40}$")
-DEPS_KEY_SCHEMA = "orcastudio-arm-deps-v1"
+DEPS_KEY_SCHEMA = "orcastudio-arm-deps-v2"
+DEPS_DIR_PATH = "../../deps"           # upstream orca_deps dir source (relative to manifest dir)
+DEPS_DIR_DEST = "deps"
+DEPS_TAR_NAME = "orca-deps-src.tar"    # written next to the generated manifest
+DEPS_TAR_TOP = "deps"                  # single top-level dir inside the tar (strip-components 1)
 
 
 class AnchorError(Exception):
@@ -267,6 +285,123 @@ def add_ffmpeg_source(deps_mod, url, sha256):
     return "inserted after %s" % PY_DEST
 
 
+def deterministic_tar(src_dir, top=DEPS_TAR_TOP):
+    """Byte-reproducible tar of src_dir under `top/`: sorted entries, mtime 0, uid/gid 0,
+    empty uname/gname, GNU format (no pax headers/timestamps). Modes: dirs 0755, files 0755
+    if any exec bit is set else 0644 (git's model; avoids umask-dependent group/other bits),
+    symlinks kept as symlinks. Anything else (fifo, socket, device) is an error."""
+    if not os.path.isdir(src_dir):
+        fail("deps source directory %s not found" % src_dir)
+    buf = io.BytesIO()
+    with tarfile.open(fileobj=buf, mode="w", format=tarfile.GNU_FORMAT) as tar:
+        def add(path, arcname):
+            st = os.lstat(path)
+            ti = tarfile.TarInfo(arcname)
+            ti.mtime = 0
+            ti.uid = ti.gid = 0
+            ti.uname = ti.gname = ""
+            if stat.S_ISLNK(st.st_mode):
+                ti.type = tarfile.SYMTYPE
+                ti.linkname = os.readlink(path)
+                ti.mode = 0o777
+                tar.addfile(ti)
+            elif stat.S_ISDIR(st.st_mode):
+                ti.type = tarfile.DIRTYPE
+                ti.mode = 0o755
+                tar.addfile(ti)
+                for name in sorted(os.listdir(path)):
+                    add(os.path.join(path, name), arcname + "/" + name)
+            elif stat.S_ISREG(st.st_mode):
+                ti.type = tarfile.REGTYPE
+                ti.mode = 0o755 if st.st_mode & 0o111 else 0o644
+                ti.size = st.st_size
+                with open(path, "rb") as fh:
+                    tar.addfile(ti, fh)
+            else:
+                fail("deps tar: %s is not a regular file, directory or symlink" % path)
+        add(src_dir, top)
+    return buf.getvalue()
+
+
+def replace_deps_dir_source(deps_mod, manifest_dir):
+    """Swap orca_deps' `type: dir` source for a local reproducible archive. Returns tar bytes."""
+    sources = deps_mod.get("sources")
+    dirs = [i for i, s in enumerate(sources) if isinstance(s, dict) and s.get("type") == "dir"]
+    if len(dirs) != 1:
+        fail("orca_deps: expected exactly one `type: dir` source (deps/), found %d" % len(dirs))
+    src = sources[dirs[0]]
+    if src.get("path") != DEPS_DIR_PATH or src.get("dest") != DEPS_DIR_DEST:
+        fail("orca_deps dir source is %r -> %r, expected %r -> %r"
+             % (src.get("path"), src.get("dest"), DEPS_DIR_PATH, DEPS_DIR_DEST))
+    extra = set(src) - {"type", "path", "dest"}
+    if extra:
+        fail("orca_deps dir source has unsupported keys %s (e.g. skip); review the tar conversion"
+             % sorted(extra))
+    data = deterministic_tar(os.path.normpath(os.path.join(manifest_dir, DEPS_DIR_PATH)))
+    sources[dirs[0]] = {"type": "archive", "path": DEPS_TAR_NAME,
+                        "sha256": hashlib.sha256(data).hexdigest(),
+                        "strip-components": 1, "dest": DEPS_DIR_DEST}
+    return data
+
+
+SHARED_DIR_PATH = "../../shared"
+
+
+def add_shared_source(app_mod, manifest_dir):
+    """f) Upstream copies only cmake/ deps_src/ resources/ src/ localization/ into the
+    OrcaStudio module, but src/slic3r/Utils/SlicerLinuxRuntime/
+    SlicerLinuxRuntimeForwarderExports.cpp includes
+    ../../../../shared/slicer_linux_runtime_core/RuntimeCoreJson.hpp, so the app fails to
+    compile (CI run 36987073337, v02.08.01.55-p6). Add shared/ as a dir source (the app
+    module always rebuilds anyway). Idempotent: skipped if upstream already provides it."""
+    sources = app_mod.get("sources")
+    if not isinstance(sources, list):
+        fail("OrcaStudio module has no sources list")
+    if any(isinstance(s, dict) and (s.get("dest") == "shared" or s.get("path") == SHARED_DIR_PATH)
+           for s in sources):
+        return "already present upstream"
+    if not os.path.isdir(os.path.normpath(os.path.join(manifest_dir, SHARED_DIR_PATH))):
+        fail("shared/ not found in the source tree; upstream layout changed")
+    srcs = [i for i, s in enumerate(sources) if isinstance(s, dict) and s.get("dest") == "src"]
+    if len(srcs) != 1:
+        fail("OrcaStudio module: expected exactly one source with dest: src")
+    sources.insert(srcs[0] + 1, {"type": "dir", "path": SHARED_DIR_PATH, "dest": "shared"})
+    return "added after src/"
+
+
+_HASH_KEYS = ("sha256", "sha512")
+
+
+def check_cacheable(mods, where="before OrcaStudio"):
+    """Fail on any source whose flatpak-builder checksum is random or not content-bound."""
+    for mod in mods:
+        if not isinstance(mod, dict):
+            fail("external module file %r (%s) is not supported" % (mod, where))
+        name = mod.get("name")
+        for s in mod.get("sources", []) or []:
+            if not isinstance(s, dict):
+                fail("module %r (%s): external source file references are not supported" % (name, where))
+            t = s.get("type")
+            if t == "dir":
+                fail("module %r (%s) has a `type: dir` source; flatpak-builder checksums dir "
+                     "sources randomly, so the module could never be cached" % (name, where))
+            elif t in ("archive", "file"):
+                if "url" in s and not any(s.get(k) for k in _HASH_KEYS):
+                    fail("module %r: %s source %s has no sha256/sha512" % (name, t, s.get("url")))
+                if t == "archive" and "path" in s and not any(s.get(k) for k in _HASH_KEYS):
+                    fail("module %r: local archive %s has no sha256 (its content would not be part "
+                         "of the cache checksum)" % (name, s.get("path")))
+            elif t == "git":
+                if not s.get("commit"):
+                    fail("module %r: git source %s is not pinned to a commit" % (name, s.get("url")))
+            elif t in ("patch", "script", "shell", "inline"):
+                pass  # content / command text is part of the checksum
+            else:
+                fail("module %r: source type %r before OrcaStudio is not verified as cacheable"
+                     % (name, t))
+        check_cacheable(mod.get("modules", []) or [], where)
+
+
 def cap_deps_parallelism(deps_mod, jobs):
     cmds = deps_mod.get("build-commands")
     if not isinstance(cmds, list):
@@ -343,7 +478,7 @@ def integration_module(versions, release_tag):
     }
 
 
-def generate(upstream, versions, obn_modules, ffmpeg, release_tag, opts):
+def generate(upstream, versions, obn_modules, ffmpeg, release_tag, opts, manifest_dir):
     m = copy.deepcopy(upstream)
     if not isinstance(m, dict):
         fail("upstream manifest is not a mapping")
@@ -383,6 +518,9 @@ def generate(upstream, versions, obn_modules, ffmpeg, release_tag, opts):
         no_debug_info(m)
     if opts.ccache_launcher:
         ccache_launcher(app)
+    report["shared"] = add_shared_source(app, manifest_dir)
+    report["deps_tar"] = replace_deps_dir_source(modules[deps_idx], manifest_dir)
+    check_cacheable(modules[:app_idx])
     m["command"] = LAUNCHER
     modules.extend(copy.deepcopy(obn_modules))
     modules.append(integration_module(versions, release_tag))
@@ -423,7 +561,9 @@ def deps_key(manifest, app_idx, manifest_dir):
     def walk(mods):
         for mod in mods:
             for src in mod.get("sources", []) or []:
-                if isinstance(src, dict) and "path" in src and src.get("type") in ("dir", "file", "patch",
+                # archives carry their sha256 in the JSON above; dir sources are rejected
+                # by check_cacheable(); local files/patches are hashed by content here.
+                if isinstance(src, dict) and "path" in src and src.get("type") in ("file", "patch",
                                                                                    "script", "shell"):
                     p = os.path.normpath(os.path.join(manifest_dir, src["path"]))
                     _hash_path(h, p, src["path"])
@@ -502,10 +642,14 @@ def main(argv=None):
     upstream = load_yaml_text(read_text(upstream_path, "upstream manifest"), "upstream manifest")
     obn_modules = load_obn_modules(obn_path, versions)
     ffmpeg = ffmpeg_source_from_cmake(os.path.join(root, FFMPEG_CMAKE_REL))
-    manifest, app_idx, report = generate(upstream, versions, obn_modules, ffmpeg, release_tag, a)
+    manifest_dir = os.path.dirname(os.path.abspath(upstream_path))
+    manifest, app_idx, report = generate(upstream, versions, obn_modules, ffmpeg, release_tag, a,
+                                         manifest_dir)
+    tar_bytes = report.pop("deps_tar")
+    tar_path = os.path.join(manifest_dir, DEPS_TAR_NAME)
 
     if a.print_deps_key:
-        print(deps_key(manifest, app_idx, os.path.dirname(os.path.abspath(upstream_path))))
+        print(deps_key(manifest, app_idx, manifest_dir))
         return 0
 
     header = ("# GENERATED by arm-build/make-manifest.py from %s -- do not edit or commit.\n"
@@ -529,13 +673,17 @@ def main(argv=None):
                  "parsed" if shown is not None else "not installed, skipped"))
         return 0
 
-    fd, tmp = tempfile.mkstemp(prefix=".arm-gen-", suffix=".yml", dir=out_dir)
-    with os.fdopen(fd, "w", encoding="utf-8") as fh:
-        fh.write(text)
-    os.chmod(tmp, 0o644)
-    os.replace(tmp, out_path)
-    print("make-manifest: wrote %s (ffmpeg: %s; obn modules: %s; release_tag=%s)"
-          % (out_path, report["ffmpeg"], ", ".join(mm["name"] for mm in obn_modules), release_tag))
+    # The archive first: the manifest references it by path + sha256.
+    for path, data in ((tar_path, tar_bytes), (out_path, text.encode("utf-8"))):
+        fd, tmp = tempfile.mkstemp(prefix=".arm-gen-", dir=out_dir)
+        with os.fdopen(fd, "wb") as fh:
+            fh.write(data)
+        os.chmod(tmp, 0o644)
+        os.replace(tmp, path)
+    print("make-manifest: wrote %s and %s (sha256 %s, %d bytes; ffmpeg: %s; obn modules: %s; "
+          "release_tag=%s)"
+          % (out_path, tar_path, hashlib.sha256(tar_bytes).hexdigest(), len(tar_bytes),
+             report["ffmpeg"], ", ".join(mm["name"] for mm in obn_modules), release_tag))
     return 0
 
 
