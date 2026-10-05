@@ -394,6 +394,14 @@ jobs:
           grep -q '^Exec=.*--command=orcastudio-arm-launcher' \
             "$d/export/share/applications/com.orcaslicer.OrcaStudio.desktop"
           file -L "$d/files/bin/orca-studio" | grep -q 'ARM aarch64'
+          # Every shared library the app needs must resolve inside the sandbox (catches libs
+          # installed outside the runtime's search path, e.g. /app/lib64).
+          # shellcheck disable=SC2016  # $f / $(find) must expand inside the sandbox, not here
+          missing=$(flatpak run --user --command=sh "$ref" -c \
+            'for f in /app/bin/orca-studio $(find /app/lib /app/lib64 -name "*.so*" -type f 2>/dev/null); do ldd "$f" 2>/dev/null | sed "s|^|$f: |"; done' \
+            | grep "not found" || true)
+          if [ -n "$missing" ]; then echo "::error::unresolved shared libraries:"; echo "$missing"; exit 1; fi
+          echo "all shared libraries resolve"
           # Credentials must never ship in the bundle (security rule).
           if find "$d/files" \( -name 'slicer_cert*' -o -name 'slicer_key*' -o -name 'slicer_crl*' \) | grep -q .; then
             echo "::error::credential-like files found in bundle"; exit 1

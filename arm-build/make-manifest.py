@@ -27,6 +27,8 @@ Always-applied transformations (semantic changes):
      local archive without sha256) and the script fails if one is found.
   f) OrcaStudio: add shared/ as a source (upstream omits it, but the app includes a header
      from it). Skipped if upstream adds it.
+  g) wxWidgets: -DCMAKE_INSTALL_LIBDIR=lib (otherwise /app/lib64 on aarch64, not on the
+     runtime's library path).
 Optional CI-resource transformations (do not change what the app does):
   --jobs N          cap orca_deps parallelism (top-level `cmake --build --parallel`
                     is otherwise unbounded `make -j`; see arm-build/NOTES-ci.md).
@@ -344,6 +346,24 @@ def replace_deps_dir_source(deps_mod, manifest_dir):
     return data
 
 
+WX_MODULE = "wxWidgets"
+WX_LIBDIR_OPT = "-DCMAKE_INSTALL_LIBDIR=lib"
+
+
+def pin_wx_libdir(modules):
+    """g) wxWidgets (buildsystem cmake-ninja, no libdir given) installs into /app/lib64 on
+    aarch64 via GNUInstallDirs, but the Flatpak runtime's library path only has /app/lib and
+    orca-studio has no RUNPATH for lib64, so the first aarch64 release failed at launch with
+    "libwx_baseu-3.3.so.2: cannot open shared object file". Pin the libdir. Idempotent."""
+    idx = find_module(modules, WX_MODULE)
+    mod = modules[idx]
+    opts = mod.setdefault("config-opts", [])
+    if any(isinstance(o, str) and o.startswith("-DCMAKE_INSTALL_LIBDIR=") for o in opts):
+        return "libdir already set upstream"
+    opts.append(WX_LIBDIR_OPT)
+    return "added " + WX_LIBDIR_OPT
+
+
 SHARED_DIR_PATH = "../../shared"
 
 
@@ -519,6 +539,7 @@ def generate(upstream, versions, obn_modules, ffmpeg, release_tag, opts, manifes
     if opts.ccache_launcher:
         ccache_launcher(app)
     report["shared"] = add_shared_source(app, manifest_dir)
+    report["wx_libdir"] = pin_wx_libdir(modules)
     report["deps_tar"] = replace_deps_dir_source(modules[deps_idx], manifest_dir)
     check_cacheable(modules[:app_idx])
     m["command"] = LAUNCHER

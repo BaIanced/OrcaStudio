@@ -249,3 +249,8 @@ This is above the 14 GB spec but well under the measured ~46 GB free. Cleanup re
   references in src/CMakeLists.txt are inside `if (WIN32)`.
 - **Measured on ubuntu-24.04-arm (public repo):** 4 vCPU, 15 GiB RAM, 118 GB free after cleanup;
   orca_deps ≈ 26 min, OrcaStudio app ≈ 41 min (failed at the `shared/` include near the end).
+- **wxWidgets landed in /app/lib64 (release r3 failed to launch on the Chromebook:
+  `libwx_baseu-3.3.so.2: cannot open shared object file`).** The cmake-ninja module gave no
+  libdir, GNUInstallDirs chose lib64 on aarch64, and the runtime's library path only covers
+  /app/lib. make-manifest.py now adds `-DCMAKE_INSTALL_LIBDIR=lib`, and the smoke check runs `ldd`
+  inside the sandbox on orca-studio and every bundled .so, failing on any "not found".
