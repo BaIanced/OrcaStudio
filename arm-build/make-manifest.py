@@ -29,6 +29,7 @@ Always-applied transformations (semantic changes):
      from it). Skipped if upstream adds it.
   g) wxWidgets: -DCMAKE_INSTALL_LIBDIR=lib (otherwise /app/lib64 on aarch64, not on the
      runtime's library path).
+  h) finish-args: SSL_CERT_FILE = the runtime CA bundle (avoids Http.cpp's first-start prompt).
 Optional CI-resource transformations (do not change what the app does):
   --jobs N          cap orca_deps parallelism (top-level `cmake --build --parallel`
                     is otherwise unbounded `make -j`; see arm-build/NOTES-ci.md).
@@ -364,6 +365,21 @@ def pin_wx_libdir(modules):
     return "added " + WX_LIBDIR_OPT
 
 
+CA_BUNDLE_ENV = "--env=SSL_CERT_FILE=/etc/pki/tls/certs/ca-bundle.crt"
+
+
+def set_ca_bundle(manifest):
+    """h) The app's static OpenSSL (orca_deps) has a default CA file path that does not exist in
+    the Flatpak, so slic3r/Utils/Http.cpp falls back to the first bundle it finds and shows a
+    "use system SSL certificate" prompt on every first start. Point SSL_CERT_FILE at that same
+    runtime bundle (the path the prompt reported on the Chromebook). Idempotent."""
+    args = manifest.setdefault("finish-args", [])
+    if any(isinstance(a, str) and a.startswith("--env=SSL_CERT_FILE=") for a in args):
+        return "SSL_CERT_FILE already set upstream"
+    args.append(CA_BUNDLE_ENV)
+    return "added " + CA_BUNDLE_ENV
+
+
 SHARED_DIR_PATH = "../../shared"
 
 
@@ -540,6 +556,7 @@ def generate(upstream, versions, obn_modules, ffmpeg, release_tag, opts, manifes
         ccache_launcher(app)
     report["shared"] = add_shared_source(app, manifest_dir)
     report["wx_libdir"] = pin_wx_libdir(modules)
+    report["ca_bundle"] = set_ca_bundle(m)
     report["deps_tar"] = replace_deps_dir_source(modules[deps_idx], manifest_dir)
     check_cacheable(modules[:app_idx])
     m["command"] = LAUNCHER
