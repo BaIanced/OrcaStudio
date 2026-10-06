@@ -271,7 +271,7 @@ fi
 obn_conf="$data_dir/obn.conf"
 if [ ! -e "$obn_conf" ] && [ -f "$OBN_SHARE/obn.conf.default" ]; then
     if mkdir -p "$data_dir" && cp "$OBN_SHARE/obn.conf.default" "$obn_conf"; then
-        warn "created $obn_conf (block_cloud = 0, client_name = BambuStudio)"
+        warn "created $obn_conf (block_cloud = 0, client_name = BambuStudio, cloud_print = try_lan_first)"
     else
         warn "could not create $obn_conf"
     fi

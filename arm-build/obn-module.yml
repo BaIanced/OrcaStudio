@@ -135,9 +135,11 @@
       printf '%s\n' "${plugin_ver}" > /app/share/obn/PLUGIN_VERSION
       sed -e 's/^block_cloud = 1$/block_cloud = 0/' \
           -e 's/^client_name = OpenBambooNetworking$/client_name = BambuStudio/' \
+          -e 's/^cloud_print = cloud_only$/cloud_print = try_lan_first/' \
           packaging/obn.conf.in > obn.conf.default
       grep -qx 'block_cloud = 0' obn.conf.default
       grep -qx 'client_name = BambuStudio' obn.conf.default
+      grep -qx 'cloud_print = try_lan_first' obn.conf.default
       install -Dm644 obn.conf.default /app/share/obn/obn.conf.default
       install -Dm644 LICENSE "/app/share/licenses/${FLATPAK_ID}/open-bamboo-networking-LICENSE"
   sources:
@@ -152,6 +154,10 @@
     # longer applies, the build fails here on purpose so the patch gets reviewed.
     - type: patch
       path: ../../arm-build/obn-patches/0001-cloud-callbacks-read-fresh.patch
+    # try_lan_first also for start_print (the call a cloud-connected printer gets):
+    # LAN FTPS upload + signed project_file, cloud /my/task only as fallback.
+    - type: patch
+      path: ../../arm-build/obn-patches/0002-start-print-try-lan-first.patch
     # FetchContent deps pinned by obn's CMakeLists.txt (OBN_MOSQUITTO_GIT_TAG,
     # OBN_CJSON_GIT_TAG). Build step 2 fails if a new obn tag changes them.
     - type: git
