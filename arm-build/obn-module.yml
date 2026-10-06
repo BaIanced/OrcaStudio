@@ -145,6 +145,13 @@
       url: https://github.com/ClusterM/open-bamboo-networking.git
       tag: "@OBN_TAG@"
       commit: "@OBN_COMMIT@"
+    # Local fix for obn v2.2.0: read the slicer's cloud callbacks fresh per report.
+    # Without it a saved Bambu sign-in auto-connects before OrcaStudio registers
+    # set_on_message_fn and every push_status is dropped ("Failed to connect to the
+    # printer"). Written against v2.2.0; if a new obn tag no longer needs it or it no
+    # longer applies, the build fails here on purpose so the patch gets reviewed.
+    - type: patch
+      path: ../../arm-build/obn-patches/0001-cloud-callbacks-read-fresh.patch
     # FetchContent deps pinned by obn's CMakeLists.txt (OBN_MOSQUITTO_GIT_TAG,
     # OBN_CJSON_GIT_TAG). Build step 2 fails if a new obn tag changes them.
     - type: git
