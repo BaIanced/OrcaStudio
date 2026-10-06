@@ -69,8 +69,8 @@ Read this first, then `arm-build/README.md` and the `NOTES-*.md` files next to i
   - Logout/login does **not** help: the cloud session stays connected, so the stale snapshot
     persists.
   - Upstream main fixed `on_printer_connected` but still snapshots `on_msg`.
-- **0002-start-print-try-lan-first.patch** (building in run **37406830869** at handoff time,
-  **untested**).
+- **0002-start-print-try-lan-first.patch** (released in r7, **verified working by the user**
+  2026-10-05 21:52 −0600: the cube printed).
   - `bambu_network_start_print` (`abi_print.cpp`) in v2.2.0 always calls `run_cloud_print_job`.
   - That path fails at `POST /v1/user-service/my/task` → **HTTP 403** "The client does not have
     access rights to the content." on this account, even with `client_name = BambuStudio`
@@ -83,34 +83,147 @@ Read this first, then `arm-build/README.md` and the `NOTES-*.md` files next to i
     channel otherwise. If that fails, it falls back to the cloud path.
   - The bundled `obn.conf.default` now ships `cloud_print = try_lan_first`.
 
+### Session 2026-10-06 findings
+
+- Run 37406830869 succeeded on 2bb3a93d. Release `arm64-v02.08.01.55-p6-obn-v2.2.0-r7` was published
+  at 03:08:15Z.
+  - The `Applying patch 0002` line was **not seen**. The job-log API returns only the last 5000
+    lines, and the zip host (results-receiver.actions.githubusercontent.com) is blocked by the
+    session proxy.
+  - Indirect evidence: the obn module lists 0002 as a `type: patch` source, flatpak-builder aborts
+    the build if a patch fails, and the job was green.
+- When OrcaStudio calls `start_print` at all (`src/slic3r/GUI/Jobs/PrintJob.cpp:569-633`, cloud
+  connection, not `lan_mode_only`):
+  - Studio already runs `start_local_print_with_record` first when `!cloud_print_only &&
+    password && dev_ip && has_sdcard`. It calls `start_print` only as a fallback (`:611`, `:626`).
+  - Otherwise it goes straight to `start_print` (`:632`). In that case `params.comments` records
+    why: `no_ip` / `low_version` (= `is_support_cloud_print_only`, `SelectMachine.cpp:3777`) /
+    `no_sdcard` / `no_password` (`:574-581`).
+  - So 0002 changes the outcome only when `dev_ip` is set. With `no_ip`, 0002 logs
+    `try_lan_first skipped (missing dev_ip)` and the 403 cloud path still runs.
+  - `dev_ip` for a cloud printer comes from push_status `net.info[].ip`
+    (`DeviceManager.cpp:3546-3553`), which arrives only with 0001 in place.
+- Studio's own log: `<data_dir>/log/debug_<Day>_<Mon>_<dd>_<HH>_<MM>_<SS>_<pid>.log.0`
+  (`GUI_App.cpp:2879-2882`, `utils.cpp:384-391`). The default level is `info` (`AppConfig.cpp:349`),
+  so the `print_job:` branch lines are logged.
+
+- First user test (21:42 −0600) proved nothing about r7.
+  - Both cube prints were at 20:56 and 20:57 −0600. r7 was published at 03:08Z, which is
+    21:08 −0600, so both prints ran on r6.
+  - The obn line shows `start_print ... ip=192.168.4.30`, so Studio does pass `dev_ip`.
+    `no_ip` is ruled out, and 0002's LAN branch should be reachable.
+  - The Studio log is detected as binary, so grep it with `grep -a`.
+  - The Studio log for those prints shows `print_job: send with cloud`, i.e. the direct
+    `start_print` branch (`PrintJob.cpp:629-632`). With `dev_ip` set, the cause is
+    `cloud_print_only`, an empty access code, or no SD card; Studio does not log which.
+    Either way 0002 should take the LAN path, since it needs only dev_ip, an access code
+    (from `lan_access_code_for`) and a file.
+  - The result was `-2120` = `BAMBU_NETWORK_ERR_PRINT_WR_POST_TASK_FAILED`
+    (`bambu_networking.hpp:81`), which is the obn create_task 403.
+
 ### Next steps (Flatpak)
 
-1. Check run 37406830869. The log must show `Applying patch 0002-start-print-try-lan-first.patch`.
-   The release should be r7.
-2. The user runs `~/.local/bin/orcastudio-update.sh`, relaunches, prints the cube, and pastes the
-   `[obn]` lines.
-   - Success looks like: `start_print: cloud_print=try_lan_first -> local print over LAN` →
-     `local_print: upload path=ftps :990` → `queued for printing`.
-   - If it fails, read `print_job.cpp` `Agent::run_local_print_job` and `print_job::ftp_upload`
-     before suggesting anything.
-   - I need to verify whether the A1 accepts a cloud-channel `project_file` that points at an
-     FTPS-uploaded file (`build_ftp_url`).
+1. DONE. Patch 0002 is verified on r7.
+   - The installed `libbambu_networking.so` contains the 0002 string (`grep -a -c` = 1).
+   - BUILD_INFO shows `release_tag=...-r7`.
+   - The 21:51:57 print logged, in order: `start_print: cloud_print=try_lan_first -> local print
+     over LAN` → `local_print: upload path=ftps :990` → `ftps: logged in to 192.168.4.30:990` →
+     `STOR /Cube.gcode.3mf ok (97646 bytes)` → `queued for printing`. Studio logged
+     `print_job: send ok.`, which it logs at error severity (`PrintJob.cpp:701`, harmless).
+   - The cube printed.
+   - Still unknown: whether `project_file` went over LAN MQTT or the cloud channel. The grep filter
+     did not include obn's send_message lines.
+2. Watch for regressions on other print types (AMS mapping, timelapse, multi-plate). They are
+   untested with 0002.
 3. Optional: find the real 403 cause by running at `log_level = debug`.
    - `cloud_print.cpp` logs `X-BBL-Client-Name` / `X-BBL-OS-Type` and PoP headers for create_task.
    - Compare with upstream issues.
 4. Consider reporting 0001 upstream (ClusterM/open-bamboo-networking). The user said he doesn't
    want to learn PR mechanics, so do it for him and give him a link.
 
+### Session 2026-10-06 later findings
+
+- **Dark mode.** The Preferences toggle exists only on Windows (`Preferences.cpp:1624-1627`). On
+  Linux the app takes `dark_color_mode` from `wxSystemAppearance::IsDark()` at every start
+  (`GUI_App.cpp:3291-3294`). In wx 3.3.2 that check compares window text brightness against the
+  window background.
+  - Fix (user-confirmed, the whole UI is dark):
+    `flatpak override --user --env=GTK_THEME=Adwaita:dark com.orcaslicer.OrcaStudio`.
+  - Upstream bug: after a theme change it takes two launches. `init_label_colours()` and
+    `Update_dark_mode_flag()` (`:3227-3229`) run before the new value is written (`:3293`).
+    The `:3314` re-check compares against the already-written value.
+  - Offered the user an optional patch; not done.
+- **OrcaStudio-Android:** patch 0002 was added (`android/obn/obn.cmake`), pushed on branch
+  `claude/handoff-continuation-rseql3`, and **not merged to main**. A push to main that touches
+  `android/**` triggers the APK build.
+  - The app calls only `start_local_print` and writes `cloud_print = lan_only`, so 0002 has no
+    runtime effect there.
+- **Should Android be based on OrcaStudio?** Compared
+  jarczakpawel/OrcaStudio `bef044f4` with OrcaSlicer `2769b12` (the Android `src-orca`
+  submodule) using a tree-only fetch.
+  - `src/libslic3r`: OrcaStudio adds 0 files, lacks 53 (CAD/sketch, FilamentMixer,
+    TextureToColor, PreciseSeam, FillSpiralInset, FillCornerSmoothing, AssimpImport, ...), and
+    differs in 149. Its only engine commits are the initial import and "update 02.08.01.55";
+    the only engine marker is `SLIC3R_APP_FULL_NAME "OrcaStudio"`.
+  - `resources/profiles`: OrcaStudio lacks 3289 files and has 1655 extra.
+  - OrcaStudio's additions are all in the desktop GUI and network glue (`src/slic3r`): Linux
+    runtime forwarder, gstreamer camera, PluginWebDialog, BMCU retry and X1C wait fixes in
+    PrintJob/SelectMachine. Android doesn't build `src/slic3r`.
+  - So rebasing Android onto OrcaStudio would subtract features. The only portable candidate
+    is the BMCU retry logic, which needs the user's go-ahead.
+
+- **OrcaStudio-Android tracks OrcaSlicer main** (branch `claude/handoff-continuation-rseql3`,
+  not merged to main):
+  - `0c4012c` adds `.github/workflows/orca-upstream-watch.yml`. It runs daily, and when
+    OrcaSlicer main has moved it recreates and force-pushes bot branch `upstream/orca-main`
+    (= main + src-orca bump), then dispatches android-apk.yml there. Releases come only from
+    main.
+  - `android/scripts/bump_upstream.py` updates the UPSTREAM.md table and lists the
+    port-dependent files that changed.
+  - The deps cache key now hashes `src-orca` `deps/` + `cmake/modules` trees instead of the
+    commit.
+  - `534db60` moves src-orca from `2769b12` to `f8dd5605` (172 commits; OCCT recipe changed, so
+    the deps rebuild once).
+  - Test build: run 37435400715, dispatched 08:20Z; check-in scheduled for 10:01Z. The user
+    wants builds only for changes that might break.
+  - The watch only becomes active once the branch is merged into main, which also publishes a
+    release.
+  - Run 37435400715 failed: `deps_src/clipper` was removed upstream (OrcaSlicer `222c6a2d`,
+    Clipper2 2.0.1). Fixed by `2b16b85`, which drops it from `android/core/CMakeLists.txt`.
+  - Run 37447164478 is **green**: deps restored from the new cache key, native core and APK
+    built in 18 min, 8 ObnNative JNI exports, APK uploaded as an artifact, no release.
+  - Watch changed to weekly (Mondays, `82daec0`). Builds are free here: run usage showed 0
+    billable ms, including the ARM jobs.
+  - Not done: on-device tests; merge to main (awaits the user).
+- **2026-10-06 18:30Z, user approved both:**
+  - OrcaStudio-Android main was fast-forwarded to `2b16b85`; release build run 37511333837.
+  - MakerLab was implemented as `arm-build/orcastudio-patches/0001-makerlab-tab.patch`
+    (`bc2e1d77`): new MakerLabPanel.{hpp,cpp}, MainFrame tab and show_device() ordering, tab icon,
+    CMake entries.
+  - make-manifest transformation i) applies the patch; arm-flatpak.yml has a `publish` input.
+  - Test build run 37512203230 (publish=false); check-in at 19:24Z.
+  - **Not compiled locally** (no wx/deps here). Runtime is untested: ticket sign-in, the 3MF/STL
+    round trip, and whether MakerWorld shows its "open in slicer" actions.
+- **MakerLab tab (original proposal):** a MakerLab tab in the top bar loading
+  `makerworld.com/makerlab?from=bambustudio`, signed in via
+  `agent->request_bind_ticket` + `api/sign-in/ticket?to=..&ticket=..` (obn `abi_bind.cpp`
+  implements it; untested).
+  - Handlers: `homepage_makerlab_open_3mf_binary` (`3mf`, `3mf_name`) and
+    `homepage_makerlab_stl_download` (`file_data`, `sequence_id`, `file_name`).
+  - The tab gets a command allowlist: OrcaStudio forwards every web message to
+    `handle_web_request` (`WebViewDialog.cpp:692`).
+  - Carry it as a build-time patch in arm-build.
+
 ## User's Chromebook state
 
-- **Installed:** com.orcaslicer.OrcaStudio from release **r6**, via the updater
+- **Installed:** com.orcaslicer.OrcaStudio from release **r7**, via the updater
   (`~/.local/bin/orcastudio-update.sh`, systemd user timer).
 - **Data dir:** `~/.var/app/com.orcaslicer.OrcaStudio/config/BambuStudio_OrcaSlicer/`.
 - **Keys:** `slicer_cert.pem` / `slicer_key.pem` / `slicer_crl.pem` are in that data dir, with a
   backup copy in `~/obn-keys/`. **Never** put them in a repo or bundle, and never explain how to
   obtain them.
 - **obn.conf:** `block_cloud = 0`, `client_name = BambuStudio`, `cloud_print = try_lan_first`,
-  `log_to_file = 1`. `log_level` may still be `trace`; set it back to `info`.
+  `log_to_file = 1`, `log_level = info` (set 2026-10-05 21:42 −0600).
 - **A1:** serial `03919C450802955`, LAN IP 192.168.4.30, cloud-bound, Developer Mode OFF. The
   firmware advertises the new authorization-control system (flag3 bit16).
   - The app-certificate exchange succeeds: `device certificate installed, pubkey cached`.

@@ -22,6 +22,10 @@ on:
         description: "Commit/branch of this repo providing arm-build/ (default: the triggering commit)"
         type: string
         default: ""
+      publish:
+        description: "Publish the release (off: test build, bundle only as a run artifact)"
+        type: boolean
+        default: true
   workflow_call:
     inputs:
       clean_cache:
@@ -33,6 +37,11 @@ on:
         description: "Commit/branch of this repo providing arm-build/ (default: github.sha of the caller)"
         type: string
         default: ""
+        required: false
+      publish:
+        description: "Publish the release (off: test build, bundle only as a run artifact)"
+        type: boolean
+        default: true
         required: false
     outputs:
       release_tag:
@@ -424,6 +433,9 @@ jobs:
   release:
     name: Publish release
     needs: [deps, app]
+    # A test build (publish: false) must not become the "latest" release: the Chromebook
+    # updater installs whatever is latest. prune-caches is skipped with it.
+    if: inputs.publish
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:

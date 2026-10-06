@@ -30,6 +30,10 @@ Always-applied transformations (semantic changes):
   g) wxWidgets: -DCMAKE_INSTALL_LIBDIR=lib (otherwise /app/lib64 on aarch64, not on the
      runtime's library path).
   h) finish-args: SSL_CERT_FILE = the runtime CA bundle (avoids Http.cpp's first-start prompt).
+  i) OrcaStudio: every arm-build/orcastudio-patches/*.patch is appended to the module's sources
+     (`type: patch`, name order), so our feature patches (e.g. the MakerLab tab) apply to the
+     pinned upstream source at build time and this fork's src/ stays identical to upstream.
+     A patch that no longer applies fails the build.
 Optional CI-resource transformations (do not change what the app does):
   --jobs N          cap orca_deps parallelism (top-level `cmake --build --parallel`
                     is otherwise unbounded `make -j`; see arm-build/NOTES-ci.md).
@@ -405,6 +409,24 @@ def add_shared_source(app_mod, manifest_dir):
     return "added after src/"
 
 
+ORCA_PATCHES_PATH = "../../arm-build/orcastudio-patches"
+
+
+def add_orcastudio_patches(app_mod, manifest_dir):
+    """i) Append arm-build/orcastudio-patches/*.patch (sorted) as patch sources of the app
+    module, after the dir/file sources they modify. Returns the patch file names."""
+    d = os.path.normpath(os.path.join(manifest_dir, ORCA_PATCHES_PATH))
+    if not os.path.isdir(d):
+        return []
+    names = sorted(f for f in os.listdir(d) if f.endswith(".patch"))
+    sources = app_mod.get("sources")
+    if not isinstance(sources, list):
+        fail("OrcaStudio module has no sources list")
+    for name in names:
+        sources.append({"type": "patch", "path": ORCA_PATCHES_PATH + "/" + name})
+    return names
+
+
 _HASH_KEYS = ("sha256", "sha512")
 
 
@@ -555,6 +577,7 @@ def generate(upstream, versions, obn_modules, ffmpeg, release_tag, opts, manifes
     if opts.ccache_launcher:
         ccache_launcher(app)
     report["shared"] = add_shared_source(app, manifest_dir)
+    report["orcastudio_patches"] = add_orcastudio_patches(app, manifest_dir)
     report["wx_libdir"] = pin_wx_libdir(modules)
     report["ca_bundle"] = set_ca_bundle(m)
     report["deps_tar"] = replace_deps_dir_source(modules[deps_idx], manifest_dir)
