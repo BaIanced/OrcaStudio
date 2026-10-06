@@ -17,6 +17,18 @@ Fork-only overlay. Nothing outside `arm-build/` and `.github/workflows/arm-*.yml
    It skips the install while OrcaStudio is running.
 
 Manual build: Actions → *arm64 Flatpak* → Run workflow. Tick *clean_cache* to force a full rebuild.
+Untick *publish* for a test build: the bundle is kept as a run artifact (3 days) and no release is made,
+so the Chromebook updater does not install it.
+
+## Feature patches
+
+`orcastudio-patches/*.patch` are applied to the pinned upstream source at build time (`make-manifest.py`,
+transformation i), so `src/` here stays identical to upstream. A patch that no longer applies fails the build.
+
+- `0001-makerlab-tab.patch`: a **MakerLab** tab (last in the top bar) with MakerWorld's MakerLab tools.
+  It is signed in with the Bambu account through the network plugin's bind ticket, as Bambu Studio does,
+  and models it generates open in OrcaStudio (3MF) or are saved to the downloads folder (STL).
+  The page may only send the commands MakerLab uses.
 
 ## One-time Chromebook setup (Linux terminal, Debian 13, aarch64)
 

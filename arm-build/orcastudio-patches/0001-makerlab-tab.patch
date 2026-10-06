@@ -1,0 +1,349 @@
+diff --git a/resources/images/tab_makerlab_active.svg b/resources/images/tab_makerlab_active.svg
+new file mode 100644
+index 00000000..f145edfc
+--- /dev/null
++++ b/resources/images/tab_makerlab_active.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path d="M7.5,2.5v5l-5,8.5a1,1,0,0,0,.86,1.5H16.64a1,1,0,0,0,.86-1.5l-5-8.5v-5" style="fill:none;stroke:#fff;stroke-linejoin:round;stroke-miterlimit:10"/><line x1="6" y1="2.5" x2="14" y2="2.5" style="fill:none;stroke:#fff;stroke-linecap:square;stroke-miterlimit:10"/><line x1="5" y1="12.5" x2="15" y2="12.5" style="fill:none;stroke:#fff;stroke-linecap:square;stroke-miterlimit:10"/></svg>
+diff --git a/src/slic3r/CMakeLists.txt b/src/slic3r/CMakeLists.txt
+index 9ec14102..3f4d6536 100644
+--- a/src/slic3r/CMakeLists.txt
++++ b/src/slic3r/CMakeLists.txt
+@@ -335,6 +335,8 @@ set(SLIC3R_GUI_SOURCES
+     GUI/LinuxDisplayBackend.hpp
+     GUI/MainFrame.cpp
+     GUI/MainFrame.hpp
++    GUI/MakerLabPanel.cpp
++    GUI/MakerLabPanel.hpp
+     GUI/MarkdownTip.cpp
+     GUI/MarkdownTip.hpp
+     GUI/MediaFilePanel.cpp
+diff --git a/src/slic3r/GUI/MainFrame.cpp b/src/slic3r/GUI/MainFrame.cpp
+index 34868bbc..c2b68c5e 100644
+--- a/src/slic3r/GUI/MainFrame.cpp
++++ b/src/slic3r/GUI/MainFrame.cpp
+@@ -1353,6 +1353,13 @@ void MainFrame::init_tabpanel() {
+     m_calibration->SetBackgroundColour(*wxWHITE);
+     m_tabpanel->AddPage(m_calibration, _L("Calibration"), std::string("tab_calibration_active"), std::string("tab_calibration_active"), false);
+ 
++    // MakerWorld MakerLab tools. Kept as the last tab so the TabPosition indices of the tabs
++    // before it do not move; show_device() inserts Calibration in front of it.
++    if (wxGetApp().is_editor()) {
++        m_makerlab = new MakerLabPanel(m_tabpanel);
++        m_tabpanel->AddPage(m_makerlab, _L("MakerLab"), std::string("tab_makerlab_active"), std::string("tab_makerlab_active"), false);
++    }
++
+     if (m_plater) {
+         // load initial config
+         auto full_config = wxGetApp().preset_bundle->full_config();
+@@ -1404,10 +1411,11 @@ void MainFrame::show_device(bool bBBLPrinter) {
+             m_calibration->SetBackgroundColour(*wxWHITE);
+         }
+         m_calibration->Show(false);
+-        // Calibration is always the last page, so don't use InsertPage here. Otherwise, if multi_machine page is not enabled,
+-        // the calibration tab won't be properly added as well, due to the TabPosition::tpCalibration no longer matches the real tab position.
+-        m_tabpanel->AddPage(m_calibration, _L("Calibration"), std::string("tab_calibration_active"),
+-                               std::string("tab_calibration_active"), false);
++        // Calibration goes last, or right before MakerLab (always the last tab), not at TabPosition::tpCalibration: if the
++        // multi_machine page is not enabled, tpCalibration no longer matches the real tab position.
++        const int makerlab_idx = m_makerlab ? m_tabpanel->FindPage(m_makerlab) : wxNOT_FOUND;
++        m_tabpanel->InsertPage(makerlab_idx == wxNOT_FOUND ? m_tabpanel->GetPageCount() : size_t(makerlab_idx), m_calibration,
++                               _L("Calibration"), std::string("tab_calibration_active"), std::string("tab_calibration_active"), false);
+ 
+ #ifdef _MSW_DARK_MODE
+         wxGetApp().UpdateDarkUIWin(this);
+diff --git a/src/slic3r/GUI/MainFrame.hpp b/src/slic3r/GUI/MainFrame.hpp
+index 20229a61..fa956005 100644
+--- a/src/slic3r/GUI/MainFrame.hpp
++++ b/src/slic3r/GUI/MainFrame.hpp
+@@ -33,6 +33,7 @@
+ // BBS
+ #include "BBLTopbar.hpp"
+ #include "PrinterWebView.hpp"
++#include "MakerLabPanel.hpp"
+ #include "calib_dlg.hpp"
+ #include "MultiMachinePage.hpp"
+ 
+@@ -383,6 +384,7 @@ public:
+     ProjectPanel*         m_project{ nullptr };
+ 
+     CalibrationPanel*     m_calibration{ nullptr };
++    MakerLabPanel*        m_makerlab{ nullptr };
+     WebViewPanel*         m_webview { nullptr };
+     PrinterWebView*       m_printer_view{nullptr};
+     wxLogWindow*          m_log_window { nullptr };
+diff --git a/src/slic3r/GUI/MakerLabPanel.cpp b/src/slic3r/GUI/MakerLabPanel.cpp
+new file mode 100644
+index 00000000..52167799
+--- /dev/null
++++ b/src/slic3r/GUI/MakerLabPanel.cpp
+@@ -0,0 +1,221 @@
++#include "MakerLabPanel.hpp"
++
++#include "GUI_App.hpp"
++#include "Widgets/WebView.hpp"
++#include "slic3r/Utils/BBLNetworkPlugin.hpp"
++
++#include <algorithm>
++#include <cctype>
++#include <ctime>
++#include <set>
++
++#include <boost/filesystem.hpp>
++#include <boost/log/trivial.hpp>
++#include <boost/nowide/fstream.hpp>
++#include <nlohmann/json.hpp>
++#include <wx/base64.h>
++#include <wx/filename.h>
++#include <wx/sizer.h>
++
++using json = nlohmann::json;
++
++namespace Slic3r {
++namespace GUI {
++
++MakerLabPanel::MakerLabPanel(wxWindow *parent) : wxPanel(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize)
++{
++    auto *sizer = new wxBoxSizer(wxVERTICAL);
++    m_browser   = WebView::CreateWebView(this, "");
++    if (m_browser == nullptr) {
++        BOOST_LOG_TRIVIAL(error) << "MakerLab: could not create the web view";
++        return;
++    }
++    m_browser->Bind(wxEVT_WEBVIEW_SCRIPT_MESSAGE_RECEIVED, &MakerLabPanel::on_script_message, this);
++    m_browser->Bind(wxEVT_WEBVIEW_NEWWINDOW, &MakerLabPanel::on_new_window, this);
++    sizer->Add(m_browser, wxSizerFlags().Expand().Proportion(1));
++    SetSizer(sizer);
++}
++
++MakerLabPanel::~MakerLabPanel()
++{
++    SetEvtHandlerEnabled(false);
++    if (m_browser) {
++        m_browser->Destroy();
++        m_browser = nullptr;
++    }
++}
++
++bool MakerLabPanel::Show(bool show)
++{
++    if (show && m_browser && (!m_loaded || m_loaded_signed_in != wxGetApp().is_user_login(BBL_CLOUD_PROVIDER)))
++        load_page();
++    return wxPanel::Show(show);
++}
++
++void MakerLabPanel::load_page()
++{
++    // Same URLs as Bambu Studio (WebViewPanel::SetMakerlabUrl / GetJumpUrl).
++    const std::string host   = wxGetApp().get_model_http_url(wxGetApp().app_config->get_country_code());
++    const std::string target = host + "makerlab?from=bambustudio";
++
++    // The ticket comes from the Bambu network plugin itself, not from the selected printer's
++    // agent, so MakerLab stays signed in while a non-Bambu printer is selected.
++    std::string url;
++    bool        signed_in = wxGetApp().is_user_login(BBL_CLOUD_PROVIDER);
++    if (signed_in) {
++        std::string ticket;
++        int         ret = -1;
++        {
++            auto &plugin      = BBLNetworkPlugin::instance();
++            auto  module_lock = BBLNetworkPlugin::lock_module_for_call();
++            auto  agent       = plugin.get_agent();
++            auto  func        = plugin.get_request_bind_ticket();
++            if (agent && func)
++                ret = func(agent, &ticket);
++        }
++        if (ret == 0 && !ticket.empty())
++            url = host + "api/sign-in/ticket?to=" + wxGetApp().url_encode(target) + "&ticket=" + ticket;
++        else {
++            BOOST_LOG_TRIVIAL(warning) << "MakerLab: request_bind_ticket failed (" << ret << "), loading signed out";
++            signed_in = false;
++        }
++    }
++    // Signed out: also end a stale MakerWorld web session.
++    if (url.empty())
++        url = host + "api/sign-out?to=" + wxGetApp().url_encode(target);
++
++    m_loaded           = true;
++    m_loaded_signed_in = signed_in;
++    WebView::LoadUrl(m_browser, wxString::FromUTF8(url));
++}
++
++void MakerLabPanel::request_login()
++{
++    // ZUserLogin runs modally, so the sign-in state is known when request_login returns.
++    wxGetApp().request_login(true, BBL_CLOUD_PROVIDER);
++    if (m_loaded_signed_in != wxGetApp().is_user_login(BBL_CLOUD_PROVIDER))
++        load_page();
++}
++
++void MakerLabPanel::on_new_window(wxWebViewEvent &evt)
++{
++    const wxString url = evt.GetURL();
++    if (!url.empty())
++        wxGetApp().open_browser_with_warning_dialog(url);
++    evt.Veto();
++}
++
++void MakerLabPanel::on_script_message(wxWebViewEvent &evt)
++{
++    // Remote content: accept only what MakerLab uses (Bambu Studio's kMakerLabAllowed) and
++    // handle it here instead of passing it to GUI_App::handle_web_request.
++    json j;
++    try {
++        j = json::parse(evt.GetString().ToUTF8().data());
++    } catch (const std::exception &) {
++        BOOST_LOG_TRIVIAL(warning) << "MakerLab: script message is not JSON";
++        return;
++    }
++    if (!j.is_object() || !j.contains("command") || !j["command"].is_string())
++        return;
++    const std::string cmd = j["command"].get<std::string>();
++    auto str = [&j](const char *key) {
++        return j.contains(key) && j[key].is_string() ? j[key].get<std::string>() : std::string();
++    };
++
++    if (cmd == "homepage_makerlab_open_3mf_binary") {
++        const std::string data = str("3mf");
++        if (!data.empty())
++            open_3mf(data, str("3mf_name"));
++    } else if (cmd == "homepage_makerlab_stl_download") {
++        const std::string data = str("file_data");
++        int               seq  = -1;
++        if (j.contains("sequence_id")) {
++            if (j["sequence_id"].is_number_integer())
++                seq = j["sequence_id"].get<int>();
++            else if (j["sequence_id"].is_string())
++                seq = std::atoi(j["sequence_id"].get<std::string>().c_str());
++        }
++        if (!data.empty() && seq >= 0)
++            save_stl(seq, data, str("file_name"));
++    } else if (cmd == "common_openurl") {
++        const std::string url = str("url");
++        if (!url.empty())
++            wxGetApp().open_browser_with_warning_dialog(wxString::FromUTF8(url));
++    } else if (cmd == "makerworld_model_open") {
++        if (j.contains("model") && j["model"].is_object() && j["model"].contains("url") && j["model"]["url"].is_string())
++            wxGetApp().request_model_download(wxString::FromUTF8(wxGetApp().url_decode(j["model"]["url"].get<std::string>())));
++    } else if (cmd == "homepage_login_or_register") {
++        CallAfter([this] { request_login(); });
++    } else {
++        BOOST_LOG_TRIVIAL(warning) << "MakerLab: blocked web command " << (cmd.size() > 64 ? cmd.substr(0, 64) : cmd);
++    }
++}
++
++void MakerLabPanel::open_3mf(const std::string &base64, const std::string &name)
++{
++    const std::string path = save_base64(base64, name, "3mf");
++    if (!path.empty())
++        wxGetApp().request_open_project(path);
++}
++
++void MakerLabPanel::save_stl(int sequence_id, const std::string &base64, const std::string &name)
++{
++    const std::string path = save_base64(base64, name, "stl");
++    // The page waits for this reply (same shape as Bambu Studio's SaveMakerlabStl).
++    json reply;
++    reply["sequence_id"] = sequence_id;
++    reply["command"]     = "homepage_makerlab_stl_download";
++    reply["file_name"]   = name;
++    reply["result"]      = path.empty() ? "fail" : "success";
++    const wxString js    = wxString::Format("window.postMessage(%s)",
++                                            wxString::FromUTF8(reply.dump(-1, ' ', false, json::error_handler_t::ignore)));
++    CallAfter([this, js] {
++        if (m_browser)
++            WebView::RunScript(m_browser, js);
++    });
++}
++
++std::string MakerLabPanel::save_base64(const std::string &base64, const std::string &name, const std::string &ext)
++{
++    const wxMemoryBuffer data = wxBase64Decode(base64.c_str(), base64.size(), wxBase64DecodeMode_SkipWS);
++    if (data.GetDataLen() == 0) {
++        BOOST_LOG_TRIVIAL(error) << "MakerLab: invalid base64 " << ext << " data";
++        return {};
++    }
++
++    // Keep only the base name, without folders or extension, and only safe characters.
++    std::string stem = boost::filesystem::path(name).filename().stem().string();
++    stem.erase(std::remove_if(stem.begin(), stem.end(),
++                              [](unsigned char c) { return !(std::isalnum(c) || c == '-' || c == '_' || c == ' '); }),
++               stem.end());
++    if (stem.size() > 64)
++        stem.resize(64);
++    if (stem.empty())
++        stem = "makerlab";
++
++    wxString dir = wxString::FromUTF8(wxGetApp().app_config->get("download_path"));
++    if (dir.empty() || !wxFileName::DirExists(dir))
++        dir = wxFileName::GetTempDir();
++
++    char         stamp[32];
++    const time_t now = time(nullptr);
++    strftime(stamp, sizeof(stamp), "%Y%m%d_%H%M%S", localtime(&now));
++    wxFileName file(dir, wxString::FromUTF8(stem + "_" + stamp), wxString::FromUTF8(ext));
++    for (int i = 1; file.FileExists() && i < 100; ++i)
++        file.SetName(wxString::FromUTF8(stem + "_" + stamp + "_" + std::to_string(i)));
++
++    const std::string path = file.GetFullPath().utf8_string();
++    boost::nowide::ofstream out(path, std::ios::binary | std::ios::trunc);
++    out.write(static_cast<const char *>(data.GetData()), std::streamsize(data.GetDataLen()));
++    out.close();
++    if (!out) {
++        BOOST_LOG_TRIVIAL(error) << "MakerLab: could not write " << path;
++        return {};
++    }
++    BOOST_LOG_TRIVIAL(info) << "MakerLab: saved " << path << " (" << data.GetDataLen() << " bytes)";
++    return path;
++}
++
++} // namespace GUI
++} // namespace Slic3r
+diff --git a/src/slic3r/GUI/MakerLabPanel.hpp b/src/slic3r/GUI/MakerLabPanel.hpp
+new file mode 100644
+index 00000000..8ec552f6
+--- /dev/null
++++ b/src/slic3r/GUI/MakerLabPanel.hpp
+@@ -0,0 +1,42 @@
++#ifndef slic3r_MakerLabPanel_hpp_
++#define slic3r_MakerLabPanel_hpp_
++
++#include <string>
++#include <wx/panel.h>
++#include <wx/webview.h>
++
++namespace Slic3r {
++namespace GUI {
++
++// MakerWorld's MakerLab tools (makerworld.com/makerlab) in a tab of their own, signed in with
++// the Bambu account the same way Bambu Studio does it: a bind ticket from the network plugin
++// is exchanged at <host>api/sign-in/ticket. Models the tools generate come back as base64
++// 3MF/STL script messages; only the commands MakerLab uses are accepted from this page.
++class MakerLabPanel : public wxPanel
++{
++public:
++    MakerLabPanel(wxWindow *parent);
++    ~MakerLabPanel() override;
++
++    // Loads the page on first show and reloads it when the Bambu sign-in state changed.
++    bool Show(bool show = true) override;
++
++private:
++    void load_page();
++    void request_login();
++    void on_script_message(wxWebViewEvent &evt);
++    void on_new_window(wxWebViewEvent &evt);
++    void open_3mf(const std::string &base64, const std::string &name);
++    void save_stl(int sequence_id, const std::string &base64, const std::string &name);
++    // Decodes base64 into <download folder>/<sanitized name>_<time>.<ext>; returns the UTF-8 path or "".
++    std::string save_base64(const std::string &base64, const std::string &name, const std::string &ext);
++
++    wxWebView *m_browser{nullptr};
++    bool       m_loaded{false};
++    bool       m_loaded_signed_in{false};
++};
++
++} // namespace GUI
++} // namespace Slic3r
++
++#endif // slic3r_MakerLabPanel_hpp_
