@@ -195,7 +195,16 @@ Read this first, then `arm-build/README.md` and the `NOTES-*.md` files next to i
   - Watch changed to weekly (Mondays, `82daec0`). Builds are free here: run usage showed 0
     billable ms, including the ARM jobs.
   - Not done: on-device tests; merge to main (awaits the user).
-- **MakerLab tab (proposed, awaiting go-ahead):** a MakerLab tab in the top bar loading
+- **2026-10-06 18:30Z, user approved both:**
+  - OrcaStudio-Android main was fast-forwarded to `2b16b85`; release build run 37511333837.
+  - MakerLab was implemented as `arm-build/orcastudio-patches/0001-makerlab-tab.patch`
+    (`bc2e1d77`): new MakerLabPanel.{hpp,cpp}, MainFrame tab and show_device() ordering, tab icon,
+    CMake entries.
+  - make-manifest transformation i) applies the patch; arm-flatpak.yml has a `publish` input.
+  - Test build run 37512203230 (publish=false); check-in at 19:24Z.
+  - **Not compiled locally** (no wx/deps here). Runtime is untested: ticket sign-in, the 3MF/STL
+    round trip, and whether MakerWorld shows its "open in slicer" actions.
+- **MakerLab tab (original proposal):** a MakerLab tab in the top bar loading
   `makerworld.com/makerlab?from=bambustudio`, signed in via
   `agent->request_bind_ticket` + `api/sign-in/ticket?to=..&ticket=..` (obn `abi_bind.cpp`
   implements it; untested).
