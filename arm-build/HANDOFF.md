@@ -141,6 +141,37 @@ Read this first, then `arm-build/README.md` and the `NOTES-*.md` files next to i
 4. Consider reporting 0001 upstream (ClusterM/open-bamboo-networking). The user said he doesn't
    want to learn PR mechanics, so do it for him and give him a link.
 
+### Session 2026-10-06 later findings
+
+- **Dark mode.** The Preferences toggle exists only on Windows (`Preferences.cpp:1624-1627`). On
+  Linux the app takes `dark_color_mode` from `wxSystemAppearance::IsDark()` at every start
+  (`GUI_App.cpp:3291-3294`). In wx 3.3.2 that check compares window text brightness against the
+  window background.
+  - Fix (user-confirmed, the whole UI is dark):
+    `flatpak override --user --env=GTK_THEME=Adwaita:dark com.orcaslicer.OrcaStudio`.
+  - Upstream bug: after a theme change it takes two launches. `init_label_colours()` and
+    `Update_dark_mode_flag()` (`:3227-3229`) run before the new value is written (`:3293`).
+    The `:3314` re-check compares against the already-written value.
+  - Offered the user an optional patch; not done.
+- **OrcaStudio-Android:** patch 0002 was added (`android/obn/obn.cmake`), pushed on branch
+  `claude/handoff-continuation-rseql3`, and **not merged to main**. A push to main that touches
+  `android/**` triggers the APK build.
+  - The app calls only `start_local_print` and writes `cloud_print = lan_only`, so 0002 has no
+    runtime effect there.
+- **Should Android be based on OrcaStudio?** Compared
+  jarczakpawel/OrcaStudio `bef044f4` with OrcaSlicer `2769b12` (the Android `src-orca`
+  submodule) using a tree-only fetch.
+  - `src/libslic3r`: OrcaStudio adds 0 files, lacks 53 (CAD/sketch, FilamentMixer,
+    TextureToColor, PreciseSeam, FillSpiralInset, FillCornerSmoothing, AssimpImport, ...), and
+    differs in 149. Its only engine commits are the initial import and "update 02.08.01.55";
+    the only engine marker is `SLIC3R_APP_FULL_NAME "OrcaStudio"`.
+  - `resources/profiles`: OrcaStudio lacks 3289 files and has 1655 extra.
+  - OrcaStudio's additions are all in the desktop GUI and network glue (`src/slic3r`): Linux
+    runtime forwarder, gstreamer camera, PluginWebDialog, BMCU retry and X1C wait fixes in
+    PrintJob/SelectMachine. Android doesn't build `src/slic3r`.
+  - So rebasing Android onto OrcaStudio would subtract features. The only portable candidate
+    is the BMCU retry logic, which needs the user's go-ahead.
+
 ## User's Chromebook state
 
 - **Installed:** com.orcaslicer.OrcaStudio from release **r7**, via the updater
