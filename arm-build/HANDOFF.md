@@ -113,6 +113,13 @@ Read this first, then `arm-build/README.md` and the `NOTES-*.md` files next to i
   - The obn line shows `start_print ... ip=192.168.4.30`, so Studio does pass `dev_ip`.
     `no_ip` is ruled out, and 0002's LAN branch should be reachable.
   - The Studio log is detected as binary, so grep it with `grep -a`.
+  - The Studio log for those prints shows `print_job: send with cloud`, i.e. the direct
+    `start_print` branch (`PrintJob.cpp:629-632`). With `dev_ip` set, the cause is
+    `cloud_print_only`, an empty access code, or no SD card; Studio does not log which.
+    Either way 0002 should take the LAN path, since it needs only dev_ip, an access code
+    (from `lan_access_code_for`) and a file.
+  - The result was `-2120` = `BAMBU_NETWORK_ERR_PRINT_WR_POST_TASK_FAILED`
+    (`bambu_networking.hpp:81`), which is the obn create_task 403.
 
 ### Next steps (Flatpak)
 
