@@ -188,6 +188,22 @@ Read this first, then `arm-build/README.md` and the `NOTES-*.md` files next to i
     wants builds only for changes that might break.
   - The watch only becomes active once the branch is merged into main, which also publishes a
     release.
+  - Run 37435400715 failed: `deps_src/clipper` was removed upstream (OrcaSlicer `222c6a2d`,
+    Clipper2 2.0.1). Fixed by `2b16b85`, which drops it from `android/core/CMakeLists.txt`.
+  - Run 37447164478 is **green**: deps restored from the new cache key, native core and APK
+    built in 18 min, 8 ObnNative JNI exports, APK uploaded as an artifact, no release.
+  - Watch changed to weekly (Mondays, `82daec0`). Builds are free here: run usage showed 0
+    billable ms, including the ARM jobs.
+  - Not done: on-device tests; merge to main (awaits the user).
+- **MakerLab tab (proposed, awaiting go-ahead):** a MakerLab tab in the top bar loading
+  `makerworld.com/makerlab?from=bambustudio`, signed in via
+  `agent->request_bind_ticket` + `api/sign-in/ticket?to=..&ticket=..` (obn `abi_bind.cpp`
+  implements it; untested).
+  - Handlers: `homepage_makerlab_open_3mf_binary` (`3mf`, `3mf_name`) and
+    `homepage_makerlab_stl_download` (`file_data`, `sequence_id`, `file_name`).
+  - The tab gets a command allowlist: OrcaStudio forwards every web message to
+    `handle_web_request` (`WebViewDialog.cpp:692`).
+  - Carry it as a build-time patch in arm-build.
 
 ## User's Chromebook state
 
