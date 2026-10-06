@@ -69,8 +69,8 @@ Read this first, then `arm-build/README.md` and the `NOTES-*.md` files next to i
   - Logout/login does **not** help: the cloud session stays connected, so the stale snapshot
     persists.
   - Upstream main fixed `on_printer_connected` but still snapshots `on_msg`.
-- **0002-start-print-try-lan-first.patch** (building in run **37406830869** at handoff time,
-  **untested**).
+- **0002-start-print-try-lan-first.patch** (released in r7, **verified working by the user**
+  2026-10-05 21:52 −0600: the cube printed).
   - `bambu_network_start_print` (`abi_print.cpp`) in v2.2.0 always calls `run_cloud_print_job`.
   - That path fails at `POST /v1/user-service/my/task` → **HTTP 403** "The client does not have
     access rights to the content." on this account, even with `client_name = BambuStudio`
@@ -123,16 +123,18 @@ Read this first, then `arm-build/README.md` and the `NOTES-*.md` files next to i
 
 ### Next steps (Flatpak)
 
-1. Check run 37406830869. The log must show `Applying patch 0002-start-print-try-lan-first.patch`.
-   The release should be r7.
-2. The user runs `~/.local/bin/orcastudio-update.sh`, relaunches, prints the cube, and pastes the
-   `[obn]` lines.
-   - Success looks like: `start_print: cloud_print=try_lan_first -> local print over LAN` →
-     `local_print: upload path=ftps :990` → `queued for printing`.
-   - If it fails, read `print_job.cpp` `Agent::run_local_print_job` and `print_job::ftp_upload`
-     before suggesting anything.
-   - I need to verify whether the A1 accepts a cloud-channel `project_file` that points at an
-     FTPS-uploaded file (`build_ftp_url`).
+1. DONE. Patch 0002 is verified on r7.
+   - The installed `libbambu_networking.so` contains the 0002 string (`grep -a -c` = 1).
+   - BUILD_INFO shows `release_tag=...-r7`.
+   - The 21:51:57 print logged, in order: `start_print: cloud_print=try_lan_first -> local print
+     over LAN` → `local_print: upload path=ftps :990` → `ftps: logged in to 192.168.4.30:990` →
+     `STOR /Cube.gcode.3mf ok (97646 bytes)` → `queued for printing`. Studio logged
+     `print_job: send ok.`, which it logs at error severity (`PrintJob.cpp:701`, harmless).
+   - The cube printed.
+   - Still unknown: whether `project_file` went over LAN MQTT or the cloud channel. The grep filter
+     did not include obn's send_message lines.
+2. Watch for regressions on other print types (AMS mapping, timelapse, multi-plate). They are
+   untested with 0002.
 3. Optional: find the real 403 cause by running at `log_level = debug`.
    - `cloud_print.cpp` logs `X-BBL-Client-Name` / `X-BBL-OS-Type` and PoP headers for create_task.
    - Compare with upstream issues.
@@ -141,14 +143,14 @@ Read this first, then `arm-build/README.md` and the `NOTES-*.md` files next to i
 
 ## User's Chromebook state
 
-- **Installed:** com.orcaslicer.OrcaStudio from release **r6**, via the updater
+- **Installed:** com.orcaslicer.OrcaStudio from release **r7**, via the updater
   (`~/.local/bin/orcastudio-update.sh`, systemd user timer).
 - **Data dir:** `~/.var/app/com.orcaslicer.OrcaStudio/config/BambuStudio_OrcaSlicer/`.
 - **Keys:** `slicer_cert.pem` / `slicer_key.pem` / `slicer_crl.pem` are in that data dir, with a
   backup copy in `~/obn-keys/`. **Never** put them in a repo or bundle, and never explain how to
   obtain them.
 - **obn.conf:** `block_cloud = 0`, `client_name = BambuStudio`, `cloud_print = try_lan_first`,
-  `log_to_file = 1`. `log_level` may still be `trace`; set it back to `info`.
+  `log_to_file = 1`, `log_level = info` (set 2026-10-05 21:42 −0600).
 - **A1:** serial `03919C450802955`, LAN IP 192.168.4.30, cloud-bound, Developer Mode OFF. The
   firmware advertises the new authorization-control system (flag3 bit16).
   - The app-certificate exchange succeeds: `device certificate installed, pubkey cached`.
