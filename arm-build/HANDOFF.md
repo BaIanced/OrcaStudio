@@ -107,6 +107,13 @@ Read this first, then `arm-build/README.md` and the `NOTES-*.md` files next to i
   (`GUI_App.cpp:2879-2882`, `utils.cpp:384-391`). The default level is `info` (`AppConfig.cpp:349`),
   so the `print_job:` branch lines are logged.
 
+- First user test (21:42 −0600) proved nothing about r7.
+  - Both cube prints were at 20:56 and 20:57 −0600. r7 was published at 03:08Z, which is
+    21:08 −0600, so both prints ran on r6.
+  - The obn line shows `start_print ... ip=192.168.4.30`, so Studio does pass `dev_ip`.
+    `no_ip` is ruled out, and 0002's LAN branch should be reachable.
+  - The Studio log is detected as binary, so grep it with `grep -a`.
+
 ### Next steps (Flatpak)
 
 1. Check run 37406830869. The log must show `Applying patch 0002-start-print-try-lan-first.patch`.
