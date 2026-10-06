@@ -172,6 +172,23 @@ Read this first, then `arm-build/README.md` and the `NOTES-*.md` files next to i
   - So rebasing Android onto OrcaStudio would subtract features. The only portable candidate
     is the BMCU retry logic, which needs the user's go-ahead.
 
+- **OrcaStudio-Android tracks OrcaSlicer main** (branch `claude/handoff-continuation-rseql3`,
+  not merged to main):
+  - `0c4012c` adds `.github/workflows/orca-upstream-watch.yml`. It runs daily, and when
+    OrcaSlicer main has moved it recreates and force-pushes bot branch `upstream/orca-main`
+    (= main + src-orca bump), then dispatches android-apk.yml there. Releases come only from
+    main.
+  - `android/scripts/bump_upstream.py` updates the UPSTREAM.md table and lists the
+    port-dependent files that changed.
+  - The deps cache key now hashes `src-orca` `deps/` + `cmake/modules` trees instead of the
+    commit.
+  - `534db60` moves src-orca from `2769b12` to `f8dd5605` (172 commits; OCCT recipe changed, so
+    the deps rebuild once).
+  - Test build: run 37435400715, dispatched 08:20Z; check-in scheduled for 10:01Z. The user
+    wants builds only for changes that might break.
+  - The watch only becomes active once the branch is merged into main, which also publishes a
+    release.
+
 ## User's Chromebook state
 
 - **Installed:** com.orcaslicer.OrcaStudio from release **r7**, via the updater
