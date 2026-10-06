@@ -83,6 +83,30 @@ Read this first, then `arm-build/README.md` and the `NOTES-*.md` files next to i
     channel otherwise. If that fails, it falls back to the cloud path.
   - The bundled `obn.conf.default` now ships `cloud_print = try_lan_first`.
 
+### Session 2026-10-06 findings
+
+- Run 37406830869 succeeded on 2bb3a93d. Release `arm64-v02.08.01.55-p6-obn-v2.2.0-r7` was published
+  at 03:08:15Z.
+  - The `Applying patch 0002` line was **not seen**. The job-log API returns only the last 5000
+    lines, and the zip host (results-receiver.actions.githubusercontent.com) is blocked by the
+    session proxy.
+  - Indirect evidence: the obn module lists 0002 as a `type: patch` source, flatpak-builder aborts
+    the build if a patch fails, and the job was green.
+- When OrcaStudio calls `start_print` at all (`src/slic3r/GUI/Jobs/PrintJob.cpp:569-633`, cloud
+  connection, not `lan_mode_only`):
+  - Studio already runs `start_local_print_with_record` first when `!cloud_print_only &&
+    password && dev_ip && has_sdcard`. It calls `start_print` only as a fallback (`:611`, `:626`).
+  - Otherwise it goes straight to `start_print` (`:632`). In that case `params.comments` records
+    why: `no_ip` / `low_version` (= `is_support_cloud_print_only`, `SelectMachine.cpp:3777`) /
+    `no_sdcard` / `no_password` (`:574-581`).
+  - So 0002 changes the outcome only when `dev_ip` is set. With `no_ip`, 0002 logs
+    `try_lan_first skipped (missing dev_ip)` and the 403 cloud path still runs.
+  - `dev_ip` for a cloud printer comes from push_status `net.info[].ip`
+    (`DeviceManager.cpp:3546-3553`), which arrives only with 0001 in place.
+- Studio's own log: `<data_dir>/log/debug_<Day>_<Mon>_<dd>_<HH>_<MM>_<SS>_<pid>.log.0`
+  (`GUI_App.cpp:2879-2882`, `utils.cpp:384-391`). The default level is `info` (`AppConfig.cpp:349`),
+  so the `print_job:` branch lines are logged.
+
 ### Next steps (Flatpak)
 
 1. Check run 37406830869. The log must show `Applying patch 0002-start-print-try-lan-first.patch`.
