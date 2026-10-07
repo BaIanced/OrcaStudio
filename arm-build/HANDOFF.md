@@ -1,47 +1,42 @@
-# Handoff: OrcaStudio aarch64 Flatpak + OrcaStudio-Android (state as of 2026-10-07 02:40 UTC)
+# Handoff: OrcaStudio aarch64 Flatpak + OrcaStudio-Android (state as of 2026-10-07 03:20 UTC)
 
 Read this first, then `arm-build/README.md` and the `NOTES-*.md` files next to it. The user is
 referred to as they/them.
 
 ## Start here: open items, in order
 
-1. **Android test build run 11** ([run](https://github.com/BaIanced/OrcaStudio-Android/actions/runs/37561570844),
-   commit `fcfbec5` on Android branch `claude/handoff-continuation-rseql3`) is **green**
-   (finished 02:42Z). Its APK artifact `OrcaStudio-Android-apk` expires 2026-10-14. Waiting on
-   the user's device test:
-   1. install the APK artifact;
-   2. sign in once (it should now work on the first click);
-   3. with type "Bambu Lab (signed, no LAN mode)", press **Test**, then **Print**.
+1. **Android test build run 12** ([run](https://github.com/BaIanced/OrcaStudio-Android/actions/runs/37565909438),
+   commit `253ee71` on Android branch `claude/handoff-continuation-rseql3`) was dispatched at
+   03:15Z, and one check-in is scheduled for about 03:45Z. When it's green, the user should
+   install the APK, then press **Test** and then **Print** with type "Bambu Lab (signed, no LAN
+   mode)".
 
-   It fixes two things the user reported on run 10. Both fixes are **untested on a device**:
-   - **Print/Test failed with "Connection to the printer failed (obn -2)".** This is verified
-     against the obn v2.2.0 source:
-     - TLS verification is on by default (`lan_tls_skip_verify = false`, `include/obn/config.hpp`).
-     - obn finds the printer CA as `<cert_folder>/printer.cer`, where the folder is set by
-       `bambu_network_set_cert_file` (`agent.cpp` `bambu_ca_bundle_path()`). The desktop
-       slicers pass `resources/cert` (`GUI_App.cpp:4436`); the app never called it.
-     - So `LanSession::start` (`lan_session.cpp`) logged "TLS verify enabled but printer.cer
-       missing" and returned -2 without any network traffic.
-     - Fix:
-       - `pack_resources.py` packs OrcaSlicer `resources/cert/printer.cer` (Bambu's public CA
-         chain, 5 certs) as `assets/obn/printer.cer`.
-       - `ObnCredentials.startAgent()` copies it into obn's dir.
-       - `ObnBridge.cpp` init calls `bambu_network_set_cert_file(agent, dir, "")`. The file
-         name is empty on purpose: with a name, obn's `connect_cloud` would also use
-         folder+name as the cloud MQTT CA.
-     - ObnHost connect errors now append obn's last `LanSession` / `mqtt connect` log line.
-   - **The first sign-in click showed "✗ The coroutine scope left the composition".**
-     - Cause: the login ran in the dialog's `rememberCoroutineScope`, and `runCatching`
-       reported the scope's cancellation as an error.
-     - Now the dialog only hands the ticket to `BambuAccountSection.signIn()`, which runs the
-       login in the section's scope. `onIo()` rethrows `CancellationException` instead of
-       reporting it.
-     - `clientVersion()` (the first obn start) moved off the main thread.
-     - What closed the dialog's scope on the first attempt was **not** pinned down.
-   - Expected-but-unverified: the A1 accepts LAN MQTT (:8883) while cloud-bound. Evidence: the
-     Flatpak's r7 cube print went over LAN (`start_print: cloud_print=try_lan_first -> local
-     print over LAN`). If Android still fails, the new error text will name obn's reason.
-2. If run 11 works on the device, ask before merging the Android branch to `main`: a push to
+   Run 11 on a device (user report, 2026-10-07):
+   - Sign-in and **Test** worked. The sign-in and printer.cer fixes from `fcfbec5` are
+     confirmed.
+   - **Print** failed with "The printer did not complete the certificate exchange; check the
+     slicer credentials". That text is the app's own check (`ObnHost.kt` `upload`), raised when
+     `ObnNative.installCert` doesn't see obn's `device_cert_installed` message within 15 s.
+
+   Cause, verified against the obn v2.2.0 source; run 12's fix is **untested on a device**:
+   - Every app action connects and disconnects (`DeviceController.withHost`).
+   - obn's default `mqtt_keep_connection = 1` (`include/obn/config.hpp:62`) makes
+     `disconnect_printer` defer the teardown by 3 s (`agent.cpp:306-317`, `:37`).
+   - The deferred teardown (`agent.cpp:117-129`) drops the session but doesn't clear the
+     `app_cert_install_sent_` latch. The immediate path does clear it (`agent.cpp:330`).
+   - A clean MQTT disconnect reports `ConnectStatusOk` (`lan_session.cpp:130-133`), and the
+     latch is cleared only on a non-OK status (`agent.cpp:573-581`).
+   - So after Test, `install_device_cert` returns early (`agent.cpp:2062-2066`): no
+     `app_cert_install` is sent and no `device_cert_installed` message arrives.
+   - Fix: `ObnCredentials.writeDefaultConf` sets `mqtt_keep_connection = 0`, and appends it to
+     an existing `obn.conf` that doesn't set the key.
+   - Side note, not acted on: with keep-connection on, obn would also sign on a new session
+     without reinstalling the app cert. Its own comment (`agent.cpp:1180-1186`) says the
+     printer rejects that with 84033545. This could be an upstream obn report, together with
+     patch 0001.
+   - Unverified edge: `PrintMonitorService` keeps its own `ObnHost` open. A second connection
+     replaces obn's single LAN session (pre-existing; not changed).
+2. If run 12 prints on the device, ask before merging the Android branch to `main`: a push to
    `main` that touches `android/**` publishes a release. If it fails, fix on the branch and
    dispatch `android-apk.yml` there (no release).
 3. **Not yet reported by the user:** whether the MakerLab tab works in Flatpak release
@@ -108,7 +103,7 @@ referred to as they/them.
 | Repo | Purpose |
 |---|---|
 | `BaIanced/OrcaStudio` | Public fork of jarczakpawel/OrcaStudio. Everything we own is in `arm-build/` and `.github/workflows/arm-*.yml`. `main` = `c3304375` (PR #1 merged: MakerLab patch + `publish` switch). Work branch `claude/handoff-continuation-rseql3`. |
-| `BaIanced/OrcaStudio-Android` | cl1x/Orca-Android history plus signed Bambu printing via obn. `src-orca` submodule = OrcaSlicer. `main` = `2b16b85` (release `android-v0.1.2-r5`). Work branch `claude/handoff-continuation-rseql3` = main + `4b4a6a5`, `f9f6f51`, `c23d34f`, `fcfbec5` (account sign-in work, **unmerged**). Bot branch `upstream/orca-main` (never commit to it). |
+| `BaIanced/OrcaStudio-Android` | cl1x/Orca-Android history plus signed Bambu printing via obn. `src-orca` submodule = OrcaSlicer. `main` = `2b16b85` (release `android-v0.1.2-r5`). Work branch `claude/handoff-continuation-rseql3` = main + `4b4a6a5`, `f9f6f51`, `c23d34f`, `fcfbec5`, `3fdd2cc` (privacy scan), `253ee71` (account sign-in and signed printing work, **unmerged**). Bot branch `upstream/orca-main` (never commit to it). |
 | `ClusterM/open-bamboo-networking` (obn) | Network plugin, pinned **v2.2.0** (`5e6a359c71a0c07476f5d372bf7ad0f2b43efe94`), with local patches. Read its source with WebFetch on `raw.githubusercontent.com/ClusterM/open-bamboo-networking/v2.2.0/src/<file>`. Main files: `agent.cpp`, `lan_session.cpp`, `lan_tls.cpp`, `abi_*.cpp`, `config.cpp`; `include/obn/config.hpp` has the defaults. |
 
 In a new cloud session, add the Android repo with `add_repo` (BaIanced/OrcaStudio-Android) and
