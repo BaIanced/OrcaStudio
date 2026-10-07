@@ -1,47 +1,51 @@
-# Handoff: OrcaStudio aarch64 Flatpak + OrcaStudio-Android (state as of 2026-10-07 03:20 UTC)
+# Handoff: OrcaStudio aarch64 Flatpak + OrcaStudio-Android (state as of 2026-10-07 05:50 UTC)
 
 Read this first, then `arm-build/README.md` and the `NOTES-*.md` files next to it. The user is
 referred to as they/them.
 
 ## Start here: open items, in order
 
-1. **Android test build run 12** ([run](https://github.com/BaIanced/OrcaStudio-Android/actions/runs/37565909438),
-   commit `253ee71` on Android branch `claude/handoff-continuation-rseql3`) is **green**
-   (finished 03:37Z; APK artifact expires 2026-10-14). Waiting on the user's device test: install the APK, then press **Test** and then **Print** with type "Bambu Lab (signed, no LAN
-   mode)".
-
-   Run 11 on a device (user report, 2026-10-07):
-   - Sign-in and **Test** worked. The sign-in and printer.cer fixes from `fcfbec5` are
-     confirmed.
-   - **Print** failed with "The printer did not complete the certificate exchange; check the
-     slicer credentials". That text is the app's own check (`ObnHost.kt` `upload`), raised when
-     `ObnNative.installCert` doesn't see obn's `device_cert_installed` message within 15 s.
-
-   **Run 12 verified on a device (user report, 2026-10-07): Print goes through.** Signed LAN
-   printing from Android works end to end.
-
-   Cause, verified against the obn v2.2.0 source:
-   - Every app action connects and disconnects (`DeviceController.withHost`).
-   - obn's default `mqtt_keep_connection = 1` (`include/obn/config.hpp:62`) makes
-     `disconnect_printer` defer the teardown by 3 s (`agent.cpp:306-317`, `:37`).
-   - The deferred teardown (`agent.cpp:117-129`) drops the session but doesn't clear the
-     `app_cert_install_sent_` latch. The immediate path does clear it (`agent.cpp:330`).
-   - A clean MQTT disconnect reports `ConnectStatusOk` (`lan_session.cpp:130-133`), and the
-     latch is cleared only on a non-OK status (`agent.cpp:573-581`).
-   - So after Test, `install_device_cert` returns early (`agent.cpp:2062-2066`): no
-     `app_cert_install` is sent and no `device_cert_installed` message arrives.
-   - Fix: `ObnCredentials.writeDefaultConf` sets `mqtt_keep_connection = 0`, and appends it to
-     an existing `obn.conf` that doesn't set the key.
-   - Side note, not acted on: with keep-connection on, obn would also sign on a new session
-     without reinstalling the app cert. Its own comment (`agent.cpp:1180-1186`) says the
-     printer rejects that with 84033545. This could be an upstream obn report, together with
-     patch 0001.
-   - Unverified edge: `PrintMonitorService` keeps its own `ObnHost` open. A second connection
-     replaces obn's single LAN session (pre-existing; not changed).
-2. **Android [PR #2](https://github.com/BaIanced/OrcaStudio-Android/pull/2)** (work branch to
-   `main`) is open, and the user said they'll merge it themselves. Merging should publish a
-   pre-release through `android-apk.yml`. Note: PR #1's merge (`35d1deb`, 2026-10-06 23:18Z)
-   started **no** Android APK run, so check after the merge and ask before dispatching on `main`.
+1. **Android test build run 14** ([run](https://github.com/BaIanced/OrcaStudio-Android/actions/runs/37577813513),
+   commit `1139297` on Android branch `claude/handoff-continuation-rseql3`, which was restarted from
+   `main` after PR #2 merged) was dispatched at 05:44Z, and one check-in is scheduled for about 06:15Z.
+   The user asked for three features, all **untested** (no local Android SDK, so CI is the first compile):
+   - **Printer messages with prompt buttons.**
+     - `net/BambuReport.kt` parses `print_error` and `hms` from reports.
+     - `net/HmsCatalog.kt` loads the texts and buttons per model like the desktop's HMSQuery
+       (`e.bambulab.com/query.php` and `/hms/GetActionImage.php`, cached for a week). The
+       session proxy blocks that host, so the response format was taken from the bundled files
+       that HMSQuery saves unchanged.
+     - The Device tab shows a message line and a prompt with the desktop's buttons
+       (`DeviceErrorDialog::on_button_click` commands, checked identical at OrcaSlicer `f8dd560`).
+     - The print notification shows the text and posts a separate notification for a new prompt.
+     - Commands now wait 5 s for the printer's reply and surface `"result": "fail"`.
+   - **Filament sync**: "Sync filaments from printer" under the filament slots. It feeds AMS /
+     AMS lite / external-spool trays to `PresetBundle::sync_ams_list` (direct sync) via the new
+     engine call `syncFilaments` (`core/jni/OrcaProject.cpp`).
+   - **Cloud preset sync**: More > "Sync presets from Bambu account".
+     - The new JNI `ObnNative.cloudPresets` runs obn's `get_setting_list` + `get_user_presets`.
+     - Then `loadCloudPresets` runs `load_user_presets` + `save_user_presets`. App-only presets
+       have no `setting_id`, so the sync never removes them.
+     - The workflow's JNI export count is now 16.
+   - Also: `ObnHost` instances share obn's single LAN session (reference counted), so the device
+     tab's polls no longer drop the print notification's session.
+   - The user's prompt that motivated this: `07FF-8007` "Please observe the nozzle ..." (A1, start
+     of print). Handy offers "Filament Extruded, Continue" / "Not Extruded Yet, Retry"
+     (`ams_control` `done` / `resume`). The earlier in-app cancel during that prompt did nothing
+     visible. Why was **not** determined (no reply checking at the time).
+2. Done 2026-10-07:
+   - Run 12 printed on the device.
+   - PR #2 merged (`8871376`), and the merge's run 13 published pre-release
+     [android-v0.1.2-r13](https://github.com/BaIanced/OrcaStudio-Android/releases/tag/android-v0.1.2-r13).
+   - Cause of the run 11 Print failure, verified against obn v2.2.0:
+     - obn's default `mqtt_keep_connection = 1` (`config.hpp:62`) defers the disconnect.
+     - The deferred teardown (`agent.cpp:117-129`) keeps the `app_cert_install_sent_` latch,
+       and a clean disconnect reports `ConnectStatusOk` (`lan_session.cpp:130-133`).
+     - So `install_device_cert` returned early (`agent.cpp:2062-2066`).
+     - Fixed with `mqtt_keep_connection = 0`.
+   - A possible upstream obn report: the deferred path should erase the latch like
+     `disconnect_printer` does (`agent.cpp:330`).
+   - Ask before merging the work branch to `main` again: that publishes a release.
 3. **Not yet reported by the user:** whether the MakerLab tab works in Flatpak release
    **r9** (`arm64-v02.08.01.55-p6-obn-v2.2.0-r9`, published 2026-10-06 19:33Z). Untested
    areas:
@@ -106,7 +110,7 @@ referred to as they/them.
 | Repo | Purpose |
 |---|---|
 | `BaIanced/OrcaStudio` | Public fork of jarczakpawel/OrcaStudio. Everything we own is in `arm-build/` and `.github/workflows/arm-*.yml`. `main` = `c3304375` (PR #1 merged: MakerLab patch + `publish` switch). Work branch `claude/handoff-continuation-rseql3`. |
-| `BaIanced/OrcaStudio-Android` | cl1x/Orca-Android history plus signed Bambu printing via obn. `src-orca` submodule = OrcaSlicer. `main` = `35d1deb` (PR #1 merge; latest release `android-v0.1.2-r5` from `2b16b85`). Work branch `claude/handoff-continuation-rseql3` = main + `4b4a6a5`, `f9f6f51`, `c23d34f`, `fcfbec5`, `3fdd2cc` (privacy scan), `253ee71` (account sign-in and signed printing work, **unmerged**). Bot branch `upstream/orca-main` (never commit to it). |
+| `BaIanced/OrcaStudio-Android` | cl1x/Orca-Android history plus signed Bambu printing via obn. `src-orca` submodule = OrcaSlicer. `main` = `8871376` (PR #2 merge; latest release `android-v0.1.2-r13`). Work branch `claude/handoff-continuation-rseql3` = main + `1139297` (printer messages, filament sync, cloud preset sync; **unmerged**). Bot branch `upstream/orca-main` (never commit to it). |
 | `ClusterM/open-bamboo-networking` (obn) | Network plugin, pinned **v2.2.0** (`5e6a359c71a0c07476f5d372bf7ad0f2b43efe94`), with local patches. Read its source with WebFetch on `raw.githubusercontent.com/ClusterM/open-bamboo-networking/v2.2.0/src/<file>`. Main files: `agent.cpp`, `lan_session.cpp`, `lan_tls.cpp`, `abi_*.cpp`, `config.cpp`; `include/obn/config.hpp` has the defaults. |
 
 In a new cloud session, add the Android repo with `add_repo` (BaIanced/OrcaStudio-Android) and
@@ -188,7 +192,7 @@ clone it next to OrcaStudio. A shallow single-branch clone needs a fetch refspec
   - Triggers: `workflow_dispatch`, or a push to `main` touching `android/**`. Pushes to other
     branches don't build; dispatch them.
   - Build ≈ 18-26 min warm.
-  - It checks for exactly **15** `ObnNative` JNI exports. Adding a JNI function means updating
+  - It checks for exactly **16** `ObnNative` JNI exports. Adding a JNI function means updating
     that number.
   - Artifacts are debug-signed. Release-signing secrets aren't set up.
 - **obn on Android:**
