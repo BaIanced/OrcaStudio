@@ -88,6 +88,19 @@ referred to as they/them.
      or bundle. Never explain how to obtain them.
    - `obn.auth.json` and trace logs contain tokens. Ask only for filtered output, e.g.
      `grep -o 'mqtt msg topic=[^ ]* bytes=[0-9]*'`.
+7. **Both repos are public. Never put identifying details in them**: not in files, commit
+   messages, PR text or GitHub comments. That covers printer serials, IP addresses, the user's
+   e-mail address, account or display names, device models and tokens. Use placeholders such as
+   `<serial>` and `<printer-ip>`.
+   - The topic in the `grep` above contains the serial: ask the user to replace it with
+     `<serial>` before pasting.
+   - `.claude/hooks/privacy_scan.py` (in both repos) blocks this when the session runs inside
+     the repo (Claude Code hook), and the `privacy scan` workflow checks every push.
+   - In a multi-repo session started from the parent directory, the hook does **not** load. Run
+     it yourself before every push:
+     `python3 .claude/hooks/privacy_scan.py range "HEAD --not --remotes" <pathspecs>`
+     (pathspecs: OrcaStudio `arm-build '.github/workflows/arm-*' .claude`; Android
+     `. ':(exclude)src-orca'`).
 
 ## Repos
 
@@ -207,8 +220,7 @@ clone it next to OrcaStudio. A shallow single-branch clone needs a fetch refspec
     `user_login` JSON → `change_user`.
   - "Use printer from account" (`get_user_print_info`) fills in the serial and access code.
   - Google sign-in in the WebView does nothing (not investigated).
-- **Devices:** the user's phones are a OnePlus 15, a OnePlus 11 and a Note 10+, plus an
-  NVIDIA Shield, all arm64.
+- **Devices:** the user tests on several arm64 Android devices (phones and a TV box).
 
 ## User's environment
 
@@ -223,10 +235,10 @@ clone it next to OrcaStudio. A shallow single-branch clone needs a fetch refspec
   - `obn.conf`: `block_cloud = 0`, `client_name = BambuStudio`, `cloud_print = try_lan_first`,
     `log_to_file = 1`, `log_level = info`.
 - **A1:**
-  - Serial `03919C450802955`, LAN IP 192.168.4.30.
+  - Its serial and LAN IP are in the user's app settings; never write them down (rule 7).
   - Cloud-bound, Developer Mode OFF, new authorization-control firmware.
   - The certificate exchange works. Bambu Handy works.
-- **Android app:** signed in as "Balanced", PEMs imported, printer configured as above.
+- **Android app:** signed in to the user's Bambu account, PEMs imported, printer configured as above.
 
 ## Useful facts
 
