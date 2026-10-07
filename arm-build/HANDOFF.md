@@ -110,7 +110,7 @@ Read this first, then `arm-build/README.md` and the `NOTES-*.md` files next to i
 - First user test (21:42 −0600) proved nothing about r7.
   - Both cube prints were at 20:56 and 20:57 −0600. r7 was published at 03:08Z, which is
     21:08 −0600, so both prints ran on r6.
-  - The obn line shows `start_print ... ip=192.168.4.30`, so Studio does pass `dev_ip`.
+  - The obn line shows `start_print ... ip=<printer LAN IP>`, so Studio does pass `dev_ip`.
     `no_ip` is ruled out, and 0002's LAN branch should be reachable.
   - The Studio log is detected as binary, so grep it with `grep -a`.
   - The Studio log for those prints shows `print_job: send with cloud`, i.e. the direct
@@ -127,7 +127,7 @@ Read this first, then `arm-build/README.md` and the `NOTES-*.md` files next to i
    - The installed `libbambu_networking.so` contains the 0002 string (`grep -a -c` = 1).
    - BUILD_INFO shows `release_tag=...-r7`.
    - The 21:51:57 print logged, in order: `start_print: cloud_print=try_lan_first -> local print
-     over LAN` → `local_print: upload path=ftps :990` → `ftps: logged in to 192.168.4.30:990` →
+     over LAN` → `local_print: upload path=ftps :990` → `ftps: logged in to <printer LAN IP>:990` →
      `STOR /Cube.gcode.3mf ok (97646 bytes)` → `queued for printing`. Studio logged
      `print_job: send ok.`, which it logs at error severity (`PrintJob.cpp:701`, harmless).
    - The cube printed.
@@ -224,7 +224,7 @@ Read this first, then `arm-build/README.md` and the `NOTES-*.md` files next to i
   obtain them.
 - **obn.conf:** `block_cloud = 0`, `client_name = BambuStudio`, `cloud_print = try_lan_first`,
   `log_to_file = 1`, `log_level = info` (set 2026-10-05 21:42 −0600).
-- **A1:** serial `03919C450802955`, LAN IP 192.168.4.30, cloud-bound, Developer Mode OFF. The
+- **A1:** cloud-bound, Developer Mode OFF. Its serial and LAN IP are deliberately not recorded here. The
   firmware advertises the new authorization-control system (flag3 bit16).
   - The app-certificate exchange succeeds: `device certificate installed, pubkey cached`.
   - Bambu Handy works.
