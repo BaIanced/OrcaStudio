@@ -6,9 +6,8 @@ referred to as they/them.
 ## Start here: open items, in order
 
 1. **Android test build run 12** ([run](https://github.com/BaIanced/OrcaStudio-Android/actions/runs/37565909438),
-   commit `253ee71` on Android branch `claude/handoff-continuation-rseql3`) was dispatched at
-   03:15Z, and one check-in is scheduled for about 03:45Z. When it's green, the user should
-   install the APK, then press **Test** and then **Print** with type "Bambu Lab (signed, no LAN
+   commit `253ee71` on Android branch `claude/handoff-continuation-rseql3`) is **green**
+   (finished 03:37Z; APK artifact expires 2026-10-14). Waiting on the user's device test: install the APK, then press **Test** and then **Print** with type "Bambu Lab (signed, no LAN
    mode)".
 
    Run 11 on a device (user report, 2026-10-07):
