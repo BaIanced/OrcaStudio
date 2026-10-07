@@ -17,7 +17,10 @@ referred to as they/them.
      slicer credentials". That text is the app's own check (`ObnHost.kt` `upload`), raised when
      `ObnNative.installCert` doesn't see obn's `device_cert_installed` message within 15 s.
 
-   Cause, verified against the obn v2.2.0 source; run 12's fix is **untested on a device**:
+   **Run 12 verified on a device (user report, 2026-10-07): Print goes through.** Signed LAN
+   printing from Android works end to end.
+
+   Cause, verified against the obn v2.2.0 source:
    - Every app action connects and disconnects (`DeviceController.withHost`).
    - obn's default `mqtt_keep_connection = 1` (`include/obn/config.hpp:62`) makes
      `disconnect_printer` defer the teardown by 3 s (`agent.cpp:306-317`, `:37`).
@@ -35,7 +38,7 @@ referred to as they/them.
      patch 0001.
    - Unverified edge: `PrintMonitorService` keeps its own `ObnHost` open. A second connection
      replaces obn's single LAN session (pre-existing; not changed).
-2. If run 12 prints on the device, ask before merging the Android branch to `main`: a push to
+2. Run 12 printed on the device, so ask before merging the Android branch to `main`: a push to
    `main` that touches `android/**` publishes a release. If it fails, fix on the branch and
    dispatch `android-apk.yml` there (no release).
 3. **Not yet reported by the user:** whether the MakerLab tab works in Flatpak release
