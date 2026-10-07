@@ -38,9 +38,10 @@ referred to as they/them.
      patch 0001.
    - Unverified edge: `PrintMonitorService` keeps its own `ObnHost` open. A second connection
      replaces obn's single LAN session (pre-existing; not changed).
-2. Run 12 printed on the device, so ask before merging the Android branch to `main`: a push to
-   `main` that touches `android/**` publishes a release. If it fails, fix on the branch and
-   dispatch `android-apk.yml` there (no release).
+2. **Android [PR #2](https://github.com/BaIanced/OrcaStudio-Android/pull/2)** (work branch to
+   `main`) is open, and the user said they'll merge it themselves. Merging should publish a
+   pre-release through `android-apk.yml`. Note: PR #1's merge (`35d1deb`, 2026-10-06 23:18Z)
+   started **no** Android APK run, so check after the merge and ask before dispatching on `main`.
 3. **Not yet reported by the user:** whether the MakerLab tab works in Flatpak release
    **r9** (`arm64-v02.08.01.55-p6-obn-v2.2.0-r9`, published 2026-10-06 19:33Z). Untested
    areas:
@@ -105,7 +106,7 @@ referred to as they/them.
 | Repo | Purpose |
 |---|---|
 | `BaIanced/OrcaStudio` | Public fork of jarczakpawel/OrcaStudio. Everything we own is in `arm-build/` and `.github/workflows/arm-*.yml`. `main` = `c3304375` (PR #1 merged: MakerLab patch + `publish` switch). Work branch `claude/handoff-continuation-rseql3`. |
-| `BaIanced/OrcaStudio-Android` | cl1x/Orca-Android history plus signed Bambu printing via obn. `src-orca` submodule = OrcaSlicer. `main` = `2b16b85` (release `android-v0.1.2-r5`). Work branch `claude/handoff-continuation-rseql3` = main + `4b4a6a5`, `f9f6f51`, `c23d34f`, `fcfbec5`, `3fdd2cc` (privacy scan), `253ee71` (account sign-in and signed printing work, **unmerged**). Bot branch `upstream/orca-main` (never commit to it). |
+| `BaIanced/OrcaStudio-Android` | cl1x/Orca-Android history plus signed Bambu printing via obn. `src-orca` submodule = OrcaSlicer. `main` = `35d1deb` (PR #1 merge; latest release `android-v0.1.2-r5` from `2b16b85`). Work branch `claude/handoff-continuation-rseql3` = main + `4b4a6a5`, `f9f6f51`, `c23d34f`, `fcfbec5`, `3fdd2cc` (privacy scan), `253ee71` (account sign-in and signed printing work, **unmerged**). Bot branch `upstream/orca-main` (never commit to it). |
 | `ClusterM/open-bamboo-networking` (obn) | Network plugin, pinned **v2.2.0** (`5e6a359c71a0c07476f5d372bf7ad0f2b43efe94`), with local patches. Read its source with WebFetch on `raw.githubusercontent.com/ClusterM/open-bamboo-networking/v2.2.0/src/<file>`. Main files: `agent.cpp`, `lan_session.cpp`, `lan_tls.cpp`, `abi_*.cpp`, `config.cpp`; `include/obn/config.hpp` has the defaults. |
 
 In a new cloud session, add the Android repo with `add_repo` (BaIanced/OrcaStudio-Android) and
