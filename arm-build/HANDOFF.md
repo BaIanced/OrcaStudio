@@ -53,8 +53,11 @@ referred to as they/them.
    - The first run built `upstream/orca-main` = main + OrcaSlicer `78f74a6` (2026-10-06).
      [Run 37549726219](https://github.com/BaIanced/OrcaStudio-Android/actions/runs/37549726219)
      is **green**.
-   - The bump flagged `src/slic3r/GUI/Tab.cpp` for review (the settings-layout extractor reads
-     it). The review isn't done.
+   - The bump flagged `src/slic3r/GUI/Tab.cpp` for review. **Reviewed 2026-10-07: no impact.**
+     In `f8dd5605..78f74a62` (40 commits), only `2d90345d` touches it, changing one wiki anchor
+     (2nd argument of `append_single_option_line("infill_complete_top", ...)`). The extractor's
+     `OPTION_RE` (`android/scripts/extract_settings_layout.py:27`) reads only the option key.
+     None of the other port-dependent files in `android/UPSTREAM.md` step 2 changed in that range.
    - Merging it into main is the user's call.
 5. Older optional items:
    - Find the real cloud 403 cause (see the Flatpak section).
