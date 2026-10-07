@@ -8,7 +8,7 @@ referred to as they/them.
 1. **Android test build run 14** ([run](https://github.com/BaIanced/OrcaStudio-Android/actions/runs/37577813513),
    commit `1139297` on Android branch `claude/handoff-continuation-rseql3`, which was restarted from
    `main` after PR #2 merged) is **green** (finished 06:11Z, so it compiles; APK artifact expires
-   2026-10-21). The user asked for three features, all **untested on a device**:
+   2026-10-14). The user asked for three features, all **untested on a device**:
    - **Printer messages with prompt buttons.**
      - `net/BambuReport.kt` parses `print_error` and `hms` from reports.
      - `net/HmsCatalog.kt` loads the texts and buttons per model like the desktop's HMSQuery
