@@ -1,10 +1,26 @@
-# Handoff: OrcaStudio aarch64 Flatpak + OrcaStudio-Android (state as of 2026-10-07 06:20 UTC)
+# Handoff: OrcaStudio aarch64 Flatpak + OrcaStudio-Android (state as of 2026-10-08 09:30 UTC)
 
 Read this first, then `arm-build/README.md` and the `NOTES-*.md` files next to it. The user is
 referred to as they/them.
 
 ## Start here: open items, in order
 
+0. **Android test build run 15** ([run](https://github.com/BaIanced/OrcaStudio-Android/actions/runs/37753117522),
+   commit `7b7ceed`) is **green** (2026-10-08 09:22Z). User report on run 14 (2026-10-08): app
+   installs, sign-in and PEM import work, filament sync works, but:
+   - 2 synced slots show the wrong colour (details not reported yet);
+   - tapping a filament slot afterwards (to change it or open its settings) closes the app with
+     no message;
+   - "Sync presets from Bambu account" closes the app the same way.
+   The cause is **not determined**. Run 15:
+   - adds `CrashReport.kt` (the report is shown with a Copy button on the next start);
+   - restores the bundle state that `sync_ams_list` / `load_user_presets` change;
+   - makes filament sync wait for a fresh AMS report.
+   **Coordination:** the user's local Windows session (Remote Control,
+   `session_01K9rgDzNwS1Ys37uHwxSUAE`) does device debugging with adb and does not push. This
+   cloud session is the only one that commits, dispatches CI and edits this file.
+   Queued next: mouse support (left/right/middle-pan/back) and a plate context menu on right-click /
+   long-press (e.g. add shape), modelled on OrcaSlicer desktop.
 1. **Android test build run 14** ([run](https://github.com/BaIanced/OrcaStudio-Android/actions/runs/37577813513),
    commit `1139297` on Android branch `claude/handoff-continuation-rseql3`, which was restarted from
    `main` after PR #2 merged) is **green** (finished 06:11Z, so it compiles; APK artifact expires
