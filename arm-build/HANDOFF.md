@@ -1,10 +1,33 @@
-# Handoff: OrcaStudio aarch64 Flatpak + OrcaStudio-Android (state as of 2026-10-09 04:30 UTC)
+# Handoff: OrcaStudio aarch64 Flatpak + OrcaStudio-Android (state as of 2026-10-09 05:40 UTC)
 
 Read this first, then `arm-build/README.md` and the `NOTES-*.md` files next to it. The user is
 referred to as they/them.
 
 ## Start here: open items, in order
 
+0. **Handoff to the local session (2026-10-09, user's request: cloud usage).** The cloud session
+   `session_01Dycp4Bu9GrptBgymXRxiss` has stopped. The user's local Windows session
+   (`session_01Dyz5iJaQCQ1WuH3ktn4KU9`, "orcastudio-d5", gh logged in, root adb on WSA) is now the
+   **only writer**: it commits/pushes `claude/handoff-continuation-rseql3` in both repos, dispatches
+   `android-apk.yml` with `gh workflow run android-apk.yml --ref claude/handoff-continuation-rseql3 -R
+   BaIanced/OrcaStudio-Android`, and keeps this file current. Run the privacy scan before every push
+   (rule 7).
+   - **Build 17** (commit `7383c7c`, dispatched 05:24Z, result not checked yet) adds:
+     - **Opt-in Bambu cloud** (2 switches in the connection dialog of the signed type, stored in
+       `obn.conf`):
+       - `block_cloud = 0`: ObnHost falls back to obn's cloud MQTT when the LAN fails
+         (`cloudConnect` JNI), and commands go through obn's `send_message`.
+       - `cloud_print = try_lan_first`: obn `start_print` (patch 0002) prints over the LAN when it
+         can, else through Bambu's cloud. That path previously returned 403 for this account.
+       - JNI exports are now 18.
+     - The settings editor shows single string-list values without quotes.
+   - **Test on WSA:**
+     - turn the cloud switch on, then Test ("connected through the Bambu cloud");
+     - status, Sync filaments (check the 2 wrong colours);
+     - optionally a cloud print;
+     - the editor's Vendor value has no quotes.
+   - **Next after that:** mouse support and the plate context menu (task #5 in the cloud session);
+     the permanent signing-key secrets.
 0. **Run 16 verified on WSA by the local session (2026-10-09):**
    - The filament picker crash is fixed (groups render, picking a synced preset works).
    - "Sync presets from Bambu account" loads 199 presets without a crash.
