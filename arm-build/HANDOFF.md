@@ -37,7 +37,17 @@ to be addressed as Supreme Master.
        - Desktop mouse controls: right/middle-drag pans, right click opens a context menu.
        - Long press opens the same context menu: object actions on an object, add / import /
          arrange on the empty bed.
-     - **Build 26** (`19f76c2`): the preset editor offers "Only changed" when a preset has changes.
+     - **Build 28** (`a00c119`, verified on WSA). Adds:
+       - the preset editor's "Only changed" filter;
+       - a Flushing volumes matrix dialog (the button used to silently recalculate the matrix);
+       - the view follows a newly added plate;
+       - X/Y/Z units in the row label;
+       - **crash fix:** painting crashed with SIGBUS in glBufferData. `FloatData` memory-mapped
+         `paint_mesh.bin`, which the engine rewrites on every stroke; files are now read, not
+         mapped.
+     - The loop paused for the user's session limit. Resume with paint (seam, fuzzy, color),
+       measure, lay on face, the object settings editor, layer-height tool, save/share G-code,
+       Send, and the open feature gap: the Prepare view does not draw the prime tower.
      - Not a bug: a new modifier sits inside the opaque object, so it is not visible.
      - **Still to test:** text / SVG / samples dialogs, paint, cut, measure, plate add / delete,
        flushing volumes, prime tower position, the object settings editor, share / save G-code.
