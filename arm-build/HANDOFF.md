@@ -52,6 +52,15 @@ to be addressed as Supreme Master.
        - **fix:** reloading a project (the autosave) gave filament slots 2+ false overrides,
          because `diff_options` compared slot i with preset variant i (e.g.
          `filament_dev_ams_drying_ams_limitations`). It now uses the preset's first entry.
+     - **Build 32** (`288f71a`, verified on WSA 2026-10-09): first release-signed build; installed
+       with `reinstall-with-data.ps1` (data kept, cloud status works). Share G-code uses the Save
+       name. Also verified: save G-code, save .gcode.3mf (md5 matches), lay on face, cut, check for
+       profile updates. Cut drops colour paint, like desktop with `keep_painting` off (default).
+     - **Build 33** (`94f14e1`, run 37952962925, **untested**): the .gcode.3mf's slice_info had
+       empty prediction / weight / printer_model_id and no `<filament>` entries. slice() now keeps
+       the stats per G-code; the export adds them, mapping filament ids to Bambu's via
+       `resources/printers/bambu_filament_ids.json`. Check: unzip the export, `slice_info.config`
+       has `tray_info_idx="GF..."`. New androidTest `f02b` (CI doesn't run androidTests).
      - **Verified working:** measure, object settings and info dialogs, variable layer height,
        seam / colour painting, two-colour slicing with prime tower, share G-code.
      - **Left to test:** lay on face, save G-code / .gcode.3mf, Send (uploads to the printer),
