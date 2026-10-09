@@ -65,10 +65,26 @@ to be addressed as Supreme Master.
        - Also verified on build 32/33: plate add / delete, Add > Text / SVG / Sample models
          (a non-SVG file gives "no closed shapes"), object settings editor + undo, pauses & colour
          changes dialog, temperature tower (G-code steps 230 to 190 °C, 50 layers each).
-     - **Build 34** (`9664bab`, run 37956913283, **untested**): the 3D view drew every part orange;
+     - **Build 34** (`9664bab`, cancelled; included in 35): the 3D view drew every part orange;
        parts now take their filament's colour (volume extruder, else object, else 1), like the
-       thumbnails (`filament_of` moved to Thumbnails.hpp; mesh type 100 + filament). Check: the
-       cube is yellow (filament 1); set its filament to 2 and it turns black.
+       thumbnails (`filament_of` moved to Thumbnails.hpp; mesh type 100 + filament).
+     - **Build 35** (`a8afcb7`, run 37960398849, verified on WSA): **multi-select**, asked for by the
+       user ("five cubes, duplicate two at once").
+       - Ctrl/Shift+click adds a copy. On touch, "Select multiple" (tool column, long-press menu,
+         or long press on an Objects row) turns on select mode: taps add / remove, a banner shows
+         the count, Select all (active plate) and Done.
+       - With 2+ copies: Duplicate, Delete, drag and the filament picker (Objects tab card) act on
+         all of them, each one undo step. Engine: `duplicate` takes `items` [[obj, inst]],
+         `deleteItems`, `moveItems`, `setObjectSetting` with `objects`. androidTest `c05`.
+       - The scene and paint meshes tag copies as obj * 4096 + instance (`INSTANCE_ID_STRIDE`,
+         OrcaEngine.hpp / PlateRenderer.kt); the shader highlights up to 64 selected copies.
+       - Verified: five cubes, select two, duplicate (both 2x), filament 2 on both, drag both,
+         long-press menu shows only Duplicate / Delete, delete two copies, one undo restores them,
+         Select all = 7. Filament colours verified (yellow cube).
+     - **Build 36** (`caa4734`, run 37964003695, **untested**): select mode keeps Objects rows
+       compact (the first pick expanded its details and moved the rows under the next tap); very
+       dark filaments get a minimum shade (black was a flat silhouette).
+     - Minor, not fixed: the selection banner's buttons move when its text changes length.
      - **Open (low):** after a calibration, Undo back to the old plate keeps the calibration's
        project name ("Temperature tower") for Save / export names. The desktop has no undo across
        a calibration start (it makes a new project).
