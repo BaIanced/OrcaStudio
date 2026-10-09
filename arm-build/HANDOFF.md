@@ -14,6 +14,29 @@ to be addressed as Supreme Master.
    (rule 7).
    - The user approved (2026-10-09) pushes and `android-apk.yml` dispatches on this branch without
      asking each time. A merge to main still needs their go-ahead.
+   - **Builds 19-22 (local session, 2026-10-09):**
+     - Build 18 verified on WSA: cloud MQTT connects (status and temperatures arrive), and cloud
+       filament sync reads all 4 slots with the right colours.
+     - `2fd9f15` (build 20, verified): Bambu spools fell back to Generic PLA because upstream
+       re-keyed the Bambu bundle's `filament_id` (ec207e67a, e.g. `OFoiVqVM`), while printers still
+       report `GFA00`. The sync translates a reported `GF..` id through `setting_id` (`GFSA00_04`).
+       WSA now syncs Bambu PLA Basic / Matte / Matte / iSanMate PETG HF.
+     - `b361bb6` (build 20, verified): the Filament brands filter lists `filament_vendor` brands,
+       with search and show/hide all.
+     - `913870c` (build 21): filament picker with user presets first, then collapsible
+       brand > material sections.
+     - `c9914d0` (build 22): dialog number fields commit while typing (a typed shape size was lost
+       on Add); Slice on an empty plate shows a message.
+     - The user gave standing permission for an autonomous test-and-fix loop over every button and
+       setting on WSA. Never print, sign out or delete presets without asking.
+     - **Open bugs found:**
+       - With an object selected, the left toolbar grows over the "Plate 1" selector.
+       - Modifiers are not drawn in the 3D view (they are listed under Parts & modifiers).
+     - **Not yet tested:** Preview's G-code viewer / share / save, the Device screen, every More
+       entry, the settings editor pages.
+     - **WSA caveat:** WSA stops drawing the app while its window is not in the foreground. Bring it
+       forward with `wsaclient /launch wsa://io.github.baianced.orcastudio_android` before each
+       step, and use taps, not key events (a key event without focus gives an ANR kill).
    - **Build 18** ([run 37904663855](https://github.com/BaIanced/OrcaStudio-Android/actions/runs/37904663855),
      commit `3676dad`, dispatched by the local session) adds obn patch 0003: MQTT TLS without a CA
      file reads `SSL_CERT_FILE` first.
