@@ -56,11 +56,25 @@ to be addressed as Supreme Master.
        with `reinstall-with-data.ps1` (data kept, cloud status works). Share G-code uses the Save
        name. Also verified: save G-code, save .gcode.3mf (md5 matches), lay on face, cut, check for
        profile updates. Cut drops colour paint, like desktop with `keep_painting` off (default).
-     - **Build 33** (`94f14e1`, run 37952962925, **untested**): the .gcode.3mf's slice_info had
+     - **Build 33** (`94f14e1`, run 37952962925, verified on WSA): the .gcode.3mf's slice_info had
        empty prediction / weight / printer_model_id and no `<filament>` entries. slice() now keeps
        the stats per G-code; the export adds them, mapping filament ids to Bambu's via
-       `resources/printers/bambu_filament_ids.json`. Check: unzip the export, `slice_info.config`
-       has `tray_info_idx="GF..."`. New androidTest `f02b` (CI doesn't run androidTests).
+       `resources/printers/bambu_filament_ids.json`. WSA export: prediction 6456, weight 18.19,
+       `printer_model_id` N2S, filaments `GFA00` / `GFA01` with colours and use. New androidTest
+       `f02b` (CI doesn't run androidTests).
+       - Also verified on build 32/33: plate add / delete, Add > Text / SVG / Sample models
+         (a non-SVG file gives "no closed shapes"), object settings editor + undo, pauses & colour
+         changes dialog, temperature tower (G-code steps 230 to 190 °C, 50 layers each).
+     - **Build 34** (`9664bab`, run 37956913283, **untested**): the 3D view drew every part orange;
+       parts now take their filament's colour (volume extruder, else object, else 1), like the
+       thumbnails (`filament_of` moved to Thumbnails.hpp; mesh type 100 + filament). Check: the
+       cube is yellow (filament 1); set its filament to 2 and it turns black.
+     - **Open (low):** after a calibration, Undo back to the old plate keeps the calibration's
+       project name ("Temperature tower") for Save / export names. The desktop has no undo across
+       a calibration start (it makes a new project).
+     - **Tooling:** `install-build.ps1` now defaults `-Device` to WSA (with the Shield attached,
+       a bare `adb install` failed). Don't use `step.ps1` while a system file picker is open: its
+       relaunch closes the picker; tap with `adb shell input tap` instead.
      - **Verified working:** measure, object settings and info dialogs, variable layer height,
        seam / colour painting, two-colour slicing with prime tower, share G-code.
      - **Left to test:** lay on face, save G-code / .gcode.3mf, Send (uploads to the printer),
