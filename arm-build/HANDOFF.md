@@ -29,11 +29,18 @@ to be addressed as Supreme Master.
        on Add); Slice on an empty plate shows a message.
      - The user gave standing permission for an autonomous test-and-fix loop over every button and
        setting on WSA. Never print, sign out or delete presets without asking.
-     - **Open bugs found:**
-       - With an object selected, the left toolbar grows over the "Plate 1" selector.
-       - Modifiers are not drawn in the 3D view (they are listed under Parts & modifiers).
-     - **Not yet tested:** Preview's G-code viewer / share / save, the Device screen, every More
-       entry, the settings editor pages.
+     - **Build 25** (`55df52c`, verified on WSA):
+       - Fixes: the tool column stays below the top bar; a stopped print shows "Stopped", not
+         "Error"; More > Compare presets opens the picker; Choose printers opens on a vendor with
+         chosen printers; About shows the CI build ("0.1.2-r25").
+       - Device panel for Bambu: job, temperatures, AMS slots, messages.
+       - Desktop mouse controls: right/middle-drag pans, right click opens a context menu.
+       - Long press opens the same context menu: object actions on an object, add / import /
+         arrange on the empty bed.
+     - **Build 26** (`19f76c2`): the preset editor offers "Only changed" when a preset has changes.
+     - Not a bug: a new modifier sits inside the opaque object, so it is not visible.
+     - **Still to test:** text / SVG / samples dialogs, paint, cut, measure, plate add / delete,
+       flushing volumes, prime tower position, the object settings editor, share / save G-code.
      - **WSA caveat:** WSA stops drawing the app while its window is not in the foreground. Bring it
        forward with `wsaclient /launch wsa://io.github.baianced.orcastudio_android` before each
        step, and use taps, not key events (a key event without focus gives an ANR kill).
