@@ -1,4 +1,4 @@
-# Handoff: OrcaStudio aarch64 Flatpak + OrcaStudio-Android (state as of 2026-10-09 05:40 UTC)
+# Handoff: OrcaStudio aarch64 Flatpak + OrcaStudio-Android (state as of 2026-10-09 06:40 UTC)
 
 Read this first, then `arm-build/README.md` and the `NOTES-*.md` files next to it. The user is
 referred to as they/them.
@@ -12,7 +12,23 @@ referred to as they/them.
    `android-apk.yml` with `gh workflow run android-apk.yml --ref claude/handoff-continuation-rseql3 -R
    BaIanced/OrcaStudio-Android`, and keeps this file current. Run the privacy scan before every push
    (rule 7).
-   - **Build 17** (commit `7383c7c`, dispatched 05:24Z, result not checked yet) adds:
+   - The user approved (2026-10-09) pushes and `android-apk.yml` dispatches on this branch without
+     asking each time. A merge to main still needs their go-ahead.
+   - **Build 18** ([run 37904663855](https://github.com/BaIanced/OrcaStudio-Android/actions/runs/37904663855),
+     commit `3676dad`, dispatched by the local session) adds obn patch 0003: MQTT TLS without a CA
+     file reads `SSL_CERT_FILE` first.
+     - Build 17 on WSA: the cloud switch saved `block_cloud = 0`. LAN failed as expected, then
+       `connect_server -> 0`, but the cloud MQTT never connected: `cloud mqtt disconnect rc=14`.
+     - Cause: outside Windows, obn v2.2.0 gives the cloud broker no CA file and only probes Linux
+       trust paths (`mqtt_client.cpp`), none of which exist on Android.
+     - The app already exports Android's CA store to `cacert.pem` and sets `SSL_CERT_FILE`
+       (`ObnCredentials.prepareTls`).
+     - Test plan below is unchanged; run it on build 18.
+     - The 4 slots per the user: Bambu PLA Matte Bone White, iSanMate PETG HF Black, Bambu PLA
+       Sunflower Yellow, Bambu PLA Matte Black. The earlier "2 wrong colours" report was a
+       misread, so just compare the sync against this list.
+     - Printer for a test print: 0.4 hardened steel nozzle, SuperTack plate.
+   - **Build 17** (commit `7383c7c`, green; WSA result above) adds:
      - **Opt-in Bambu cloud** (2 switches in the connection dialog of the signed type, stored in
        `obn.conf`):
        - `block_cloud = 0`: ObnHost falls back to obn's cloud MQTT when the LAN fails
