@@ -85,6 +85,37 @@ to be addressed as Supreme Master.
        compact (the first pick expanded its details and moved the rows under the next tap); very
        dark filaments get a minimum shade (black was a flat silhouette).
      - Minor, not fixed: the selection banner's buttons move when its text changes length.
+     - **Merged to main (2026-10-09, user's go-ahead):** PR #3 (builds 15-36); main build
+       38003237247 published pre-release `android-v0.1.2-r37`.
+     - **Builds 37-39: desktop mouse / keyboard controls** (user's request: "mimic Bambu Studio /
+       Orca desktop", defaults from `src-orca/src/slic3r/GUI/Shortcuts.cpp`).
+       - Mouse: Shift+drag rectangle select (adds), Alt+drag removes, Alt+click selects a part,
+         Ctrl+wheel brush size while painting. Zoom stays centred (desktop `zoom_to_mouse` = false).
+       - Ctrl keys, only while the 3D view has focus (it takes focus on touch): A / Shift+A select
+         all (plate / all plates), C / V copy-paste (paste = duplicate), K clone, D delete all,
+         0-7 camera views (iso, top, bottom, front, rear, left, right, plate). Ctrl+Z/Y/R/N global.
+       - Single keys: Tab Prepare/Preview, I/O zoom, A / Shift+A arrange all / plate, Q orient,
+         F lay on face, C cut, L/P/H/N paint, U measure, arrows 10 mm (Shift 1 mm), PgUp/PgDn
+         rotate 45 deg, +/- copies, 1-9 filament; Preview: arrows layer / moves, Home/End.
+       - Behaviour changed to match the desktop: Ctrl+A was arrange, Ctrl+D duplicate, Ctrl+1-3
+         the tabs, O orient.
+       - Build 37 failed to compile (`newProject` joined `deleteAll`); 38 fixed it. On 38, Ctrl
+         shortcuts verified on WSA (Ctrl+3 front, Ctrl+A, Ctrl+K, Ctrl+C/V, Ctrl+D + Ctrl+Z), but
+         arrows / Tab went to Compose's focus navigation (scrolled the side panel). Build 39
+         (run 38005883012, **untested**): PlateView forwards its keys to the handler first.
+       - Not testable over adb: Shift/Alt mouse drags (adb input has no modifier state).
+     - **Colour mixing (investigated, waiting for the user's go-ahead):** upstream OrcaSlicer in
+       `src-orca` already has mixed filaments (`FilamentMixer.cpp`, `filament_is_mixed`,
+       `filament_mixed_components` / `_sublayer_ratios` / `_gradient*`, process
+       `enable_mixed_color_sublayer`, `ToolOrdering::resolve_mixed_filaments`). A mixed slot is a
+       virtual filament (preset copied from component 1, blended colour) resolved per layer or
+       sub-layer into its physical components. Android needs: an add/edit dialog, mixed rows in the
+       filament list, the per-slot keys in `selection_config` (size the vectors to the slot count
+       first), project save/load, and leaving virtual slots out of AMS mapping. Caveat for the A1:
+       at least one filament swap per layer that uses a mixed slot.
+     - Test loop findings: variable layer height and flow-rate calibration (9 tiles with per-object
+       settings) work; the VLH panel covers the selected object on wide layouts (minor). WSA lost
+       DNS once (cloud showed obn -2 / "Lookup error"); `wsaclient /shutdown` + relaunch fixed it.
      - **Open (low):** after a calibration, Undo back to the old plate keeps the calibration's
        project name ("Temperature tower") for Save / export names. The desktop has no undo across
        a calibration start (it makes a new project).
