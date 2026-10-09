@@ -1,10 +1,26 @@
-# Handoff: OrcaStudio aarch64 Flatpak + OrcaStudio-Android (state as of 2026-10-09 02:20 UTC)
+# Handoff: OrcaStudio aarch64 Flatpak + OrcaStudio-Android (state as of 2026-10-09 04:30 UTC)
 
 Read this first, then `arm-build/README.md` and the `NOTES-*.md` files next to it. The user is
 referred to as they/them.
 
 ## Start here: open items, in order
 
+0. **Run 16 verified on WSA by the local session (2026-10-09):**
+   - The filament picker crash is fixed (groups render, picking a synced preset works).
+   - "Sync presets from Bambu account" loads 199 presets without a crash.
+   - The settings editor opens.
+   - Still open:
+     - **Display bug:** the editor shows string options serialized, e.g. Vendor `"Bambu Lab"`
+       with quotes, Default color `""`. `preset_values` returns `opt_serialize`.
+       Pre-existing, not yet fixed.
+     - **LAN filament sync fails on WSA:** `rc=14 No route to host`. WSA's bridged network can't
+       reach the printer while the Windows host can, so this is not app code.
+     - The wrong-colour check waits for cloud AMS sync or a device on the LAN.
+     - **CI debug signing key differs between builds:** `INSTALL_FAILED_UPDATE_INCOMPATIBLE`
+       on WSA. The fix is the 4 `ANDROID_KEY*` repo secrets, queued after the primary goal.
+   - The local session is now `session_01Dyz5iJaQCQ1WuH3ktn4KU9` ("orcastudio-d5", after a
+     restart). It has `~\orca-android-tools\install-build.ps1 -Run <id>` and root on WSA; send it
+     run ids to test.
 0. **Android test build run 16** ([run](https://github.com/BaIanced/OrcaStudio-Android/actions/runs/37871184670),
    commit `93b468a`) is **green** (2026-10-09 02:08Z). Run 15 results from the local session's
    device test:
@@ -34,7 +50,7 @@ referred to as they/them.
    - restores the bundle state that `sync_ams_list` / `load_user_presets` change;
    - makes filament sync wait for a fresh AMS report.
    **Coordination:** the user's local Windows session (Remote Control,
-   `session_01K9rgDzNwS1Ys37uHwxSUAE`) does device debugging with adb and does not push. This
+   `session_01K9rgDzNwS1Ys37uHwxSUAE`, since 2026-10-09 `session_01Dyz5iJaQCQ1WuH3ktn4KU9`) does device debugging with adb and does not push. This
    cloud session is the only one that commits, dispatches CI and edits this file.
    Queued next: mouse support (left/right/middle-pan/back) and a plate context menu on right-click /
    long-press (e.g. add shape), modelled on OrcaSlicer desktop.
