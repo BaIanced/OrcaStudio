@@ -1,10 +1,27 @@
-# Handoff: OrcaStudio aarch64 Flatpak + OrcaStudio-Android (state as of 2026-10-08 09:30 UTC)
+# Handoff: OrcaStudio aarch64 Flatpak + OrcaStudio-Android (state as of 2026-10-09 02:20 UTC)
 
 Read this first, then `arm-build/README.md` and the `NOTES-*.md` files next to it. The user is
 referred to as they/them.
 
 ## Start here: open items, in order
 
+0. **Android test build run 16** ([run](https://github.com/BaIanced/OrcaStudio-Android/actions/runs/37871184670),
+   commit `93b468a`) is **green** (2026-10-09 02:08Z). Run 15 results from the local session's
+   device test:
+   - Cloud preset sync no longer crashes.
+   - Tapping a filament slot crashed with `Key "g:Bambulab" was already used`: PickerDialog emitted
+     one header per run of a group, and synced user presets interleave with system ones. Fixed in
+     `93b468a` (one header per group, de-duplicated keys). Re-test pending.
+   - "Sync filaments from printer" needs LAN. The user wants cloud AMS sync instead (task below).
+     The 2 wrong slot colours are still unchecked.
+   - **Cloud AMS sync plan (waiting for the user's go-ahead):**
+     - obn blocks cloud MQTT while `block_cloud = 1` (`abi_cloud.cpp:18`, `:66`; `send_message`
+       fallback in `agent.cpp`).
+     - An opt-in setting would write `block_cloud = 0`. obn re-reads `obn.conf` when
+       `set_config_dir` is called again (`agent.cpp:1826-1842`, documented as idempotent).
+     - Then `connect_server` + `add_subscribe([serial])`, a pushall through
+       `bambu_network_send_message`, and the cloud reports go into `BambuReport`.
+     - Printing stays LAN (`cloud_print = lan_only`).
 0. **Android test build run 15** ([run](https://github.com/BaIanced/OrcaStudio-Android/actions/runs/37753117522),
    commit `7b7ceed`) is **green** (2026-10-08 09:22Z). User report on run 14 (2026-10-08): app
    installs, sign-in and PEM import work, filament sync works, but:
