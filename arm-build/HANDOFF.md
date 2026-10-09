@@ -45,9 +45,17 @@ to be addressed as Supreme Master.
        - **crash fix:** painting crashed with SIGBUS in glBufferData. `FloatData` memory-mapped
          `paint_mesh.bin`, which the engine rewrites on every stroke; files are now read, not
          mapped.
-     - The loop paused for the user's session limit. Resume with paint (seam, fuzzy, color),
-       measure, lay on face, the object settings editor, layer-height tool, save/share G-code,
-       Send, and the open feature gap: the Prepare view does not draw the prime tower.
+     - **Build 31** (`b9eb502`, verified on WSA):
+       - mesh and paint files are written to .tmp and renamed (atomic);
+       - Prepare shows the prime tower on plates that use more than one filament (type 99 box,
+         clamped to the bed);
+       - **fix:** reloading a project (the autosave) gave filament slots 2+ false overrides,
+         because `diff_options` compared slot i with preset variant i (e.g.
+         `filament_dev_ams_drying_ams_limitations`). It now uses the preset's first entry.
+     - **Verified working:** measure, object settings and info dialogs, variable layer height,
+       seam / colour painting, two-colour slicing with prime tower, share G-code.
+     - **Left to test:** lay on face, save G-code / .gcode.3mf, Send (uploads to the printer),
+       cloud print (needs the user at the printer).
      - Not a bug: a new modifier sits inside the opaque object, so it is not visible.
      - **Still to test:** text / SVG / samples dialogs, paint, cut, measure, plate add / delete,
        flushing volumes, prime tower position, the object settings editor, share / save G-code.
