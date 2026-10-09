@@ -81,7 +81,7 @@ to be addressed as Supreme Master.
        - Verified: five cubes, select two, duplicate (both 2x), filament 2 on both, drag both,
          long-press menu shows only Duplicate / Delete, delete two copies, one undo restores them,
          Select all = 7. Filament colours verified (yellow cube).
-     - **Build 36** (`caa4734`, run 37964003695, **untested**): select mode keeps Objects rows
+     - **Build 36** (`caa4734`, run 37964003695, verified on WSA): select mode keeps Objects rows
        compact (the first pick expanded its details and moved the rows under the next tap); very
        dark filaments get a minimum shade (black was a flat silhouette).
      - Minor, not fixed: the selection banner's buttons move when its text changes length.
