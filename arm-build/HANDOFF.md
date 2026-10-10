@@ -1,16 +1,58 @@
-# Handoff: OrcaStudio aarch64 Flatpak + OrcaStudio-Android (state as of 2026-10-09 08:30 UTC)
+# Handoff: OrcaStudio aarch64 Flatpak + OrcaStudio-Android (state as of 2026-10-10 08:45 UTC)
 
 Read this first, then `arm-build/README.md` and the `NOTES-*.md` files next to it. The user is
 to be addressed as Supreme Master.
 
 ## Start here: open items, in order
 
-**Next session (2026-10-10):** check run 38037031544 (build 44) is green (if not:
-`gh run view <id> -R BaIanced/OrcaStudio-Android --log-failed | grep "e: "`), install it with
-`~\orca-android-tools\install-build.ps1 -Run <id>`, and test the "Build 43" list below on WSA.
+**Two streams (user, 2026-10-10):** implement on a feature branch while the test branch builds;
+merge the feature branch into the test branch once both build clean and pass on WSA.
+- Test branch `claude/handoff-continuation-rseql3`: build 44 (run 38037031544, APK r45) tested on
+  WSA, see "Build 44 results" below. Build 46 (run 38038737062, `Models: desktop user agent ...`)
+  is building: MakerWorld desktop user agent, `javaScriptCanOpenWindowsAutomatically`, and
+  `adb shell setprop log.tag.OrcaWeb DEBUG` (then restart the app) makes the Models WebView
+  inspectable (`adb forward tcp:9222 localabstract:webview_devtools_remote_<pid>`, then
+  `curl localhost:9222/json`).
+- Feature branch `claude/orca-cloud-login` (run 38038016405, Kotlin compile passed): Orca Cloud
+  sign-in, wishlist step 1 of Orca plugins. Untested on a device.
+- **The user skipped OpenSCAD for now (2026-10-10).** Order: Orca Cloud login, then Orca plugins.
 **Close the app when done** (`adb -s 127.0.0.1:58526 shell am force-stop io.github.baianced.orcastudio_android`):
-the test scripts keep its window in front of the user's desktop. Then continue the wishlist (Models
-tab polish, OpenSCAD, Orca Cloud login, then Orca plugins). Python on this PC is `python`, not `python3`.
+the test scripts keep its window in front of the user's desktop. Python on this PC is `python`, not `python3`.
+
+**Build 44 results (WSA, 2026-10-10):**
+- Verified: selection banner buttons stay put (text "Tap objects..." -> "1 selected"); VLH panel at
+  the right edge above Slice; undo after starting a temperature tower ends the calibration and
+  restores the plate and the previous project name; printer / filament pickers list user presets
+  first, vendor presets nested (the vendor group opens when the selected preset is in it).
+- **MakerWorld broken:** it served its phone site ("Open in Bambu Handy" prompt), the page posted
+  only `getSupportedCommands` (Handy bridge; not in the desktop sources) and tapping a model card
+  did nothing. Fix attempt in build 46 (desktop UA). Not yet tested: "Open in Bambu Studio",
+  sign-in ticket.
+- **Printables:** loads but stays dimmed, and taps on the page do nothing (an overlay, probably a
+  consent dialog that never renders; WSA WebView is 118.0.5993.111). Not diagnosed; use the
+  OrcaWeb debug switch on build 46.
+- Tooling: the system file picker's Back goes up folders; close it with
+  `adb shell am force-stop com.android.documentsui` (cancels, nothing saved).
+
+**Orca Cloud sign-in (branch `claude/orca-cloud-login`, `5cd80e6`):**
+- Port of upstream `OrcaCloudServiceAgent` (src-orca `src/slic3r/Utils/OrcaCloudServiceAgent.cpp`)
+  and `WebUserLoginDialog.cpp` / `HttpServer::auth_handle_request`, in Kotlin: `net/OrcaCloud.kt`,
+  `net/OrcaCloudLoopback.kt`, `ui/settings/OrcaCloudSection.kt` (More > Orca Cloud).
+- Page `https://cloud.orcaslicer.com/orcaslicer-login`: it detects the slicer by `window.wx` /
+  `webkit.messageHandlers.wx` (checked in its JS bundle), so the bridge is registered as `wx`.
+  `get_login_cmd` -> reply `window.postMessage(login_config)` (PKCE S256, state, redirect
+  `http://localhost:<41172..41174>/callback`, apikey). E-mail sign-in: `user_login` with flat
+  tokens. Google / GitHub: `thirdparty_login` opens the browser; GoTrue redirects to the loopback
+  with `code` + `orca_state`; exchange `POST auth.orcaslicer.com/auth/v1/token?grant_type=pkce`
+  `{auth_code, code_verifier}` with the `apikey` header.
+- Refresh `grant_type=refresh_token`, 15 min skew; 400/401/403 signs out, other failures keep the
+  session. Stored: refresh token + user, AES-GCM with an AndroidKeyStore key in
+  `noBackupFilesDir/orca_cloud/session.sec` (not in the encrypted backup yet).
+- API `https://api.orcaslicer.com` (upstream's default has no scheme; http 301s, https works).
+  "Subscribed plugins" = `GET /api/v1/plugins/subscriptions` (Bearer + apikey).
+- To test: e-mail sign-in, Google sign-in round trip (WSA may pause the app while the browser is
+  in front), app restart keeps the sign-in, sign out, plugin list.
+- Next: preset sync (`/api/v1/sync/pull|push`), then the plugin runtime (embedded Python).
 
 0. **Handoff to the local session (2026-10-09, user's request: cloud usage).** The cloud session
    `session_01Dycp4Bu9GrptBgymXRxiss` has stopped. The user's local Windows session
