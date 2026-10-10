@@ -5,6 +5,13 @@ to be addressed as Supreme Master.
 
 ## Start here: open items, in order
 
+**Next session (2026-10-10):** check run 38037031544 (build 44) is green (if not:
+`gh run view <id> -R BaIanced/OrcaStudio-Android --log-failed | grep "e: "`), install it with
+`~\orca-android-tools\install-build.ps1 -Run <id>`, and test the "Build 43" list below on WSA.
+**Close the app when done** (`adb -s 127.0.0.1:58526 shell am force-stop io.github.baianced.orcastudio_android`):
+the test scripts keep its window in front of the user's desktop. Then continue the wishlist (Models
+tab polish, OpenSCAD, Orca Cloud login, then Orca plugins). Python on this PC is `python`, not `python3`.
+
 0. **Handoff to the local session (2026-10-09, user's request: cloud usage).** The cloud session
    `session_01Dycp4Bu9GrptBgymXRxiss` has stopped. The user's local Windows session
    (`session_01Dyz5iJaQCQ1WuH3ktn4KU9`, "orcastudio-d5", gh logged in, root adb on WSA) is now the
@@ -132,7 +139,8 @@ to be addressed as Supreme Master.
          WSA sends ACTION_DOWN + BUTTON_PRESS, then `ACTION_HOVER_MOVE buttons=4` (2 = right) for
          the drag. PlateView now pans on those hover moves; middle and right drag pan, a right drag
          opens no menu. Mouse event log: `adb shell setprop log.tag.OrcaInput DEBUG`.
-     - **Build 43** (`13b183d`, run 38036385384; build 42 cancelled, superseded). Untested:
+     - **Build 43** (`13b183d`) failed to compile (ModelsScreen: `vm.toast` missing, progress setter);
+       **build 44** (`264cc54`, run 38037031544) fixes it and is what to install. Contents, all untested:
        - fixes: the selection banner fills the width (buttons stay put); Undo back before a
          calibration started ends the calibration and restores the project name (engine
          `m_calib_undo_depth`, scene `calibration_active`); on wide layouts the VLH panel sits at
