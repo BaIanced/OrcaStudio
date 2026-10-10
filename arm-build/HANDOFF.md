@@ -7,11 +7,21 @@ to be addressed as Supreme Master.
 
 **Two streams (user, 2026-10-10):** implement on a feature branch while the test branch builds;
 merge the feature branch into the test branch once both build clean and pass on WSA.
-- `claude/orca-cloud-login` was merged into `claude/handoff-continuation-rseql3` (`842977d`);
-  run 38044939151 builds the merge (Models fixes + Orca Cloud). Next feature branch: start a new
-  one from the test branch.
-- **The user skipped OpenSCAD for now (2026-10-10).** Order: Orca Cloud login (done, needs the
-  user's sign-in test), preset sync, then Orca plugins.
+- `claude/orca-cloud-login` was merged into `claude/handoff-continuation-rseql3` (`842977d`,
+  run 38044939151 = r51, installed on WSA). **The user verified Orca Cloud on r51:** Google sign-in
+  (browser round trip works on WSA), "Subscribed plugins" lists their 4 plugins, still signed in
+  after an app restart. Their account has no password (Google only); GitHub not tried.
+- Test branch: back fix (run 38067755767): Back on another tab returns to Prepare, on Prepare it
+  drops tool/selection like Esc; a **mouse back button** with nothing left to go back to is eaten
+  (before, Android put the app in the background, "acts like minimise" - user report).
+- Feature branch `claude/orca-cloud-sync` (run 38067880608): More > "Sync presets from Orca
+  Cloud" = full `GET /api/v1/sync/pull` -> engine `loadCloudPresets` (same path as the Bambu
+  sync). Pull only; cannot delete presets (`remove_users_preset` only touches presets whose
+  user_id equals the engine's empty `preset_folder`). Push (`/sync/push`, OCC with
+  `original_updated_time`, setting_id = UUIDv5(ns f47ac10b-..., "<user_id>/<name>")) writes to
+  the user's cloud: **ask before enabling it.**
+- **The user skipped OpenSCAD for now (2026-10-10).** Order: Orca Cloud login (done, verified),
+  preset sync (pull in progress), then Orca plugins.
 **Close the app when done** (`adb -s 127.0.0.1:58526 shell am force-stop io.github.baianced.orcastudio_android`):
 the test scripts keep its window in front of the user's desktop. Python on this PC is `python`, not `python3`.
 
