@@ -127,8 +127,20 @@ to be addressed as Supreme Master.
      - **Wishlist (user, 2026-10-09; not started):**
        - Model sites in their own tab, "the more the merrier", MakerWorld as the proof of concept
          (then Printables, Thingiverse, ...): browse in-app, download straight into the plate.
-       - Parametric 3D modelling inside the app (worth investigating first: e.g. OpenSCAD-style
-         scripts or MakerWorld's parametric models, what upstream / the desktop already offers).
+       - Parametric 3D modelling inside the app: embed OpenSCAD (user's idea). Options: native
+         headless build for arm64 (GPLv2+, deps mostly in Orca's: CGAL, GMP/MPFR, Boost, Eigen,
+         maybe Manifold; adds a parser plus FreeType/HarfBuzz for text()) giving meshes straight
+         into the plate; or openscad-wasm in a hidden WebView as a quick PoC. UI idea: code editor
+         plus Customizer comments shown as sliders, .scad open / share intent, later MakerWorld
+         parametric models (MakerWorld's Parametric Model Maker is OpenSCAD-based).
+       - Orca Cloud login: upstream `OrcaCloudServiceAgent` (default `ORCA_CLOUD_PROVIDER` in
+         GUI_App) for preset sync and the plugin store.
+       - Orca plugins: upstream `src/slic3r/plugin/` = embedded Python (pybind11) with host bindings
+         (model, mesh, presets, slicing, UI); types pages / printerAgent / script / slicingPipeline;
+         `CloudPluginService` subscribes / downloads through the Orca Cloud account. Android: embed
+         CPython (official Android support since 3.13) or Chaquopy; the UI / pages bindings are wx
+         and need Compose counterparts. Order: cloud login, then script + slicingPipeline plugins,
+         then printerAgent, then pages.
      - **Wishlist (later, user: "can wait"): filament colour mixing.** Investigated: upstream OrcaSlicer in
        `src-orca` already has mixed filaments (`FilamentMixer.cpp`, `filament_is_mixed`,
        `filament_mixed_components` / `_sublayer_ratios` / `_gradient*`, process
