@@ -104,7 +104,27 @@ to be addressed as Supreme Master.
          arrows / Tab went to Compose's focus navigation (scrolled the side panel). Build 39
          (run 38005883012, verified on WSA): PlateView forwards its keys to the handler first. Arrows (10 mm), PgUp (45 deg), 2 (filament), Tab, Preview Down arrow all work; four Ctrl+Z restore.
        - Not testable over adb: Shift/Alt mouse drags (adb input has no modifier state).
-     - **Colour mixing (investigated, waiting for the user's go-ahead):** upstream OrcaSlicer in
+     - **Build 40 (user report 2026-10-09):**
+       - Mouse wheel orbited instead of zooming on WSA. Cause: WSA turns the mouse into emulated
+         touches (wheel = swipe, Shift = horizontal) unless the app declares
+         `android.hardware.type.pc` (Amazon WSA compatibility guide). Manifest now declares it, so the
+         existing wheel zoom / middle-drag pan / right-click code gets real mouse events. Reproduce
+         with a real Windows wheel event: `orca-android-tools/wheel.ps1` (-Notches, -Middle -DragX) (SetForegroundWindow needs the Alt
+         key trick); adb `input` cannot.
+       - A user printer preset (inherits "Bambu Lab A1 0.4 nozzle") lost the connection, the loaded
+         filaments and the sync button: they were keyed by preset name. Now kept under the base
+         system preset (`AppSettings.setPrinterBase`, engine printer list has `base` and the
+         resolved vendor).
+       - Settings showed per-variant vectors raw ("190,190,190,190,190"): equal entries are now
+         shown / edited as one value. Not reproduced with the A1 presets on WSA (all single values);
+         H2D-style user presets have 2-7 entries.
+       - Bambu mode: for a Bambu printer the editor hides the desktop's non-BBL options plus
+         Klipper / Marlin / pellet / toolchanger / print-host options (`option_states`); the
+         connection dialog offers only the Bambu types.
+       - Encrypted backup (More > Backup): settings, connections, user presets, obn credentials
+         (login, slicer cert / key, printer certs); PBKDF2-SHA256 310k + AES-256-GCM, passphrase
+         min 8. Restore reinstalls the printers' vendors and restarts the app.
+     - **Wishlist (later, user: "can wait"): filament colour mixing.** Investigated: upstream OrcaSlicer in
        `src-orca` already has mixed filaments (`FilamentMixer.cpp`, `filament_is_mixed`,
        `filament_mixed_components` / `_sublayer_ratios` / `_gradient*`, process
        `enable_mixed_color_sublayer`, `ToolOrdering::resolve_mixed_filaments`). A mixed slot is a
