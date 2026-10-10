@@ -84,7 +84,7 @@ to be addressed as Supreme Master.
      - **Build 36** (`caa4734`, run 37964003695, verified on WSA): select mode keeps Objects rows
        compact (the first pick expanded its details and moved the rows under the next tap); very
        dark filaments get a minimum shade (black was a flat silhouette).
-     - Minor, not fixed: the selection banner's buttons move when its text changes length.
+     - Fixed in build 43: the selection banner's buttons moved when its text changed length.
      - **Merged to main (2026-10-09, user's go-ahead):** PR #3 (builds 15-36); main build
        38003237247 published pre-release `android-v0.1.2-r37`.
      - **Builds 37-39: desktop mouse / keyboard controls** (user's request: "mimic Bambu Studio /
@@ -128,10 +128,28 @@ to be addressed as Supreme Master.
        orbit), left drag orbits, a right click opens the context menu. Right / middle **drag** did
        nothing: the logcat shows `InputDispatcher: Asynchronous input event injection failed` twice
        per drag, so WSA's events for a held right / middle button don't arrive as touch moves.
-       - **Build 41** (`2bb7e71`, run 38034948519): PlateView pans on `ACTION_HOVER_MOVE` with
-         BUTTON_SECONDARY / TERTIARY held (assumed from the above, not yet confirmed), and logs
-         every mouse event under tag `OrcaInput` (`setprop log.tag.OrcaInput DEBUG`). If it still
-         doesn't pan, read that log to see what WSA really sends.
+       - **Build 41** (`2bb7e71`, run 38034948519, verified on WSA): the `OrcaInput` log confirmed
+         WSA sends ACTION_DOWN + BUTTON_PRESS, then `ACTION_HOVER_MOVE buttons=4` (2 = right) for
+         the drag. PlateView now pans on those hover moves; middle and right drag pan, a right drag
+         opens no menu. Mouse event log: `adb shell setprop log.tag.OrcaInput DEBUG`.
+     - **Build 43** (`13b183d`, run 38036385384; build 42 cancelled, superseded). Untested:
+       - fixes: the selection banner fills the width (buttons stay put); Undo back before a
+         calibration started ends the calibration and restores the project name (engine
+         `m_calib_undo_depth`, scene `calibration_active`); on wide layouts the VLH panel sits at
+         the right edge above Slice.
+       - preset pickers (user's request): user presets first in one open group, then one
+         collapsed "Vendor presets" group (vendor; filaments brand > material). `PickerDialog`
+         nests to any depth (`PickerItem.detail`), `presetItems()` in PreparePanel.kt.
+       - **Models tab** (wishlist item 1): `ui/models/ModelsScreen.kt` (`ModelBrowser`, kept by
+         AppScaffold across tab switches) + `net/ModelDownloads.kt`. MakerWorld loads through
+         `makerworld.com/api/sign-in/ticket?to=...&ticket=` with obn `request_bind_ticket`
+         (`abi_bind.cpp:110`, new JNI `ObnNative.webTicket`, **19 exports**). Handles
+         `bambustudio://open?file=<url>&name=` links (Downloader.cpp / `import_model_id`),
+         `makerworld_model_open`, MakerLab base64 messages, plain downloads and zips (Printables,
+         Thingiverse chips). Files go through `FileController.openDownloaded` -> `openModels`
+         (project 3MF on an empty plate opens as project, else adds the geometry).
+       - To test: MakerWorld signed in, "Open in Bambu Studio" on a model, a Printables download,
+         Back button in the page, tab switch keeps the page.
        - Test helper: `orca-android-tools/drag.ps1 -Middle -Down <flag> -Up <flag> -DragX 150`
          (`wheel.ps1` with selectable mouse_event flags: 2/4 left, 8/16 right, 0x20/0x40 middle).
      - **Wishlist (user, 2026-10-09; not started):**
@@ -162,9 +180,9 @@ to be addressed as Supreme Master.
        first), project save/load, and leaving virtual slots out of AMS mapping. Caveat for the A1:
        at least one filament swap per layer that uses a mixed slot.
      - Test loop findings: variable layer height and flow-rate calibration (9 tiles with per-object
-       settings) work; the VLH panel covers the selected object on wide layouts (minor). WSA lost
+       settings) work; the VLH panel covered the selected object on wide layouts (moved in build 43). WSA lost
        DNS once (cloud showed obn -2 / "Lookup error"); `wsaclient /shutdown` + relaunch fixed it.
-     - **Open (low):** after a calibration, Undo back to the old plate keeps the calibration's
+     - **Fixed in build 43 (untested):** after a calibration, Undo back to the old plate keeps the calibration's
        project name ("Temperature tower") for Save / export names. The desktop has no undo across
        a calibration start (it makes a new project).
      - **Tooling:** `install-build.ps1` now defaults `-Device` to WSA (with the Shield attached,
