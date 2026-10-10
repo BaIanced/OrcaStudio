@@ -124,6 +124,11 @@ to be addressed as Supreme Master.
        - Encrypted backup (More > Backup): settings, connections, user presets, obn credentials
          (login, slicer cert / key, printer certs); PBKDF2-SHA256 310k + AES-256-GCM, passphrase
          min 8. Restore reinstalls the printers' vendors and restarts the app.
+     - **Wishlist (user, 2026-10-09; not started):**
+       - Model sites in their own tab, "the more the merrier", MakerWorld as the proof of concept
+         (then Printables, Thingiverse, ...): browse in-app, download straight into the plate.
+       - Parametric 3D modelling inside the app (worth investigating first: e.g. OpenSCAD-style
+         scripts or MakerWorld's parametric models, what upstream / the desktop already offers).
      - **Wishlist (later, user: "can wait"): filament colour mixing.** Investigated: upstream OrcaSlicer in
        `src-orca` already has mixed filaments (`FilamentMixer.cpp`, `filament_is_mixed`,
        `filament_mixed_components` / `_sublayer_ratios` / `_gradient*`, process
