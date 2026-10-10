@@ -1,4 +1,4 @@
-# Handoff: OrcaStudio aarch64 Flatpak + OrcaStudio-Android (state as of 2026-10-10 08:45 UTC)
+# Handoff: OrcaStudio aarch64 Flatpak + OrcaStudio-Android (state as of 2026-10-10 10:30 UTC)
 
 Read this first, then `arm-build/README.md` and the `NOTES-*.md` files next to it. The user is
 to be addressed as Supreme Master.
@@ -7,32 +7,46 @@ to be addressed as Supreme Master.
 
 **Two streams (user, 2026-10-10):** implement on a feature branch while the test branch builds;
 merge the feature branch into the test branch once both build clean and pass on WSA.
-- Test branch `claude/handoff-continuation-rseql3`: build 44 (run 38037031544, APK r45) tested on
-  WSA, see "Build 44 results" below. Build 46 (run 38038737062, `Models: desktop user agent ...`)
-  is building: MakerWorld desktop user agent, `javaScriptCanOpenWindowsAutomatically`, and
-  `adb shell setprop log.tag.OrcaWeb DEBUG` (then restart the app) makes the Models WebView
-  inspectable (`adb forward tcp:9222 localabstract:webview_devtools_remote_<pid>`, then
-  `curl localhost:9222/json`).
-- Feature branch `claude/orca-cloud-login` (run 38038016405, Kotlin compile passed): Orca Cloud
-  sign-in, wishlist step 1 of Orca plugins. Untested on a device.
-- **The user skipped OpenSCAD for now (2026-10-10).** Order: Orca Cloud login, then Orca plugins.
+- `claude/orca-cloud-login` was merged into `claude/handoff-continuation-rseql3` (`842977d`);
+  run 38044939151 builds the merge (Models fixes + Orca Cloud). Next feature branch: start a new
+  one from the test branch.
+- **The user skipped OpenSCAD for now (2026-10-10).** Order: Orca Cloud login (done, needs the
+  user's sign-in test), preset sync, then Orca plugins.
 **Close the app when done** (`adb -s 127.0.0.1:58526 shell am force-stop io.github.baianced.orcastudio_android`):
 the test scripts keep its window in front of the user's desktop. Python on this PC is `python`, not `python3`.
 
-**Build 44 results (WSA, 2026-10-10):**
-- Verified: selection banner buttons stay put (text "Tap objects..." -> "1 selected"); VLH panel at
-  the right edge above Slice; undo after starting a temperature tower ends the calibration and
-  restores the plate and the previous project name; printer / filament pickers list user presets
-  first, vendor presets nested (the vendor group opens when the selected preset is in it).
-- **MakerWorld broken:** it served its phone site ("Open in Bambu Handy" prompt), the page posted
-  only `getSupportedCommands` (Handy bridge; not in the desktop sources) and tapping a model card
-  did nothing. Fix attempt in build 46 (desktop UA). Not yet tested: "Open in Bambu Studio",
-  sign-in ticket.
-- **Printables:** loads but stays dimmed, and taps on the page do nothing (an overlay, probably a
-  consent dialog that never renders; WSA WebView is 118.0.5993.111). Not diagnosed; use the
-  OrcaWeb debug switch on build 46.
+**WebView debugging (use it, it found every Models bug):** `adb shell setprop log.tag.OrcaWeb DEBUG`,
+restart the app, then `adb forward tcp:9222 localabstract:webview_devtools_remote_$(adb shell pidof
+io.github.baianced.orcastudio_android)`. Helpers (session scratchpad, recreate if gone): `cdp.mjs`
+(node, Runtime.evaluate with awaitPromise) and `cdplog.mjs` (console, exceptions, failed requests,
+`Page.frameRequestedNavigation` for custom-scheme links). Applies to the Models WebView only (the
+switch is read when ModelBrowser creates it).
+
+**Build 44-50 results (WSA, 2026-10-10):**
+- Verified on 44: selection banner buttons stay put; VLH panel at the right edge above Slice; undo
+  after starting a temperature tower ends the calibration and restores plate and project name;
+  pickers list user presets first, vendor presets nested.
+- Models fixes, all verified on 49/50 (run 38043169042 = r50):
+  - MakerWorld got the phone site (Handy prompt) -> desktop Chrome UA + BBL-Slicer suffix.
+  - Home cards only add `?modelid=` (a pop-up that never shows) -> `doUpdateVisitedHistory` loads
+    `<lang>/models/<id>` like the desktop (`WebViewPanel::get_model_mall_detail_url`).
+  - "Open in Bambu Studio" -> Import fires `bambustudio://open?file=<urlencoded url incl. %26name%3D>`
+    (anchorClick). The download landed in cache/models and `importFile` copied it onto itself (0
+    bytes). Downloads now go to cache/downloads; `importFile` skips a self-copy. Verified: a
+    250x240 pegboard 3MF imported.
+  - AndroidView's default WRAP_CONTENT made WebView lay out with height 0 (CSS `100vh` = 0):
+    Printables' CookieYes dialog had max-height 0, so only its backdrop showed and blocked taps.
+    All WebViews get MATCH_PARENT layout params.
+  - Printables "Download" saved `x.bin` (WebView guesses from octet-stream) -> the first name with a
+    model / zip extension, else sniffed from content. Verified: an STL imported.
+  - File names keep non-Latin letters (`\p{L}`).
+- Orca Cloud build (r46) on WSA: the sign-in page loads, the `wx` bridge handshake works (a fake
+  loopback callback failed with "state mismatch", not "expired"), the loopback listens on
+  127.0.0.1 and ::1:41172. **On WSA, 127.0.0.1 refuses connections from the shell; ::1 works**
+  (untested whether the browser's localhost reaches it). The real sign-in needs the user.
 - Tooling: the system file picker's Back goes up folders; close it with
-  `adb shell am force-stop com.android.documentsui` (cancels, nothing saved).
+  `adb shell am force-stop com.android.documentsui` (cancels, nothing saved). Kotlin string
+  regexes need `\d` (written via python heredocs, `\d` lost one backslash twice: compile errors).
 
 **Orca Cloud sign-in (branch `claude/orca-cloud-login`, `5cd80e6`):**
 - Port of upstream `OrcaCloudServiceAgent` (src-orca `src/slic3r/Utils/OrcaCloudServiceAgent.cpp`)
