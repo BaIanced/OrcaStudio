@@ -20,6 +20,28 @@ merge the feature branch into the test branch once both build clean and pass on 
   user_id equals the engine's empty `preset_folder`). Push (`/sync/push`, OCC with
   `original_updated_time`, setting_id = UUIDv5(ns f47ac10b-..., "<user_id>/<name>")) writes to
   the user's cloud: **ask before enabling it.**
+- Test branch, later on 2026-10-10: Models pinch + Ctrl+wheel zoom; MakerWorld "Full site" chip
+  (no BBL-Slicer UA: header/sidebar/Collections, but no slicer import), and in slicer mode a native
+  links row (search, following, MakerLab, contests, history, collections, profile; the handle is
+  `name` from `/api/v1/user-service/my/profile`, fetched by the page) plus MW_TRIM_JS (the fixed
+  `.global_new` category bar sits at top:60px with no header; moved to 0). Model pages in slicer
+  mode have no blank strip, so nothing may be overlaid there. WebViews follow the app theme
+  (`themedWebView`: ContextThemeWrapper isLightTheme + algorithmic darkening, API 33+); a theme
+  change recreates the Models browser. Run 38070361403 builds all of it.
+- Sync branch: preset upload (user approved 2026-10-10): engine `cloudUploads(userId)` /
+  `markUploaded`, More > "Upload presets to Orca Cloud". Creates use UUIDv5 ids, updates send
+  original_updated_time; 409 = reported, never forced; 413 = will_not_sync; no deletes; presets
+  with another account's user_id (Bambu) skipped. Run 38070574697.
+- **Orca plugins, research (2026-10-10):** upstream `src/slic3r/plugin` is ~14k lines: CPython
+  3.12 embedded through pybind11 (`PythonInterpreter.cpp`), capability types PrinterConnection,
+  Pages, Analysis, Importer, Exporter, Visualization, Script, SlicingPipeline. SlicingPipeline
+  hooks into libslic3r (`Print::set_slicing_pipeline_hook_fn`, so the engine already has the seam);
+  host APIs in `plugin/host/*` (geometry, model, presets, slicing are GUI-free; ui/app/pages use wx).
+  wx is also in PluginManager/PluginConfig/PluginResolver/PluginAuditManager/PythonInterpreter.
+  Android plan: CPython for Android (python.org ships Android builds from 3.13; plugins targeting
+  3.12 should mostly run on 3.13) linked into the engine via the NDK + pybind11, a wx-free port of
+  loader/manager, Script + SlicingPipeline first, cloud install via `/api/v1/plugins/...`.
+  Native-code wheels in plugins cannot run on Android; pure-Python only.
 - **The user skipped OpenSCAD for now (2026-10-10).** Order: Orca Cloud login (done, verified),
   preset sync (pull in progress), then Orca plugins.
 **Close the app when done** (`adb -s 127.0.0.1:58526 shell am force-stop io.github.baianced.orcastudio_android`):
