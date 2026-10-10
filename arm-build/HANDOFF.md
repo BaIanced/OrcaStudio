@@ -141,14 +141,7 @@ to be addressed as Supreme Master.
          CPython (official Android support since 3.13) or Chaquopy; the UI / pages bindings are wx
          and need Compose counterparts. Order: cloud login, then script + slicingPipeline plugins,
          then printerAgent, then pages.
-       - iOS port (assessed: hard, weeks). Engine: cross-compile deps (Boost, TBB, CGAL, OpenVDB,
-         OCCT, ...) for iOS arm64 on macOS runners; JNI bridge becomes ObjC++ / Kotlin-Native over the
-         same JSON calls. UI: Compose Multiplatform (iOS stable) after splitting Android-only APIs,
-         or a SwiftUI rewrite. 3D view: GLES works but is deprecated (Metal later). Networking:
-         obn + net code for iOS, Bonjour discovery, local network permission. No foreground service
-         (long slices may be suspended); iOS memory limits. Distribution: Apple Developer account,
-         Mac/test device; App Store terms conflict with AGPL, so TestFlight / AltStore / EU
-         marketplaces. Order: engine builds in CI, minimal slice app, Compose UI, networking.
+       - Not wanted: an iOS port (user, 2026-10-09: "I'll never want to do ios port").
      - **Wishlist (later, user: "can wait"): filament colour mixing.** Investigated: upstream OrcaSlicer in
        `src-orca` already has mixed filaments (`FilamentMixer.cpp`, `filament_is_mixed`,
        `filament_mixed_components` / `_sublayer_ratios` / `_gradient*`, process
