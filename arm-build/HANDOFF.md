@@ -16,9 +16,11 @@ merge the feature branch into the test branch once both build clean and pass on 
   `PreviewPanel.kt:268`, over the 512 MB heap). Now `Buffers.kt` memory-maps, and `Preview.cpp`
   FloatWriter writes `.tmp` + rename like the scene/paint meshes. WSA: the user's plate (97 MB
   extrusions.bin) slices and previews, Java heap 5 MB. The 325 MB slice itself: user to retest.
-- **Feature branch `claude/orca-plugins`: plugin runtime.** r62 = run 38082690102 installed on WSA (untested:
-  first try crashed because R8 renamed the JNI listener methods, fixed with keep rules in r62; then WSA
-  stopped creating the app window, `WsaClient /shutdown` hung; user asked to restart WSA).
+- **Feature branch `claude/orca-plugins`: plugin runtime.** r62 = run 38082690102 on WSA. Verified
+  2026-10-10: FilamentHub installs from Orca Cloud and loads (page "FilamentHub" +
+  "filamenthub-slice-reporter"), its page renders (catalog, search, filters). Not tested yet: page
+  interaction / sign-in, post-process on save/send. WSA got wedged once (no app window): stop the
+  WsaClient processes, `Start-Service WsaService`, then `Start-Process wsa://<package>`.
   Embedded CPython 3.12.12 (Chaquopy build, `android/scripts/stage_python.py`) + upstream plugin
   host compiled unchanged (`android/core/plugins.cmake`); Android replacements in
   `android/core/plugin/` (PluginManager, PluginAuditManager = no sandbox hook yet, orca.host app/ui);
