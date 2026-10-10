@@ -102,7 +102,7 @@ to be addressed as Supreme Master.
        - Build 37 failed to compile (`newProject` joined `deleteAll`); 38 fixed it. On 38, Ctrl
          shortcuts verified on WSA (Ctrl+3 front, Ctrl+A, Ctrl+K, Ctrl+C/V, Ctrl+D + Ctrl+Z), but
          arrows / Tab went to Compose's focus navigation (scrolled the side panel). Build 39
-         (run 38005883012, **untested**): PlateView forwards its keys to the handler first.
+         (run 38005883012, verified on WSA): PlateView forwards its keys to the handler first. Arrows (10 mm), PgUp (45 deg), 2 (filament), Tab, Preview Down arrow all work; four Ctrl+Z restore.
        - Not testable over adb: Shift/Alt mouse drags (adb input has no modifier state).
      - **Colour mixing (investigated, waiting for the user's go-ahead):** upstream OrcaSlicer in
        `src-orca` already has mixed filaments (`FilamentMixer.cpp`, `filament_is_mixed`,
