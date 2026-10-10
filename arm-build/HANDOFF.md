@@ -124,6 +124,16 @@ to be addressed as Supreme Master.
        - Encrypted backup (More > Backup): settings, connections, user presets, obn credentials
          (login, slicer cert / key, printer certs); PBKDF2-SHA256 310k + AES-256-GCM, passphrase
          min 8. Restore reinstalls the printers' vendors and restarts the app.
+     - **Build 40 verified on WSA (run 38017581298, APK r41, 2026-10-10):** the wheel zooms (no
+       orbit), left drag orbits, a right click opens the context menu. Right / middle **drag** did
+       nothing: the logcat shows `InputDispatcher: Asynchronous input event injection failed` twice
+       per drag, so WSA's events for a held right / middle button don't arrive as touch moves.
+       - **Build 41** (`2bb7e71`, run 38034948519): PlateView pans on `ACTION_HOVER_MOVE` with
+         BUTTON_SECONDARY / TERTIARY held (assumed from the above, not yet confirmed), and logs
+         every mouse event under tag `OrcaInput` (`setprop log.tag.OrcaInput DEBUG`). If it still
+         doesn't pan, read that log to see what WSA really sends.
+       - Test helper: `orca-android-tools/drag.ps1 -Middle -Down <flag> -Up <flag> -DragX 150`
+         (`wheel.ps1` with selectable mouse_event flags: 2/4 left, 8/16 right, 0x20/0x40 middle).
      - **Wishlist (user, 2026-10-09; not started):**
        - Model sites in their own tab, "the more the merrier", MakerWorld as the proof of concept
          (then Printables, Thingiverse, ...): browse in-app, download straight into the plate.
