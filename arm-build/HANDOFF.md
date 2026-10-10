@@ -25,8 +25,9 @@ merge the feature branch into the test branch once both build clean and pass on 
   - Pinch zoom and Ctrl+wheel zoom in Models (user / wheel.ps1).
   - MakerWorld "Full site" chip; theme switch recreates the Models browser.
   - CI native-core cache + ccache: check the 2nd build after 38072645925 takes ~5-8 min.
-- **Next: Orca plugins** (research done, see below). Ask the user which types their 4 subscribed
-  plugins are (More > Orca Cloud > Subscribed plugins shows types); that sets the first target.
+- **Next: Orca plugins** (research done, see below). The user's 4 subscribed plugins (types as the
+  app lists them): Script; "Orca Cloud dev" (label as reported, check what it is); Script; Script +
+  SlicingPipeline. So the first target is the **Script** capability (3 of 4), then SlicingPipeline.
 - Order (user): Orca Cloud login (done), preset sync (done, testing), Orca plugins (Script +
   SlicingPipeline first, then printerAgent, then pages). OpenSCAD skipped for now.
 
