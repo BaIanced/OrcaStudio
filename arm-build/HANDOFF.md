@@ -41,11 +41,20 @@ merge the feature branch into the test branch once both build clean and pass on 
   manifest as a "Plugins Used" process edit (`OrcaProject.cpp` diff_options).
   G-code save picker remembers the last folder = a folder in the user's own project dir: don't
   test saves through it (use Share + logcat).
-- **User idea (2026-10-10): 3D Filament Profiles (3dfilamentprofiles.com)** is the utility the user
-  actually uses (thought FilamentHub was it). No public API (MarksMakerSpace/filament-profiles
-  issue #134 open), Vercel bot checkpoint blocks scripted fetches (429) -> not a plugin. Proposed:
-  a MakerWorld-style WebView tab + import of its filament profile downloads as presets; inventory
-  sync not feasible without an API. Waiting on the user: which features they use.
+- **3D Filament Profiles (3dfilamentprofiles.com) = r67, run 38108434060, verified on WSA
+  2026-10-10.** The utility the user actually uses (all features wanted). No public API (issue #134),
+  Vercel bot checkpoint (scripted fetches 429; WebView passes). Built in, not a plugin:
+  - Models tab 4th site (`ModelSite.FILAMENT_PROFILES`); the user is signed in there (email/GitHub/
+    Discord; Google likely blocks WebView sign-in).
+  - Preview > More > "Log print to 3D Filament Profiles": `net/FilamentProfiles.kt` builds
+    `/my/print/log?v=1&f=&p=&d=<base64url G-code comment lines>` like the site's own
+    `tools/slicer-print-log/3dfp-print-log.py`; opens in the Models tab (`UiState.modelsUrl`). Verified:
+    page lists printer, time, 66.70 g per filament + spool picker. Never press Subtract in tests.
+  - Spool profile export (My Spools row > Actions > Export slicer profile > OrcaSlicer/A1/0.4) is a
+    blob: JSON revoked on click: BRIDGE_JS keeps blobs 60 s (`__orcaBlobs`), the download listener
+    reads them back; `.json`/`.orca_*`/zips of JSON go to the preset import (`FileController.openDownloaded`).
+    Imported "Overture PETG White (3DFP T41GBvwn4) @A1" (user approved exporting any spool).
+  - CDP on its page: `cdp.mjs` / `pick.mjs` (Radix selects need pointer events) in the scratchpad.
 - **Local native build in WSL** (25 min cold, seconds incremental): `~/orca-android-tools/wsl/corebuild.sh`
   (`MSYS_NO_PATHCONV=1 wsl -d Ubuntu -- bash /mnt/c/Users/Vince/orca-android-tools/wsl/corebuild.sh`) syncs `android/` from the
   Windows checkout (`syncsrc.py`, CRLF->LF, only changed files) into `~/src/OrcaStudio-Android`
