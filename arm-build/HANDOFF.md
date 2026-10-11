@@ -86,11 +86,13 @@ about branch handling (there was no "two streams" rule). Main merges / releases 
     of backgrounding the app (user report: "acts like minimise"). Real mouse button (user).
   - MakerWorld: dark web pages, native links row, blank strip trimmed, Collections opens the
     user's collections.
-- Built, not tested yet:
-  - More > "Sync presets from Orca Cloud" (pull) and "Upload presets to Orca Cloud" (user).
-  - Pinch zoom and Ctrl+wheel zoom in Models (user / wheel.ps1).
-  - MakerWorld "Full site" chip; theme switch recreates the Models browser.
-  - CI native-core cache + ccache: check the 2nd build after 38072645925 takes ~5-8 min.
+- Verified 2026-10-11 (r77): MakerWorld "Full site" chip (header, no BBL UA, back to slicer mode);
+  theme switch recreates the Models browser (page prefers-color-scheme follows Light/Dark); CI
+  cache works (builds ~6 min). Orca Cloud pull/upload: user tested on r72 (see below).
+- **r79 = run 38155435432 (Models zoom fix), installed + verified on WSA 2026-10-11:** Ctrl+wheel / pinch did nothing on MakerWorld because
+  its viewport meta has `maximum-scale=1.0, user-scalable=no`. `ZOOM_JS` in `ModelsScreen.kt` strips
+  those (MutationObserver re-applies). Verified on r79 (CDP + real Ctrl+wheel): meta unlocked on load, scale 1 -> 1.21 -> 1.46 -> 1.
+  (The first Ctrl+wheel right after a meta change is ignored; later ones work.) Pinch: user to test.
 - **Plugin capability settings (2026-10-11), r71 = run 38122146536 (38eb085), installed + verified
   on WSA:** More > Orca Cloud section: "<capability> settings" button per capability ->
   `ui/settings/PluginConfigDialog.kt` (custom page from get_config_ui with the plugin-config-ui.js
