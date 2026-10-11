@@ -225,6 +225,34 @@ about branch handling (there was no "two streams" rule). Main merges / releases 
     OpenSCAD design" -> `ScadController.editObject`. Native + Kotlin compiled locally. To test:
     render, paint/setting on it, Customizer change keeps both; save project, reload, Edit design.
     Not done: small in-editor preview; relative include<> files aren't embedded.
+  - **r90 = run 38182983535 (commit "Modeling: Assemble ..."), CI green, installed on WSA;
+    results below:**
+    - Engine `assemble(items)` (port of `GUI_ObjectList.cpp:3045` merge: copies become parts of one
+      "Assembly", world placement kept) and `mesh_boolean(object, src, tool, op, keepTool)` (port of
+      `GLGizmoMeshBoolean.cpp:381-431` via `MeshBoolean::mcut::make_boolean`, painting remapped).
+      Deviation: the gizmo sets the result's offset to the old part's offset (`:503`), which shifts a
+      union with an off-centre part; we keep add_volume's centred offset. Added parts are named "Part N".
+    - UI: multi-select toolbar + context menu "Assemble"; object More menu "Add part" (box at the
+      object centre) and "Mesh boolean" (dialog `PrepareDialogs.kt` MeshBooleanDialog; context menu
+      entry when the object has 2+ parts).
+    - OpenSCAD: `ScadDeps.collect` embeds local include<>/use<> files (relative to the main file,
+      2 MB cap, library files excluded) in the design JSON `files`; `ScadDesign.unpack` restores them
+      under `files/openscad/designs/<hash>/` on Edit design. Draft meta now always keeps an opened
+      file as the include base (was dropped once the text changed).
+    - **r90 on WSA (temp Plate 2, 2026-10-11):** Assemble verified (cube + cylinder -> "Assembly",
+      positions kept, 732 tris). Mesh boolean dialog verified; difference ran (cylinder didn't overlap,
+      so result = cube). Found: "Add part" threw "Unsupported volume type" (code 0 missing) and parts
+      couldn't be moved at all.
+    - **r91 = run 38183994457:** fixes Add part (placed beside the object at +X like
+      `GUI_ObjectList.cpp:2565-2578`), part/modifier Position-in-object / Rotation / Size fields under
+      the selected part in the object card (engine `setTransform` takes `volume`; scene JSON volumes
+      carry rotation + scale).
+    - **r91 verified on WSA 2026-10-11 (temp Plate 2, deleted after; session saved clean, 8 objects):**
+      Add part = 10 mm box beside the 20 mm cube; part X 15 -> 8 via the new field moved it into the
+      corner; difference 12 -> 38 tris; undo -> 2 parts; intersection = 7x10x10 box in place (centre
+      +6.5/-5 mm); union 46 tris, centre +1.5 mm (no shift). Painting through a boolean: untested.
+      Label "(mm) (mm)" fixed after (commit "Part position label", not built yet - goes with the next build). OpenSCAD: a .scad zip with a local include, render, Edit design
+      after restart.
   - Plan: separate cached OpenSCAD deps stage (don't touch the Orca deps cache key), JNI
     `renderScad(src, params)` -> TriangleMesh straight into the plate, source + Customizer values
     stored in the 3MF so the object re-renders when edited; Compose code editor + Customizer panel.
@@ -287,6 +315,12 @@ about branch handling (there was no "two streams" rule). Main merges / releases 
   `android/core` (submodule stays unpatched): PluginManager (21 refs), PluginConfig (14),
   PluginResolver (9), PluginAuditManager (43, I18N), host/PluginHostUi (84), PluginHostApp (10),
   PluginPages (40), PythonInterpreter (1).
+
+### Task list (user, 2026-10-11; not started unless noted)
+- **Auto-save:** the session is saved only in `onStop`, so a crash / force-stop loses edits. Desktop
+  Orca has Preferences "Backup" switch + interval (grep `backup_switch` / `backup_interval` in
+  src-orca) - port as More > Misc "Auto-save every N min" and/or save on plate change (user: a
+  setting would be a nice touch unless saving on build plate change is the logical choice).
 
 ### Other open items
 - WSA: 127.0.0.1 refused a shell connection to the loopback while ::1 worked (browser sign-in
