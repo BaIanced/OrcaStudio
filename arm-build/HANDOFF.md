@@ -16,31 +16,24 @@ about branch handling (there was no "two streams" rule). Main merges / releases 
   `PreviewPanel.kt:268`, over the 512 MB heap). Now `Buffers.kt` memory-maps, and `Preview.cpp`
   FloatWriter writes `.tmp` + rename like the scene/paint meshes. WSA: the user's plate (97 MB
   extrusions.bin) slices and previews, Java heap 5 MB. The 325 MB slice itself: user to retest.
-- **Feature branch `claude/orca-plugins`: plugin runtime.** r62 = run 38082690102 on WSA. Verified
-  2026-10-10: FilamentHub installs from Orca Cloud and loads (page "FilamentHub" +
-  "filamenthub-slice-reporter"), its page renders (catalog, search, filters). Not tested yet: page
-  interaction / sign-in, post-process on save/send. WSA got wedged once (no app window): stop the
-  WsaClient processes, `Start-Service WsaService`, then `Start-Process wsa://<package>`.
-  Embedded CPython 3.12.12 (Chaquopy build, `android/scripts/stage_python.py`) + upstream plugin
-  host compiled unchanged (`android/core/plugins.cmake`); Android replacements in
-  `android/core/plugin/` (PluginManager, PluginAuditManager = no sandbox hook yet, orca.host app/ui);
-  `PluginConfig.cpp` extracted by `android/scripts/extract_plugin_config.py`. JNI
-  `jni/OrcaPlugins.cpp` <-> `plugins/PluginNative.kt` / `Plugins.kt`; page UI `ui/settings/PluginPage.kt`.
-  Test on WSA: More > Orca Cloud > Subscribed plugins > FilamentHub > Install (re-downloads, installs
-  to `files/data/orca_plugins/_subscribed/<user>/<uuid>`), then the "FilamentHub" page button under
-  the section; logcat tag OrcaPlugins + python log. Post-process step runs on save/share/send.
-  Not done: plugin settings UI (getContext/saveConfig/onConfig, `resources/web/dialog`), audit
-  prompts, create_window.
-- **r65 = run 38106430722 on WSA (2026-10-10):** process settings > Others > "Slicing Pipeline
-  Plugin" is a checklist picker (`SettingsEditor.kt` PluginPicker, def `plugin_type`); engine
-  `selection_config()` calls `update_plugin_manifest()` (Android never filled `plugins`, so
-  post-process skipped every pick). Verified: pick filamenthub-slice-reporter, slice, Share ->
-  logcat `OrcaPlugins: post-process filamenthub-slice-reporter: skipped Slice reporting is off`
-  (enabling it needs the plugin settings UI = next). Option reset afterwards.
-  Commit 1fcfb56 (pushed, **not built**): session restore no longer loads the derived `plugins`
-  manifest as a "Plugins Used" process edit (`OrcaProject.cpp` diff_options).
-  G-code save picker remembers the last folder = a folder in the user's own project dir: don't
-  test saves through it (use Share + logcat).
+- **Orca plugin runtime (general capability, kept for future plugins).** User, 2026-10-11: uses no
+  Orca plugins today; wants the ability kept. **FilamentHub is dropped for good (user dislikes its
+  ToS); never suggest, test with, or mention it again.** The user's real filament site is
+  3dfilamentprofiles.com (built in, below). Verified on WSA with a test plugin 2026-10-10/11: install
+  from Orca Cloud, load, Pages page renders + messages, process option "Slicing Pipeline Plugin"
+  picker (`SettingsEditor.kt` PluginPicker; engine `selection_config()` calls
+  `update_plugin_manifest()`), post-process runs on Share (logcat tag OrcaPlugins), capability
+  settings (r71, below). Pieces: embedded CPython 3.12.12 (Chaquopy build,
+  `android/scripts/stage_python.py`) + upstream plugin host compiled unchanged
+  (`android/core/plugins.cmake`); Android replacements in `android/core/plugin/` (PluginManager,
+  PluginAuditManager = no sandbox hook yet, orca.host app/ui); `PluginConfig.cpp` extracted by
+  `android/scripts/extract_plugin_config.py`. JNI `jni/OrcaPlugins.cpp` <-> `plugins/PluginNative.kt` /
+  `Plugins.kt`; pages `ui/settings/PluginPage.kt`. Installs to
+  `files/data/orca_plugins/_subscribed/<user>/<uuid>`. Not done: audit prompts, create_window,
+  per-preset config overrides, printerAgent capability, uninstall UI. Pure-Python plugins only.
+  WSA wedged once (no app window): stop WsaClient, `Start-Service WsaService`, `Start-Process wsa://<package>`.
+  "Plugins Used" restore fix (1fcfb56) verified. G-code save picker remembers a folder in the user's
+  own project dir: test saves via Share + logcat.
 - **3D Filament Profiles (3dfilamentprofiles.com) = r67, run 38108434060, verified on WSA
   2026-10-10.** The utility the user actually uses (all features wanted). No public API (issue #134),
   Vercel bot checkpoint (scripted fetches 429; WebView passes). Built in, not a plugin:
@@ -55,19 +48,16 @@ about branch handling (there was no "two streams" rule). Main merges / releases 
     reads them back; `.json`/`.orca_*`/zips of JSON go to the preset import (`FileController.openDownloaded`).
     Imported "Overture PETG White (3DFP T41GBvwn4) @A1" (user approved exporting any spool).
   - CDP on its page: `cdp.mjs` / `pick.mjs` (Radix selects need pointer events) in the scratchpad.
-- Branches: `claude/orca-plugins` fast-forwarded into `claude/handoff-continuation-rseql3` (903ec54 =
-  r67); work on the test branch now. "Plugins Used" restore fix verified on WSA.
+- Branches: `claude/orca-plugins` was fast-forwarded into the test branch; work on the test branch.
 - **Session gotcha:** the app restores `files/session/session.3mf` on start and saves it only in
   `onStop` (41 MB, takes a while). `am force-stop` skips the save, so test edits reset before a
-  force-stop come back. WSA: HOME / another app did not trigger onStop. Leftover from 2026-10-11:
-  that session still holds `slicing_pipeline_plugin = filamenthub-slice-reporter` (harmless:
-  reporter skips); the running app has it reset, so it clears once the user closes the window.
+  force-stop come back. WSA: HOME / another app did not trigger onStop.
 - **AMS mapping (2026-10-11, b361cad, r70 = run 38119747043, installed on WSA).** Verified (FTPS :990
   blocked by iptables during the test so nothing could print): dialog maps "1 · PLA" (#FEC600) to
   A1 PLA Basic (yellow), dropdown lists A1-A4; Cancel; export slice_info now has prediction, weight,
   `<filament id="1" type="PLA" color="#FEC600" .../>`. Real print (user OK'd): 10 mm cube on a temp
-  Plate 2, dialog -> A1, "Print started", obn log `use_ams=1` (all earlier prints 0). Waiting on the
-  user to confirm it fed yellow from A1. Temp plate deleted, app closed via window close. User: the r69
+  Plate 2, dialog -> A1, "Print started", obn log `use_ams=1` (all earlier prints 0). **User confirmed
+  2026-10-11: printed yellow from A1 = AMS mapping verified.** Temp plate deleted, app closed via window close. User: the r69
   LAN cube printed from AMS A4 (PETG) instead of yellow PLA and globbed the nozzle. Cause: obn print
   got `use_ams=false`, empty `ams_mapping` (`ObnHost.kt` print call; `BambuHost.kt` same). Fix:
   `net/AmsMapping.kt` (port of `DevMapping.cpp:122` ams_filament_mapping: same type, closest CIE76;
@@ -101,10 +91,44 @@ about branch handling (there was no "two streams" rule). Main merges / releases 
   - Pinch zoom and Ctrl+wheel zoom in Models (user / wheel.ps1).
   - MakerWorld "Full site" chip; theme switch recreates the Models browser.
   - CI native-core cache + ccache: check the 2nd build after 38072645925 takes ~5-8 min.
-- **Next: Orca plugins.** The user only uses the **4th subscribed plugin (Script + SlicingPipeline)**;
-  the others (incl. "Orca Cloud dev") are not needed (user, 2026-10-10).
-- Order (user): Orca Cloud login (done), preset sync (done, testing), Orca plugins (Script +
-  SlicingPipeline first, then printerAgent, then pages). OpenSCAD skipped for now.
+- **Plugin capability settings (2026-10-11), r71 = run 38122146536 (38eb085), installed + verified
+  on WSA:** More > Orca Cloud section: "<capability> settings" button per capability ->
+  `ui/settings/PluginConfigDialog.kt` (custom page from get_config_ui with the plugin-config-ui.js
+  bridge via JS interface `orcaConfigHost`, host theme vars; else JSON editor); native
+  `config_open/save/restore` in `AndroidPluginRuntime.cpp` (global config layer only). Saves land in
+  `files/data/orca_plugins/config.json` and reload correctly.
+- **r77 = run 38128522536 (f80e7a0), installed + verified on WSA 2026-10-11:** Ctrl camera
+  shortcuts fixed. Two causes: (1) Android offers Ctrl keys to `onKeyShortcut` only when normal
+  dispatch leaves them unused, which never happened with the 3D view focused ->
+  `MainActivity.dispatchKeyEvent` runs `onKeyShortcut` first for Ctrl key-downs while the view has
+  focus; (2) the view only took focus on a click -> `PlateView.onGenericMotionEvent` takes focus on
+  any hover/scroll unless a text field has it (desktop `GLCanvas3D.cpp:4472-4482`). Verified: View
+  menu used, hover only, Ctrl+0 resets the view; `adb shell input keycombination 113 8` (Ctrl+1) ->
+  Top view. **Windows-side Ctrl+1..9 (keys.ps1 keybd_event) never reach Android** (log shows only the
+  Ctrl key; Ctrl+0 arrives): WSA or something on the PC drops them, not fixable in the app. Ask the
+  user whether a real keyboard's Ctrl+1 works. OrcaInput DEBUG logs "focus" / "shortcut" / "key".
+- **r74 = run 38126545229, installed on WSA 2026-10-11:** Quit dialog verified (centred title, note,
+  equal No/Yes). Modifier input verified with modin.ps1 (synthetic real-OS input): Ctrl/Alt/Shift+wheel
+  arrive as ACTION_SCROLL (meta CTRL 0x3000 / ALT 0x12 / SHIFT 0x41, Shift as h=-1) and zoom (screenshot
+  diff); Ctrl/Alt/Shift+middle-drag pan (WSA sends touch DOWN + hover moves buttons=4, no touch MOVE/UP).
+  The saved r72 log (`~/orca-android-tools/orcainput-r72.log`) has no modifier events in the new
+  format, so the user's earlier "deliver nothing / plain drag" reports aren't reproduced; ask the
+  user to retest on r75 if they still see it. Alt+wheel section view (desktop) not implemented.
+  modin drags shift the camera: restore with View (camera icon) > Fit plate.
+- **r73 = run 38125719209 (built, superseded by r74):** undo limit setting (More > Misc, 1-5000, default 200; was a
+  fixed 30, `OrcaScene.cpp` m_undo_limit / engine call setUndoLimit). Verified on r71 (temp plate,
+  removed): Delete key (adb + real keyboard), real Ctrl+Z, arrows 10 mm / Shift+arrow 1 mm all work
+  already. Scratch tools: `keys.ps1 -Keys <vk...>` (real keys), `click.ps1` (picks the wrong WsaClient
+  window, unfinished).
+- **r72 = run 38125329109 (installed on WSA 2026-10-11, OrcaInput DEBUG on):** Back on Prepare with nothing to clear asks
+  "Quit?" Yes/No (Back closes it); More > Misc > "Press Back twice to quit" option (toast, 2 s).
+  Shift+wheel in the 3D view used AXIS_HSCROLL (=0 -> always zoom out): fixed. OrcaInput log now
+  has meta/axes/tool/source. User test results 2026-10-11: Orca Cloud pull no error (same presets),
+  upload "0 uploaded" (fine); plain wheel zooms 3D view (= desktop). Ctrl/Alt+wheel and modifier+middle-drag:
+  see r74 (work in synthetic tests). Capture tool: `scratchpad/modin.ps1 -Key 0x10|0x11|0x12 -Mode
+  middle|wheel` + `setprop log.tag.OrcaInput DEBUG` (WSA input isn't visible to getevent/dumpsys).
+- Order (user): Orca Cloud login (done), preset sync (built, testing), plugin runtime (done as a
+  general capability; no plugin in active use). OpenSCAD skipped for now.
 
 ### Orca Cloud (Kotlin port of upstream `OrcaCloudServiceAgent.cpp`)
 - `net/OrcaCloud.kt`, `net/OrcaCloudLoopback.kt`, `ui/settings/OrcaCloudSection.kt`.
@@ -135,29 +159,14 @@ about branch handling (there was no "two streams" rule). Main merges / releases 
   (WRAP_CONTENT makes CSS 100vh = 0) and are made by `themedWebView` (app light/dark).
 - Untested: MakerWorld sign-in ticket flow, Thingiverse downloads.
 
-### FilamentHub (the user's plugin; read from the wheel, source stays out of repos)
-- Installed on WSA via run 38076568561 (`claude/orca-plugins`, r60): `files/plugins/<id>/plugin.whl`,
-  one 805 KB `filamenthub_plugin.py` (14k lines; line 545 is a 232 KB embedded React page). Pull
-  binaries with `adb exec-out "su -c 'cat ...'"` (plain `adb shell` mangles them).
-- **Stdlib only** (ssl, socket, ftplib, urllib, threading, zipfile, ...) + `orca`: fine on Android.
-- Registers `FilamentHubPage` (orca.pages.PagesPluginCapabilityBase) when the host has Pages, else
-  `FilamentHubCatalog` (Script: `orca.host.ui.create_window(html, ...)`), plus
-  `FilamentHubSliceReporter` (SlicingPipelineCapabilityBase) when orca.slicing exists.
-- Slice reporter acts **only at `Step.psGCodePostProcess`**: uses ctx.step, ctx.gcode_path (edits
-  the exported G-code in place: identity comments), ctx.output_name, ctx.host,
-  ctx.config_value("filament_settings_id") etc.; enabled per process preset via the
-  `slicing_pipeline_plugin` option.
-- Host surface: orca.base, @orca.plugin, orca.register_capability, orca.ExecutionResult.{success,
-  skipped}, capability get_name/get_icon/has_config_ui/get_config_ui/get_default_config/on_load/
-  on_unload/on_message/post_message/get_ui, orca.host.preset_bundle() (filaments/printers/prints:
-  size(), preset(i).name/.file/.is_user(), current_process_preset().config_value()),
-  orca.host.plugin.storage(), orca.host.app_language(), optional orca.host.reload_local_bundle
-  (not upstream). JS side: injected `window.orca` bridge (postMessage/onMessage/getContext/
-  saveConfig/onConfig) from `src-orca/src/slic3r/GUI/Widgets/WebHosting.cpp` ORCA_BRIDGE_JS.
-- It writes imported filament presets to `{data_dir}/user/<folder>/_local/filamenthub/filament/*.json`
-  (the app must then reload user presets) and opens OAuth in the real browser (`webbrowser`).
-- Android plan: Pages capability -> a Kotlin WebView screen with the bridge JS; post-process step
-  -> run on the G-code the app exports/sends; no wx needed.
+### Plugin host surface (what upstream plugins expect; implemented)
+- orca.base, @orca.plugin, orca.register_capability, orca.ExecutionResult.{success, skipped},
+  capability get_name/get_icon/has_config_ui/get_config_ui/get_default_config/get_config/on_load/
+  on_unload/on_message/post_message/get_ui, orca.host.preset_bundle(), orca.host.plugin.storage(),
+  orca.host.app_language(); `webbrowser.open` routed to the app. Page JS bridge = upstream
+  ORCA_BRIDGE_JS (`src-orca/src/slic3r/GUI/Widgets/WebHosting.cpp`). SlicingPipeline runs only
+  at `psGCodePostProcess` on Android (on the exported G-code, in place).
+- Pull files from WSA with `adb exec-out "su -c 'cat ...'"` (plain `adb shell` mangles binaries).
 
 ### Orca plugins: research (2026-10-10)
 - Upstream `src-orca/src/slic3r/plugin` (~14k lines): CPython 3.12 embedded via pybind11
