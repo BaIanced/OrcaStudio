@@ -153,6 +153,81 @@ about branch handling (there was no "two streams" rule). Main merges / releases 
   grep `src-orca/src/slic3r/GUI` for it; OpenSCAD's WebAssembly build (openscad-wasm /
   openscad-playground) could run in a WebView and hand the STL to the import path; upstream
   shapes + mesh boolean gizmo as a native option. Present options to the user before building.
+  **Checked 2026-10-11 (recommended: native OpenSCAD core in `liborca_jni.so`, not WASM):**
+  - WASM build forces `MANIFOLD_PAR OFF` (single-threaded) and NULLGL; native gets Manifold + TBB
+    on all cores. OpenSCAD @c0ac828 has `HEADLESS`/`NULLGL` and a static `OpenSCADLibInternal`.
+  - Shared with our Android deps prefix: Boost (has regex; lacks program_options, used only by
+    `openscad.cc` main -> patch out), CGAL, GMP/MPFR, Eigen, TBB, FreeType, OpenSSL, zlib, expat.
+    New: Manifold + Clipper2 (submodules; Orca's `deps_src/clipper2` is 2.0.1 -> watch duplicate
+    symbols), double-conversion, libzip, libxml2, harfbuzz, fontconfig, flex/bison (host).
+  - glib use outside `src/gui` is ~10 `g_utf8_*`/`gunichar` calls (`str_utf8_wrapper.h`,
+    `UnicodeIdentifier.cc`, `Value.cc`, `FreetypeRenderer.cc`) -> small shim over utf8proc
+    (minSdk 29, so NDK ICU (API 31) is out).
+  - Upstream "Design tab" (`src/slic3r/GUI/CAD/*`, `libslic3r/CAD/*`, OCCT B-rep sketch/primitives)
+    exists but is wx GUI; Android builds with `SLIC3R_CAD OFF` (`android/core/CMakeLists.txt:38`).
+  - **Step 1 started (user said "start", 2026-10-11):** `android/openscad/` superbuild ->
+    `libopenscad.so` (C API `bridge/scad_bridge.h`: `scad_render(src, file, params_json)` ->
+    triangle soup + log, `scad_parameters()`), only `scad_*` exported (`--exclude-libs,ALL`).
+    `shim/` = glib subset over utf8proc + gettext no-ops. `patch_openscad.cmake` drops
+    `src/openscad.cc` + program_options and adds the bridge subdir. CI `android-openscad.yml`
+    (push to `claude/**` touching android/openscad; restores the apk deps cache, own deps cache +
+    ccache; artifact `libopenscad-arm64-v8a` incl. `scad_smoke`, fonts, MCAD). **Step 1 DONE: run 38168198443 green, verified on WSA 2026-10-11** (lib 12 MB stripped; scad_smoke:
+    parameters JSON, CSG render 1792 tris, Customizer override works; `text()`/fonts/perf untested). Test:
+    `gh run download <id> -n libopenscad-arm64-v8a`, `MSYS_NO_PATHCONV=1 adb push` lib+bin+resources to
+    /data/local/tmp/scad, `LD_LIBRARY_PATH=. ./scad_smoke /data/local/tmp/scad/resources`. Fixed on the way:
+    pipx meson >=1.6.1, expat.pc, libxml2 pinned (NDK host .so), target `scad_core` (name clash).
+  - **Step 2 DONE (2026-10-11): r85 = run 38170713625, r86 = 38172403593, r87 = 38173875723 (installed
+    on WSA, verified below); r88 = 38174598085 (gear example pitch fix only, not installed).**
+    `bridge/scad_jni.cc` (JNI for `app.orcaandroid.scad.ScadNative`, writes binary STL, returns
+    {ok,dimension,triangles,log}; OPENSCAD_FONT_PATH=/system/fonts, HOME/XDG_CACHE_HOME=cache).
+    CI: android-openscad.yml caches `out/` as `android-openscad-out-<tree hash of android/openscad>`;
+    android-apk.yml restores it and stages `$BUILD_ROOT/openscad-jniLibs` + `openscad-assets/openscad`
+    (gradle adds both; miss = warning, APK without OpenSCAD -> "This build does not include OpenSCAD").
+    App: `scad/ScadService.kt` (process `:scad`, Messenger, 256 MB-stack thread, unpacks assets to
+    `files/openscad-resources` per lastUpdateTime; `OrcaApp.onCreate` returns early in `:scad`),
+    `scad/ScadClient.kt` (cancel = kill the :scad process via runningAppProcesses),
+    `scad/ScadModel.kt` (Customizer JSON parse/encode, vectors as "[a, b]" strings; 3 examples),
+    `ui/ScadController.kt` (UiState.scad; draft in `files/openscad/draft.scad|json`; render -> loadModels,
+    replaces the object it placed (by name) keeping offset xy/rotation/scale/mirror; auto-render on
+    Customizer change once an object is on the plate), `ui/scad/ScadEditor.kt` (panel: Code tab with
+    highlighting/line numbers/auto-indent/Tab, Customizer tab, console with clickable "line N",
+    Render/Update/Add as new/Stop; F5/F6/Ctrl+Enter render, Ctrl+S save). Entry: Prepare + menu and
+    bed context menu "OpenSCAD model"; opening .scad files (also in zips; main = file no other includes).
+    Wide: panel replaces the 380 dp side panel (45% width, 420-640 dp); phones: over the view with
+    "Show plate". **Verified on WSA (r85/r86):** editor look (highlighting, line numbers, tabs);
+    box renders + places (414 tris, 0.4 s); Customizer slider auto re-renders in place; text tag
+    (fonts) 3,506 tris; error log auto-opens console; Stop kills :scad and a fresh one serves the next
+    request; 6000-sphere for() renders after the RLIMIT_STACK raise (was a false "Recursion detected");
+    new objects go to a free spot (2nd box beside the 1st). Fixed on the way: `parser_init()` (library
+    path), RLIMIT_STACK 240 MB in scad_init, client restarts :scad after a "Recursion detected" log
+    (OpenSCAD's 1M tail-call limit left the process rejecting all calls), `handleDependencies()`.
+    r87: MCAD gear renders (use<> works; the example's pitch was in old units -> 2.5 m gear, fixed in
+    r88: MCAD spur gear takes mm per tooth, involute_gears.scad:324). Console "line N" tap switches
+    to Code and scrolls to the line (r86). Untested: Save/Open .scad via the picker, phone layout,
+    Ctrl+Enter/F6/Ctrl+S, Tab/auto-indent, opening .scad from a download/zip.
+    Test helper: `~/orca-android-tools/tapf.sh x y` (focus + tap; unfocused WSA taps are lost).
+    **WSA session gotcha (2026-10-11):** the session got saved mid-test (14:22) with test objects;
+    `CloseMainWindow()` now kills the app without onStop (no save). Reliable save: open the system
+    file picker from the app (Add > Import model), wait for session.3mf mtime, force-stop
+    documentsui. Test on a temp Plate 2 and remove it after. When deleting objects by list
+    position, verify the selection first (the list shifts; Pose08 got deleted once, undone).
+  - **Step 3 DONE: r89 = run 38178385444 (commit "keep the design with the object in the 3MF"), installed +
+    verified on WSA 2026-10-11:** box with a modifier, Customizer width 60->90 replaced the mesh in
+    place, modifier kept; session.3mf held `module` = openscad JSON (source newlines intact); after
+    force-stop + restart the restored box offered "Edit OpenSCAD design", which loaded the box (draft
+    was the gear) and Update on plate replaced it (object count unchanged). Painting remap untested.
+    Temp plate deleted, session saved clean (8 objects). Details: design kept in
+    `ModelObject::module_name` = "openscad:" + compact JSON {name, source, values} (`ScadDesign` in
+    `scad/ScadModel.kt`; 3MF writes it as `<metadata key="module">`, desktop Orca round-trips it;
+    no submodule change). Scene JSON `module` -> `SceneObject.module`. Engine calls `replaceMesh`
+    (port of `Plater.cpp:11602` replace_volume_with_stl: keeps settings/modifiers/instances, remaps
+    painting) and `setObjectModule` (no undo step) in `OrcaScene.cpp`. Object context menu "Edit
+    OpenSCAD design" -> `ScadController.editObject`. Native + Kotlin compiled locally. To test:
+    render, paint/setting on it, Customizer change keeps both; save project, reload, Edit design.
+    Not done: small in-editor preview; relative include<> files aren't embedded.
+  - Plan: separate cached OpenSCAD deps stage (don't touch the Orca deps cache key), JNI
+    `renderScad(src, params)` -> TriangleMesh straight into the plate, source + Customizer values
+    stored in the 3MF so the object re-renders when edited; Compose code editor + Customizer panel.
 
 ### Orca Cloud (Kotlin port of upstream `OrcaCloudServiceAgent.cpp`)
 - `net/OrcaCloud.kt`, `net/OrcaCloudLoopback.kt`, `ui/settings/OrcaCloudSection.kt`.
