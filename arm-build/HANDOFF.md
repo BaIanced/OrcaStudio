@@ -62,7 +62,10 @@ about branch handling (there was no "two streams" rule). Main merges / releases 
   force-stop come back. WSA: HOME / another app did not trigger onStop. Leftover from 2026-10-11:
   that session still holds `slicing_pipeline_plugin = filamenthub-slice-reporter` (harmless:
   reporter skips); the running app has it reset, so it clears once the user closes the window.
-- **AMS mapping (2026-10-11, b361cad, r70 = run 38119747043, building; untested).** User: the r69
+- **AMS mapping (2026-10-11, b361cad, r70 = run 38119747043, installed on WSA).** Verified (FTPS :990
+  blocked by iptables during the test so nothing could print): dialog maps "1 · PLA" (#FEC600) to
+  A1 PLA Basic (yellow), dropdown lists A1-A4; Cancel; export slice_info now has prediction, weight,
+  `<filament id="1" type="PLA" color="#FEC600" .../>`. **Not yet tested: a real print with it.** User: the r69
   LAN cube printed from AMS A4 (PETG) instead of yellow PLA and globbed the nozzle. Cause: obn print
   got `use_ams=false`, empty `ams_mapping` (`ObnHost.kt` print call; `BambuHost.kt` same). Fix:
   `net/AmsMapping.kt` (port of `DevMapping.cpp:122` ams_filament_mapping: same type, closest CIE76;
@@ -71,8 +74,9 @@ about branch handling (there was no "two streams" rule). Main merges / releases 
   `amsMapping2`. Also fixed: `.gcode.3mf` slice_info had no filaments/time/weight since plugin
   post-process made exports a copy (lookup by path; `exportGcode3mf(..., sliced)`).
   User's AMS lite: A1 yellow, A2 matte black, A3 white, A4 PETG. **Test print needs the user's OK.**
-  To test: run `wsa-lan.ps1 <ip>`, Print on a slice, check the dialog, Cancel; pull
-  `cache/out/export.gcode.3mf` and check `Metadata/slice_info.config` has `<filament .../>`.
+  Safe dialog test: `iptables -I OUTPUT -d <ip> -p tcp --dport 990 -j REJECT` (root), Print, Cancel,
+  then `iptables -D ...`. Closing the WSA window via `CloseMainWindow()` on the WsaClient
+  "OrcaStudio-Android" window runs onStop (session save verified 2026-10-11), unlike force-stop.
 - **Session handling (user, 2026-10-11):** keep this file current before stopping any task so the
   user can /clear at any point; cheaper (haiku/sonnet) subagents OK for builds/installs/searches.
 - **Local native build in WSL** (25 min cold, seconds incremental): `~/orca-android-tools/wsl/corebuild.sh`
