@@ -7,8 +7,8 @@ up front**; open them only when a question needs them (grep first).
 ## Now
 
 Both repos work on branch `claude/handoff-continuation-rseql3` (the "test branch").
-**Two streams (user, 2026-10-10):** implement on a feature branch while the test branch builds;
-merge the feature branch into the test branch once both build clean and pass on WSA.
+**Autonomy (user, 2026-10-11):** decide and act on whatever makes the most sense; don't stop to ask
+about branch handling (there was no "two streams" rule). Main merges / releases still need the user.
 
 - Run 38072645925 (test branch, Orca Cloud sync merge + CI cache) green, ~20 min; not installed.
 - **r59 = run 38074555972 (test branch) installed on WSA:** OOM fix (user crash: a big slice's 325 MB
@@ -55,6 +55,13 @@ merge the feature branch into the test branch once both build clean and pass on 
     reads them back; `.json`/`.orca_*`/zips of JSON go to the preset import (`FileController.openDownloaded`).
     Imported "Overture PETG White (3DFP T41GBvwn4) @A1" (user approved exporting any spool).
   - CDP on its page: `cdp.mjs` / `pick.mjs` (Radix selects need pointer events) in the scratchpad.
+- Branches: `claude/orca-plugins` fast-forwarded into `claude/handoff-continuation-rseql3` (903ec54 =
+  r67); work on the test branch now. "Plugins Used" restore fix verified on WSA.
+- **Session gotcha:** the app restores `files/session/session.3mf` on start and saves it only in
+  `onStop` (41 MB, takes a while). `am force-stop` skips the save, so test edits reset before a
+  force-stop come back. WSA: HOME / another app did not trigger onStop. Leftover from 2026-10-11:
+  that session still holds `slicing_pipeline_plugin = filamenthub-slice-reporter` (harmless:
+  reporter skips); the running app has it reset, so it clears once the user closes the window.
 - **Local native build in WSL** (25 min cold, seconds incremental): `~/orca-android-tools/wsl/corebuild.sh`
   (`MSYS_NO_PATHCONV=1 wsl -d Ubuntu -- bash /mnt/c/Users/Vince/orca-android-tools/wsl/corebuild.sh`) syncs `android/` from the
   Windows checkout (`syncsrc.py`, CRLF->LF, only changed files) into `~/src/OrcaStudio-Android`
