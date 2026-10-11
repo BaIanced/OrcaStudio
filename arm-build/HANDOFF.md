@@ -30,7 +30,10 @@ about branch handling (there was no "two streams" rule). Main merges / releases 
   `android/scripts/extract_plugin_config.py`. JNI `jni/OrcaPlugins.cpp` <-> `plugins/PluginNative.kt` /
   `Plugins.kt`; pages `ui/settings/PluginPage.kt`. Installs to
   `files/data/orca_plugins/_subscribed/<user>/<uuid>`. Not done: audit prompts, create_window,
-  per-preset config overrides, printerAgent capability, uninstall UI. Pure-Python plugins only.
+  per-preset config overrides, printerAgent capability. Pure-Python plugins only. Uninstall (r80):
+  subscribed list has Remove (`PluginManager::delete_plugin` in `AndroidPluginManager.cpp`);
+  Install over a loaded plugin now replaces it (was "restart to update"). Verified on WSA with Orca
+  Inspector (install, reinstall, remove; it was not installed before, so removed again).
   WSA wedged once (no app window): stop WsaClient, `Start-Service WsaService`, `Start-Process wsa://<package>`.
   "Plugins Used" restore fix (1fcfb56) verified. G-code save picker remembers a folder in the user's
   own project dir: test saves via Share + logcat.
@@ -93,6 +96,19 @@ about branch handling (there was no "two streams" rule). Main merges / releases 
   its viewport meta has `maximum-scale=1.0, user-scalable=no`. `ZOOM_JS` in `ModelsScreen.kt` strips
   those (MutationObserver re-applies). Verified on r79 (CDP + real Ctrl+wheel): meta unlocked on load, scale 1 -> 1.21 -> 1.46 -> 1.
   (The first Ctrl+wheel right after a meta change is ignored; later ones work.) Pinch: user to test.
+- **Section view (r80 = run 38157697528; r82 = 38158608656 panel fit + mirrored winding; r83 =
+  38159448169 panel clears the tool column; r84 = 38159995534 two-row panel, installed on WSA, layout
+  verified), verified on WSA r80/r82/r84:**
+  port of GLCanvas3D's section view. `render/SectionView.kt` (ratio, normal = camera direction at
+  first use, plane over the objects' bounding sphere as `_get_section_view_plane`), shaders discard
+  the camera side (`uSection`), back faces through the cut drawn dark grey as cut faces (no
+  MeshClipper). View menu > Section view toggles + opens the panel (`SectionViewPanel.kt`: slider,
+  Set viewing angle, Reset, Close); Alt+wheel +/-0.01 (verified 0.50 -> 0.52 -> 0.48); Esc closes the
+  panel. Mirrored copies: scene/paint export now keeps triangles facing out (`OrcaScene.cpp`
+  transform(..., true), `OrcaTools.cpp` emit swaps corners); verified r82 by mirroring a copy on the
+  user's plate, then force-stop (no session save) -> plate unchanged. Reset/Close verified r82.
+  Not done: travels/markers aren't clipped, picking ignores the cut.
+  WSA gotcha: screenshots go stale while the window isn't foreground; run focus.ps1 first.
 - **Plugin capability settings (2026-10-11), r71 = run 38122146536 (38eb085), installed + verified
   on WSA:** More > Orca Cloud section: "<capability> settings" button per capability ->
   `ui/settings/PluginConfigDialog.kt` (custom page from get_config_ui with the plugin-config-ui.js
@@ -115,7 +131,7 @@ about branch handling (there was no "two streams" rule). Main merges / releases 
   diff); Ctrl/Alt/Shift+middle-drag pan (WSA sends touch DOWN + hover moves buttons=4, no touch MOVE/UP).
   The saved r72 log (`~/orca-android-tools/orcainput-r72.log`) has no modifier events in the new
   format, so the user's earlier "deliver nothing / plain drag" reports aren't reproduced; ask the
-  user to retest on r75 if they still see it. Alt+wheel section view (desktop) not implemented.
+  user to retest on r75 if they still see it. Alt+wheel section view: done in r80 (below).
   modin drags shift the camera: restore with View (camera icon) > Fit plate.
 - **r73 = run 38125719209 (built, superseded by r74):** undo limit setting (More > Misc, 1-5000, default 200; was a
   fixed 30, `OrcaScene.cpp` m_undo_limit / engine call setUndoLimit). Verified on r71 (temp plate,
@@ -138,7 +154,8 @@ about branch handling (there was no "two streams" rule). Main merges / releases 
   `get_login_cmd` -> `window.postMessage(login_config)` (PKCE S256, loopback
   `http://localhost:41172..41174/callback`). Code exchange `POST auth.orcaslicer.com/auth/v1/token
   ?grant_type=pkce`. Refresh with 15 min skew; 400/401/403 signs out. Session: AES-GCM with an
-  AndroidKeyStore key in `noBackupFilesDir/orca_cloud/session.sec` (**not in the backup yet**).
+  AndroidKeyStore key in `noBackupFilesDir/orca_cloud/session.sec`; the app backup carries it
+  decrypted inside its passphrase-encrypted zip (`AppBackup.kt`), plus `orca_plugins/config.json` (r80).
 - API `https://api.orcaslicer.com`: plugins `GET /api/v1/plugins/subscriptions`; pull
   `GET /api/v1/sync/pull` (full, no cursor) -> engine `loadCloudPresets` (shared with the Bambu
   sync; cannot delete presets: `remove_users_preset` only touches presets whose user_id equals the
