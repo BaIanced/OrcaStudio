@@ -1,4 +1,4 @@
-# Handoff: OrcaStudio-Android + OrcaStudio aarch64 Flatpak (state as of 2026-10-10 20:45 UTC)
+# Handoff: OrcaStudio-Android + OrcaStudio aarch64 Flatpak (state as of 2026-10-11 03:05 UTC)
 
 Read this first. Address the user as Supreme Master. Older history (builds 14-50, past causes,
 Flatpak details) is in `HANDOFF-ARCHIVE.md`. **Don't read the archive or `README.md` / `NOTES-*.md`
@@ -30,7 +30,22 @@ merge the feature branch into the test branch once both build clean and pass on 
   to `files/data/orca_plugins/_subscribed/<user>/<uuid>`), then the "FilamentHub" page button under
   the section; logcat tag OrcaPlugins + python log. Post-process step runs on save/share/send.
   Not done: plugin settings UI (getContext/saveConfig/onConfig, `resources/web/dialog`), audit
-  prompts, create_window, picking `slicing_pipeline_plugin` in the process settings.
+  prompts, create_window.
+- **r65 = run 38106430722 on WSA (2026-10-10):** process settings > Others > "Slicing Pipeline
+  Plugin" is a checklist picker (`SettingsEditor.kt` PluginPicker, def `plugin_type`); engine
+  `selection_config()` calls `update_plugin_manifest()` (Android never filled `plugins`, so
+  post-process skipped every pick). Verified: pick filamenthub-slice-reporter, slice, Share ->
+  logcat `OrcaPlugins: post-process filamenthub-slice-reporter: skipped Slice reporting is off`
+  (enabling it needs the plugin settings UI = next). Option reset afterwards.
+  Commit 1fcfb56 (pushed, **not built**): session restore no longer loads the derived `plugins`
+  manifest as a "Plugins Used" process edit (`OrcaProject.cpp` diff_options).
+  G-code save picker remembers the last folder = a folder in the user's own project dir: don't
+  test saves through it (use Share + logcat).
+- **User idea (2026-10-10): 3D Filament Profiles (3dfilamentprofiles.com)** is the utility the user
+  actually uses (thought FilamentHub was it). No public API (MarksMakerSpace/filament-profiles
+  issue #134 open), Vercel bot checkpoint blocks scripted fetches (429) -> not a plugin. Proposed:
+  a MakerWorld-style WebView tab + import of its filament profile downloads as presets; inventory
+  sync not feasible without an API. Waiting on the user: which features they use.
 - **Local native build in WSL** (25 min cold, seconds incremental): `~/orca-android-tools/wsl/corebuild.sh`
   (`MSYS_NO_PATHCONV=1 wsl -d Ubuntu -- bash /mnt/c/Users/Vince/orca-android-tools/wsl/corebuild.sh`) syncs `android/` from the
   Windows checkout (`syncsrc.py`, CRLF->LF, only changed files) into `~/src/OrcaStudio-Android`
