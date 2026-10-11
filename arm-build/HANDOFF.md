@@ -1,4 +1,4 @@
-# Handoff: OrcaStudio-Android + OrcaStudio aarch64 Flatpak (state as of 2026-10-11 03:05 UTC)
+# Handoff: OrcaStudio-Android + OrcaStudio aarch64 Flatpak (state as of 2026-10-11, AMS mapping)
 
 Read this first. Address the user as Supreme Master. Older history (builds 14-50, past causes,
 Flatpak details) is in `HANDOFF-ARCHIVE.md`. **Don't read the archive or `README.md` / `NOTES-*.md`
@@ -62,6 +62,19 @@ about branch handling (there was no "two streams" rule). Main merges / releases 
   force-stop come back. WSA: HOME / another app did not trigger onStop. Leftover from 2026-10-11:
   that session still holds `slicing_pipeline_plugin = filamenthub-slice-reporter` (harmless:
   reporter skips); the running app has it reset, so it clears once the user closes the window.
+- **AMS mapping (2026-10-11, b361cad, r70 = run 38119747043, building; untested).** User: the r69
+  LAN cube printed from AMS A4 (PETG) instead of yellow PLA and globbed the nozzle. Cause: obn print
+  got `use_ams=false`, empty `ams_mapping` (`ObnHost.kt` print call; `BambuHost.kt` same). Fix:
+  `net/AmsMapping.kt` (port of `DevMapping.cpp:122` ams_filament_mapping: same type, closest CIE76;
+  serialization as `SelectMachine.cpp:1343`), Print on Bambu -> `ui/preview/AmsMappingDialog.kt`
+  (pre-filled, pick per filament) -> `DeviceController.confirmPrint`; JNI `ObnNative.print` gained
+  `amsMapping2`. Also fixed: `.gcode.3mf` slice_info had no filaments/time/weight since plugin
+  post-process made exports a copy (lookup by path; `exportGcode3mf(..., sliced)`).
+  User's AMS lite: A1 yellow, A2 matte black, A3 white, A4 PETG. **Test print needs the user's OK.**
+  To test: run `wsa-lan.ps1 <ip>`, Print on a slice, check the dialog, Cancel; pull
+  `cache/out/export.gcode.3mf` and check `Metadata/slice_info.config` has `<filament .../>`.
+- **Session handling (user, 2026-10-11):** keep this file current before stopping any task so the
+  user can /clear at any point; cheaper (haiku/sonnet) subagents OK for builds/installs/searches.
 - **Local native build in WSL** (25 min cold, seconds incremental): `~/orca-android-tools/wsl/corebuild.sh`
   (`MSYS_NO_PATHCONV=1 wsl -d Ubuntu -- bash /mnt/c/Users/Vince/orca-android-tools/wsl/corebuild.sh`) syncs `android/` from the
   Windows checkout (`syncsrc.py`, CRLF->LF, only changed files) into `~/src/OrcaStudio-Android`
@@ -161,7 +174,6 @@ about branch handling (there was no "two streams" rule). Main merges / releases 
   PluginPages (40), PythonInterpreter (1).
 
 ### Other open items
-- Orca Cloud session not in the encrypted backup.
 - WSA: 127.0.0.1 refused a shell connection to the loopback while ::1 worked (browser sign-in
   worked anyway).
 - Flatpak r9 MakerLab tab: user hasn't reported (ticket sign-in, 3MF/STL round trip).
