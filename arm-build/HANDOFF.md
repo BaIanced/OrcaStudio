@@ -65,7 +65,9 @@ about branch handling (there was no "two streams" rule). Main merges / releases 
 - **AMS mapping (2026-10-11, b361cad, r70 = run 38119747043, installed on WSA).** Verified (FTPS :990
   blocked by iptables during the test so nothing could print): dialog maps "1 · PLA" (#FEC600) to
   A1 PLA Basic (yellow), dropdown lists A1-A4; Cancel; export slice_info now has prediction, weight,
-  `<filament id="1" type="PLA" color="#FEC600" .../>`. **Not yet tested: a real print with it.** User: the r69
+  `<filament id="1" type="PLA" color="#FEC600" .../>`. Real print (user OK'd): 10 mm cube on a temp
+  Plate 2, dialog -> A1, "Print started", obn log `use_ams=1` (all earlier prints 0). Waiting on the
+  user to confirm it fed yellow from A1. Temp plate deleted, app closed via window close. User: the r69
   LAN cube printed from AMS A4 (PETG) instead of yellow PLA and globbed the nozzle. Cause: obn print
   got `use_ams=false`, empty `ams_mapping` (`ObnHost.kt` print call; `BambuHost.kt` same). Fix:
   `net/AmsMapping.kt` (port of `DevMapping.cpp:122` ams_filament_mapping: same type, closest CIE76;
