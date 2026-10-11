@@ -146,7 +146,13 @@ about branch handling (there was no "two streams" rule). Main merges / releases 
   see r74 (work in synthetic tests). Capture tool: `scratchpad/modin.ps1 -Key 0x10|0x11|0x12 -Mode
   middle|wheel` + `setprop log.tag.OrcaInput DEBUG` (WSA input isn't visible to getevent/dumpsys).
 - Order (user): Orca Cloud login (done), preset sync (built, testing), plugin runtime (done as a
-  general capability; no plugin in active use). OpenSCAD skipped for now.
+  general capability; no plugin in active use). **Next (user, 2026-10-11): modeling in the app**
+  - OpenSCAD, or any other way to use the slicer as 3D-printing modeling software. Not started;
+  no code yet. Ideas to check first (all unverified): upstream src-orca may already have a
+  "Design" tab (GLCanvas3D.hpp comment mentions "the Design tab's canvas" + studio lighting) -
+  grep `src-orca/src/slic3r/GUI` for it; OpenSCAD's WebAssembly build (openscad-wasm /
+  openscad-playground) could run in a WebView and hand the STL to the import path; upstream
+  shapes + mesh boolean gizmo as a native option. Present options to the user before building.
 
 ### Orca Cloud (Kotlin port of upstream `OrcaCloudServiceAgent.cpp`)
 - `net/OrcaCloud.kt`, `net/OrcaCloudLoopback.kt`, `ui/settings/OrcaCloudSection.kt`.
