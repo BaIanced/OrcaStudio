@@ -220,8 +220,14 @@ about branch handling (there was no "two streams" rule). Main merges / releases 
   helpers `cdp.mjs` / `cdplog.mjs` / `ua.mjs` in the session scratchpad (recreate if gone).
   A CDP UA override only lasts while that CDP connection is open.
 - System file picker: close with `adb shell am force-stop com.android.documentsui`.
-- WSA lost DNS once: `wsaclient /shutdown` and relaunch fixed it. WSA can't reach the printer on
-  the LAN (bridged network); adb `input` has no Shift/Alt state.
+- WSA lost DNS once: `wsaclient /shutdown` and relaunch fixed it. adb `input` has no Shift/Alt state.
+- **WSA -> LAN printer:** WSA shares the PC's address; only its virtual gateway answers ARP, so LAN
+  hosts give "No route to host" (Local network access is on; no effect). Fix after each WSA start:
+  `wsa-lan.ps1 <printer-ip>` (routes the host via the gateway in table 1002). Ping stays dead, TCP
+  works. Verified 2026-10-11: cube printed over LAN (FTPS upload, queued), r69.
+- Cloud-only print (no LAN) fails `-2060 upload poll timeout`: server stays "running" (> 2 min;
+  obn uploads the full .gcode.3mf as the config file). Patch 0004 tried a longer poll; reverted.
+- Printing from the app shows "Log print to 3D Filament Profiles" after success (verified).
 - The user's Chromebook (Crostini, aarch64) runs the Flatpak; A1 printer is cloud-bound
   (Developer Mode off); the app is signed in to their Bambu account with PEMs imported.
 
