@@ -278,7 +278,52 @@ about branch handling (there was no "two streams" rule). Main merges / releases 
 ### NEXT: modeling roadmap (user agreed 2026-10-11, in this order)
 User goal: model **without writing code**; OpenSCAD code is only a backstop for debugging. Today
 no-code = templates + Customizer sliders + native parts/boolean/assemble; new shapes still need code.
-1. **Shape builder (start here; nothing built yet).** User: "replicate any of the best modeling
+1. **Shape builder phase 1: r96 = run 38208190893 installed + verified on WSA 2026-10-11** (temp
+   Plate 2, deleted after; user's plate untouched = Plate 1, 1 object Pose05.step): Add menu ->
+   Shape builder opens; box + cylinder added side by side; Hole cut (12 -> 48 tris); X/W fields;
+   preview overlay (blue selection box) + tap pick + drag moved the box to (26, 15) on 1 mm snap;
+   toolbar Undo; long-press multi-select + Group (cut kept); ⋮ Make a slider on W -> Customizer
+   slider 20 -> 30 changed the size; Add to plate; auto-save, force-stop, relaunch, long-press
+   object > Edit OpenSCAD design reopened the Shapes tab at 30 mm. Bugs found -> fixed in
+   **r97 = run 38209274086, installed + verified on WSA 2026-10-11 (temp Plate 2 deleted, session
+   saved clean, app closed)**: new design starts empty; cylinder 312 tris (round); all 12 kinds
+   render (box..text, ring/dome/text codegen OK); repeat row + circle (circle turns about the
+   design origin 0,0 by default); group -> ungroup leaves every translate identical. Still
+   untested: align, mirror, dims list edit/remove, keyboard shortcuts, phone layout. Small: the
+   preview doesn't re-frame as the design grows (Frame button works). NEXT for the builder: on-screen
+   scale/rotate handles in the preview (phase 1 leftover), then phase 2 (sketch + extrude).
+   Fixed in r97: new design showed the previous
+   draft's preview (late preview result now dropped when the key changed, `runPreview`); round
+   shapes had 7 sides (scaled 1 mm primitives + $fs -> generated `function sides(d)` sets $fn);
+   palette FlowRow filled the short panel (now one scrolling row); slider names were
+   "box_1_size_mm_w" (now "box_1_width"); placed objects were named after the preview STL
+   ("4795...stl", also hit plain OpenSCAD designs; now a copy named after the design).
+   To verify on r97: cylinder looks round, new design starts with an empty preview, object name.
+   Untested: align, mirror, repeat, ungroup, dims section edit/remove, text/torus/tube/dome codegen,
+   keyboard shortcuts (need focus on the Shapes tab), phone layout.
+   Files: `scad/ShapeModel.kt` (Shape/Dim/Repeat/ShapeDesign: JSON, bounds, `toScad()` codegen;
+   pos = bottom-centre of the box, rotate about box centre, holes cut solids of their own group
+   AND at top level), `ui/ShapeController.kt` (add/update/setField/delete/duplicate/group/ungroup/
+   align/drop/mirror/move/repeat/sliders, undo 200), `ui/scad/ShapeBuilder.kt` (Shapes tab:
+   palette, toolbar, tree list (long-press = multi-select), properties, ⋮ per field row = make /
+   follow / stop following a slider, Sliders section; keys Del, Ctrl+D/G/Shift+G/Z/Y/A, arrows
+   1 mm (Shift 10), PgUp/PgDn z, H/S, Esc), `MeshPreviewView` PreviewBox overlay (selection blue,
+   holes grey, drawn on top), tap pick (slab test), drag on a shape moves the selection (1 mm snap,
+   plane = box bottom), empty drag still orbits. ScadController: `shapes`/`selected` in
+   ScadEditorState, `newShapes()`, `setShapes()` (regenerates source; dims-only change pushes to
+   the plate like the Customizer), `detachShapes()` ("Edit as code"), draft + ScadDesign carry
+   `shapes`. Entries: Prepare Add menu + bed context menu "Shape builder", template gallery card.
+   Code tab is read-only for shape designs. Customizer slider changes write the dim value.
+   Known gaps: on-screen scale/rotate handles, Customizer "Add a slider" does nothing in builder
+   mode, ungroup of a rotated group with rotated children is approximate, renaming a shape
+   re-renders (name is a code comment). Test plan: open via Add menu, add box + cylinder, make
+   cylinder a hole, group, preview shows the cut; drag in preview; slider on box width + Customizer;
+   Add to plate, restart, Edit OpenSCAD design -> Shapes tab back. Use a temp Plate 2.
+   Reuse check (user asked 2026-10-11 to reuse public projects where logical): no public
+   touch shape-builder -> OpenSCAD exists (search 2026-10-11). Materializr (F-Droid, GPL-3,
+   OpenCASCADE, Dear ImGui UI) is the only Android touch CAD found: UI not reusable in Compose;
+   look at it (and FreeCAD's planegcs solver) for phase 2 sketch/extrude/revolve.
+   Original brief: User: "replicate any of the best modeling
    software in a touchscreen format", with full keyboard + mouse support too. References: Tinkercad
    (drag shapes onto a workplane, Solid/Hole, Group, Align, Mirror, Ruler, Duplicate-repeat),
    Shapr3D / Onshape mobile (touch-first: sketch + extrude/push-pull, fillet/chamfer, snapping,
@@ -418,6 +463,9 @@ no-code = templates + Customizer sliders + native parts/boolean/assemble; new sh
 ## Efficiency (user, 2026-10-10)
 - Compile Kotlin locally before every push (12 s warm):
   `cd OrcaStudio-Android/android && JAVA_HOME="/c/Program Files/Java/jdk-22" ANDROID_HOME='C:\android_sdk' ./gradlew --console=plain -q :app:compileReleaseKotlin`
+- Add `:app:mergeReleaseResources` to that check when strings change, and read the exit code (a
+  grep on the output hid a resource failure once). Bash heredocs with python break in this tool:
+  write the script with Write, then run it.
 - Write code with Edit or python raw strings, never plain python heredocs (they ate backslashes 5x).
 - Test with `ui.ps1` text dumps; screenshots only when the look matters. After launching the app,
   wait until `ui.ps1` lists the tabs before tapping (the first tap after start is often lost).
