@@ -1079,3 +1079,93 @@ no-code = templates + Customizer sliders + native parts/boolean/assemble; new sh
   into main (Android main was r37 / PR #3). OrcaStudio: main's privacy commit 082b5d4 (handoff
   serial/IP removal) conflicted with the rewritten HANDOFF.md; kept the branch version (it holds
   no serial/IP; IP-like strings in NOTES-*.md are firmware versions).
+
+
+## Shape builder phase 2a: sketch shapes (2026-10-12, r101, run 38213296936)
+- Model `scad/Sketch.kt`: `P2`, `Loop` (corners + per-side bulge = tan(arc angle / 4), positive =
+  right of the side's direction = outward on a CCW outline; circle = 2 corners bulge 1; `polygon()`
+  tessellates arcs by $fs 0.4 / $fa 4), `Sketch` (loops; `toScad` = union of solid polygons minus
+  hole polygons; `START` = 20 mm square). JSON `{"loops":[{"pts":[[x,y]..],"bulge":[..],"hole":true}]}`.
+- `Shape.Kind.SKETCH` + `Shape.sketch`; extras `revolve` (0/1), `angle` (revolve, def 360), `top`
+  (extrude scale, def 1). Codegen `ShapeDesign.sketch()`: extrude = scale(w/nw, d/nd, h)
+  linear_extrude(1) centred drawing; revolve = rotate_extrude of the drawing (x = radius, clipped
+  to x >= 0, y shifted to 0), scaled to the box.
+- `ShapeController.setSketch/setRevolve/fitSketch`: an edit resets the box to 1:1 and moves pos so
+  the drawing stays in place (pos shift turned by rot.z only). `add()` returns the new id.
+- Editor `ui/scad/SketchEditor.kt`: full-screen Dialog, `SketchState` (own undo, view scale/origin,
+  snap to corners / grid (step from zoom) / level-plumb, hit test corners > side squares > outlines),
+  tools Select / Lines / Rectangle / Circle, PickBar (point X/Y, Bend, Straighten, Add a corner,
+  Hole switch, Delete). Done = one builder undo step. Palette chip "Sketch" opens it at once.
+- WSA test: screenshots via `adb exec-out screencap -p > file` from Bash (PowerShell redirection
+  corrupts PNGs). Drags: `adb shell input swipe x1 y1 x2 y2 600`.
+
+## Moved from HANDOFF.md on 2026-10-12 (env notes)
+- **WSA -> LAN printer:** WSA shares the PC's address; only its virtual gateway answers ARP, so LAN
+  hosts give "No route to host" (Local network access is on; no effect). Fix after each WSA start:
+  `wsa-lan.ps1 <printer-ip>` (routes the host via the gateway in table 1002). Ping stays dead, TCP
+  works. Verified 2026-10-11: cube printed over LAN (FTPS upload, queued), r69.
+- Cloud-only print (no LAN) fails `-2060 upload poll timeout`: server stays "running" (> 2 min;
+  obn uploads the full .gcode.3mf as the config file). Patch 0004 tried a longer poll; reverted.
+
+## Shape builder phase 2 rest: edges, hollow, import STL (2026-10-12, r102, run 38214501908)
+- Commit 45ac19d (+ clip fix f5840a4). Extras on `Shape`: `edge` (mm), `chamfer` (0/1), `shell`
+  (wall mm), `open` (0/1); `Shape.EDGED` / `Shape.SHELLED` kinds. Codegen `ShapeDesign.body()`:
+  3D edges = shrink by e + `minkowski` with a sphere (round) or an octahedron (chamfer, hull of two
+  $fn=4 cones), translated up e; sketch corners = 2D `offset` chain in `sketch().mods()`; hollow =
+  `difference()` with the cavity (sketch: outline `offset(delta = -wall)`), open top = cavity up past
+  the top. `Kind.MESH` + `Shape.file` (absolute path) + extras `mx0..mz1` (`Stl.bounds`, binary or
+  ASCII); `ShapeController.importMesh` copies the pick to `files/openscad/meshes` (same name and
+  length = reuse, else `_2`), placed right of the design. UI: `EdgeEditor` / `ShellEditor` in
+  `ShapeBuilder.kt`, palette chip "Import STL" (last chip).
+- WSA verified on r102: sketch drawing clipped to its canvas (pan test, screenshot); box Round 3 ->
+  668 tris, Chamfer -> 44 tris (14 + 2x3 = 20); Hollow wall 2 (cavity 16^3 at z 2), Open top;
+  Import STL (20x10x30 box with min corner 5,5,2) -> centred, at its size, file in `meshes/`, temp
+  pick deleted, W 40 -> scale 40/20; sketch Corners 4 + Hollow 2 + Open top; cylinder Round 2;
+  sphere Hollow 2. Ctrl+Z (`input keycombination`) undid a delete.
+- Found by math, fixed in feaec68 (not built yet): cavity used the outer edge size (walls 2.83 mm
+  at edges for wall 2) -> inner edge e - wall (chamfer e - 0.586 wall); open top left an inward lip
+  (cavity's rounded top) -> cavity reaches past the top by its own edge; revolved sketch's corner
+  offset was applied before scaling to the box -> profile scaled to the box first (`scale([1, d/w, 1])`
+  around the rotate_extrude).
+- Test tips: chip row scrolls left with `input swipe`, but back right only with
+  `input motionevent DOWN/MOVE/UP`; a Del key with no field focused deletes the selected shape.
+  Scratch helper `t.ps1` (focus, tap, dump filtered).
+
+## Shape builder phase 2b: sketch constraints + sketch sliders (2026-10-12, r103/r104)
+0. **r104 = run 38220409243 (56337ec)**: fixes from the r103 test (r103 passed checks 1,2,4-9 incl.
+   feaec68 hollow box). To retest on r104: rect with top fixed 30, right side Equal to… bottom ->
+   30 x 30, no red warning; removing a "=1" chip re-solves at once; ⋮ "Fix the length" fixes the
+   current value; slider "used N×" counts a sketch length; "Length = name" not clipped.
+1. **(r103 details) Test phase 2b on WSA** (build run 38218657886 = 71600d7, includes feaec68). 2b = sketch
+   constraints: `Con`/`Side` in `scad/Sketch.kt` (LENGTH value or `dim`, EQUAL, PARALLEL, LEVEL,
+   PLUMB; `Sketch.solve` = iterative projection, `pinned` corners stay; `unmet()`; index remaps
+   `withoutLoop/withoutPoint/withSplit`; `plus(rect=true)` adds H/V; `START` has them).
+   `ShapeDesign.withDims` re-solves sketches whose lengths follow a changed slider (box kept to
+   scale, `fitSketch(keepScale)` moved from the controller); used by setDim / withField /
+   Customizer `setValue`; `pushToPlate` = `old.withDims(new.dims) == new`. Editor: picked side ->
+   Length field (typing fixes), ⋮ menu (Free / Make a slider / Follow / Stop following), Level,
+   Plumb, Equal to… / Parallel to… (then tap the other side), remove chips; tags on canvas, red =
+   unmet. Solver math checked by a temp JVM JUnit run (6 tests OK; test kept in session scratchpad
+   only; gradle's test worker crashes here, run JUnitCore by hand with `cygpath -w` classpath).
+   **Test**: rect corner drag keeps a rect; Length 30 on a side; Equal/Parallel pairing; conflict
+   warning; Make a slider then move it in the builder dims list and in Customizer (sketch + box
+   follow, plate object follows); removeDim keeps the length; undo in editor restores dims.
+   Also feaec68: `draft.scad` of a hollow rounded box (open top: cavity edge = edge - wall, cavity
+   top = h + 0.01 + that edge) and a resized revolve with Corners.
+   Untested in 2a: point X/Y fields, Bend field, Add a corner, Delete corner, Undo, Rectangle tool,
+   pinch/wheel zoom, Esc/Enter/Del keys, Top scale, Turn angle, Edit sketch in Revolve mode (axis).
+   Untested in r102: revolve Corners, chamfer on cone/pyramid/wedge, edge/wall as sliders.
+   Known limit: a sketch length slider only works in the app (the .scad polygon is baked numbers).
+- r103 WSA test (run 38218657886): checks 1, 2, 4-9 passed (rect drag stays rect, Length 30,
+  conflict warning + undo, parallel on a drawn quad (slopes 0.2 both), Make a slider -> Customizer 40
+  -> size [30,40,10] + polygon +-20, removeDim keeps value 40, editor undo removes the slider,
+  feaec68 hollow rounded box: `rounded_box([16, 16, 18.01], 3)` at z 2). Failed: Equal with the
+  kept side made a false conflict; chip removal didn't re-solve; typing the current length didn't fix it.
+- r104 = run 38220409243 (56337ec) fixes: `constrain` falls back to a free solve when the pinned one
+  leaves unmet constraints; `unconstrain` re-solves; ⋮ "Fix the length"; "used N×" counts sketch
+  lengths; wider slider-name field. **Verified on WSA 2026-10-12**: Equal -> 30 x 30, no warning;
+  chip removal + Free the length clear the warning at once; Fix the length; "Length = sketch_1_side"
+  readable; "used 1×". Draft left empty, app closed.
+- Notes: a sliders' `value` in a dim-bound LENGTH con stays stale (only used as fallback). The
+  sketch canvas bottom is covered by the bottom bar when a side is picked (Fit helps). Plate 2 (empty)
+  still exists in the session. Temp JUnit test of the solver: session scratchpad only.
