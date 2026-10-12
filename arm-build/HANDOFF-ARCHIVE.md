@@ -1079,3 +1079,30 @@ no-code = templates + Customizer sliders + native parts/boolean/assemble; new sh
   into main (Android main was r37 / PR #3). OrcaStudio: main's privacy commit 082b5d4 (handoff
   serial/IP removal) conflicted with the rewritten HANDOFF.md; kept the branch version (it holds
   no serial/IP; IP-like strings in NOTES-*.md are firmware versions).
+
+
+## Shape builder phase 2a: sketch shapes (2026-10-12, r101, run 38213296936)
+- Model `scad/Sketch.kt`: `P2`, `Loop` (corners + per-side bulge = tan(arc angle / 4), positive =
+  right of the side's direction = outward on a CCW outline; circle = 2 corners bulge 1; `polygon()`
+  tessellates arcs by $fs 0.4 / $fa 4), `Sketch` (loops; `toScad` = union of solid polygons minus
+  hole polygons; `START` = 20 mm square). JSON `{"loops":[{"pts":[[x,y]..],"bulge":[..],"hole":true}]}`.
+- `Shape.Kind.SKETCH` + `Shape.sketch`; extras `revolve` (0/1), `angle` (revolve, def 360), `top`
+  (extrude scale, def 1). Codegen `ShapeDesign.sketch()`: extrude = scale(w/nw, d/nd, h)
+  linear_extrude(1) centred drawing; revolve = rotate_extrude of the drawing (x = radius, clipped
+  to x >= 0, y shifted to 0), scaled to the box.
+- `ShapeController.setSketch/setRevolve/fitSketch`: an edit resets the box to 1:1 and moves pos so
+  the drawing stays in place (pos shift turned by rot.z only). `add()` returns the new id.
+- Editor `ui/scad/SketchEditor.kt`: full-screen Dialog, `SketchState` (own undo, view scale/origin,
+  snap to corners / grid (step from zoom) / level-plumb, hit test corners > side squares > outlines),
+  tools Select / Lines / Rectangle / Circle, PickBar (point X/Y, Bend, Straighten, Add a corner,
+  Hole switch, Delete). Done = one builder undo step. Palette chip "Sketch" opens it at once.
+- WSA test: screenshots via `adb exec-out screencap -p > file` from Bash (PowerShell redirection
+  corrupts PNGs). Drags: `adb shell input swipe x1 y1 x2 y2 600`.
+
+## Moved from HANDOFF.md on 2026-10-12 (env notes)
+- **WSA -> LAN printer:** WSA shares the PC's address; only its virtual gateway answers ARP, so LAN
+  hosts give "No route to host" (Local network access is on; no effect). Fix after each WSA start:
+  `wsa-lan.ps1 <printer-ip>` (routes the host via the gateway in table 1002). Ping stays dead, TCP
+  works. Verified 2026-10-11: cube printed over LAN (FTPS upload, queued), r69.
+- Cloud-only print (no LAN) fails `-2060 upload poll timeout`: server stays "running" (> 2 min;
+  obn uploads the full .gcode.3mf as the config file). Patch 0004 tried a longer poll; reverted.

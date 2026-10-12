@@ -13,18 +13,23 @@ front**; grep them when a question needs them (e.g. `grep -n "AMS mapping" HANDO
   time to `/clear` then `/next`** (and why: task done + handoff updated). Don't suggest it mid-task.
 
 ## Next task
-1. **Shape builder phase 2: sketch + extrude** (modeling roadmap below). Start by reading
-   `scad/ShapeModel.kt` (`ShapeDesign`) and planning the sketch data model + touch UI.
+1. **Shape builder phase 2b** (batch with the pending clip fix f5840a4, then build + test):
+   light constraints in the sketch (fixed side length / dims, equal, parallel), sliders (dims)
+   inside a sketch, fillet/chamfer (2D offset; 3D minkowski), shell/hollow, import STL as a shape.
+   Untested in 2a: point X/Y fields, Bend field, Add a corner, Delete corner, Undo, Rectangle tool,
+   pinch/wheel zoom, Esc/Enter/Del keys, Top scale, Turn angle, Edit sketch in Revolve mode (axis).
 
-Done 2026-10-12: r99 verified (Frame keeps the turn dot inside; Customizer builder hint);
-main merged (see State).
+Done 2026-10-12: r101 (run 38213296936, phase 2a sketch shapes) verified on WSA: Add Sketch opens
+the editor, select, bend a side to a half circle, circle + Hole, Lines triangle, Done -> correct
+`draft.scad` (pos kept), render; Revolve renders. Bug found + fixed locally: drawing not clipped
+(f5840a4, not built yet). Details in the archive.
 
 ## State
 - Both repos work on branch `claude/handoff-continuation-rseql3` (the "test branch"). Autonomy
   (user, 2026-10-11): decide branch handling and next steps yourself. **Main merges / releases need
   the user.** Main = r99 (merged 2026-10-12 on the user's "merge"); user agreed to merge more
   often, at verified milestones: offer a merge PR when a batch is verified, merge only on their "merge".
-- Latest installed on WSA: r99 (run 38211644743), verified. Shape-builder handles not tested: Y
+- Latest installed on WSA: r101 (run 38213296936), sketch shapes verified (see Next task). Shape-builder handles not tested: Y
   handle, Shift = 1° turn, handles on a group / nested child, touch (WSA has none).
 - Shape-builder handles: `MeshPreviewView` (`handles()`, `overlay()` -> `PreviewOverlay` points/
   guide/ghost, `HANDLE_VS`), `ShapeController.resize/turn/handles/addDim`, `ScadPreview.kt` listener.
@@ -138,13 +143,6 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
   A CDP UA override only lasts while that CDP connection is open.
 - System file picker: close with `adb shell am force-stop com.android.documentsui`.
 - WSA lost DNS once: `wsaclient /shutdown` and relaunch fixed it. adb `input` has no Shift/Alt state.
-- **WSA -> LAN printer:** WSA shares the PC's address; only its virtual gateway answers ARP, so LAN
-  hosts give "No route to host" (Local network access is on; no effect). Fix after each WSA start:
-  `wsa-lan.ps1 <printer-ip>` (routes the host via the gateway in table 1002). Ping stays dead, TCP
-  works. Verified 2026-10-11: cube printed over LAN (FTPS upload, queued), r69.
-- Cloud-only print (no LAN) fails `-2060 upload poll timeout`: server stays "running" (> 2 min;
-  obn uploads the full .gcode.3mf as the config file). Patch 0004 tried a longer poll; reverted.
-- Printing from the app shows "Log print to 3D Filament Profiles" after success (verified).
 - The user's Chromebook (Crostini, aarch64) runs the Flatpak; A1 printer is cloud-bound
   (Developer Mode off); the app is signed in to their Bambu account with PEMs imported.
 
