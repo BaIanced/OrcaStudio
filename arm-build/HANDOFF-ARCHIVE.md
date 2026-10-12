@@ -1169,3 +1169,31 @@ no-code = templates + Customizer sliders + native parts/boolean/assemble; new sh
 - Notes: a sliders' `value` in a dim-bound LENGTH con stays stale (only used as fallback). The
   sketch canvas bottom is covered by the bottom bar when a side is picked (Fit helps). Plate 2 (empty)
   still exists in the session. Temp JUnit test of the solver: session scratchpad only.
+
+## AI tool layer milestone 1 (2026-10-12, Android r106-r108, verified on WSA r108)
+- Commits `c1f7c48`, `ae3a01b`, `7dd50e0`. Files: `ai/McpServer.kt` (hand-written HTTP/1.1 +
+  JSON-RPC: `initialize` / `ping` / `tools/list` / `tools/call`; `Mcp-Session-Id` issued, unknown id
+  -> 404; notifications -> 202; Origin -> 403; no / wrong bearer -> 401; GET -> 405),
+  `ai/McpTools.kt` (`design_get`, `design_describe`, `design_set` with validation: kinds, unique ids,
+  size > 0, dim names = identifiers, bind targets exist, no new mesh files, no control chars in
+  names), `ShapeController.replace` (one undo step via `commit`), `AppSettings.aiTools / aiToolsLan /
+  aiToken` (48 hex chars, SecureRandom), More > "AI tools (MCP)" (switch, LAN switch + addresses,
+  token show/hide, Copy setup command, New token), `AppViewModel.setAiTools` (bind on IO; restored at
+  startup after READY; stopped in `onCleared`). Debug: `setprop log.tag.OrcaMcp DEBUG` logs each request.
+- **WSA cause:** WSA's ip rules (`from 127.0.0.1 iif lo lookup 127`, `iif lo lookup 128`) send
+  Android loopback traffic to Windows, so `adb forward tcp:8765 tcp:8765` made adbd connect to
+  adb's own Windows listener: 2,000+ looping sockets, adb wedged (kill adb.exe to recover). Inbound
+  TCP from Windows to a WSA listener (127.0.0.1, loopback0 169.254.x, PC LAN IP) is not routed either.
+  toybox `nc` inside WSA can't reach any loopback listener for the same reason.
+- Fix: also listen on abstract unix socket `orcastudio_mcp`; `adb forward tcp:8765
+  localabstract:orcastudio_mcp`. `LocalServerSocket.close()` doesn't wake `accept()`, so `stop()`
+  connects once first (verified: both sockets gone after switching off).
+- Verified r108: curl suite (401 / 403 / 405 / initialize 2025-06-18 + session / 202 / bad session
+  404 / tools/list / describe + get with editor closed / invalid design_set lists 3 errors / valid
+  design_set opened the editor on the draft, preview 40 x 30 x 20 mm, generated code right, toast
+  "AI: changed the design (3 shapes)"); builder Undo -> empty, Redo -> 3 shapes (one step each);
+  `claude mcp add --transport http` -> `claude mcp list` "Connected"; headless `claude -p` called
+  `design_describe` ("3 shapes: Base, Peg, Hole"). Cleanup: temp `orca-test` MCP entry removed, draft
+  undone to the original empty design, AI tools + LAN switched off, forward removed, app stopped.
+- Untested: LAN mode from another device; restarting the server while a client is connected;
+  request > 4 MB / chunked (refused by design); real USB device forward; Copy setup command paste.

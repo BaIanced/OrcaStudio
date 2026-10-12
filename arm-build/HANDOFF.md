@@ -13,22 +13,23 @@ front**; grep them when a question needs them (e.g. `grep -n "AMS mapping" HANDO
   time to `/clear` then `/next`** (and why: task done + handoff updated). Don't suggest it mid-task.
 
 ## Next task
-1. **AI tool layer, milestone 1** (design note: `OrcaStudio-Android/docs/mcp-tool-layer.md`, read it
-   first): Settings toggle + bearer token, hand-written `ServerSocket` HTTP on `127.0.0.1:8765`
-   `POST /mcp`, JSON-RPC `initialize` / `tools/list` / `tools/call`, tools `design_get`,
-   `design_describe`, `design_set` through `ShapeController` (one undo step each). Test on WSA:
-   `adb forward tcp:8765 tcp:8765` + curl, then `claude mcp add --transport http ...`.
-   Open questions for the user are at the end of the note (defaults: localhost only, port 8765).
+1. **AI tool layer, milestone 2** (design note `OrcaStudio-Android/docs/mcp-tool-layer.md`, tables
+   "Tools v1" + "Confirm-on-screen rules"): shape edit tools (`shape_add/update/delete/move/turn/
+   resize/align/mirror/hole/group/ungroup/repeat`, `dim_*`, `sketch_set`) taking explicit `ids`,
+   `design_preview` (returns render errors), `design_to_plate` behind an Allow/Deny dialog (60 s =
+   deny), "AI: ..." toast with Undo. Add to `ai/McpTools.kt` (validation + `describe` reuse).
+   Test as in milestone 1 (archive: "AI tool layer milestone 1"); curl script pattern there.
 
 Done 2026-10-12: merged test branch -> main (Android PR #5 at r104, OrcaStudio PR #3); MCP design
-note written (Android `7768812`).
+note; **AI tools milestone 1 verified on WSA r108** (server, token, `design_get/describe/set`,
+Claude Code connected and called a tool). Merge offer for r105-r108 pending the user's "merge".
 
 ## State
 - Both repos work on branch `claude/handoff-continuation-rseql3` (the "test branch"). Autonomy
   (user, 2026-10-11): decide branch handling and next steps yourself. **Main merges / releases need
   the user.** Main = r104 (merged 2026-10-12, PR #5, on the user's "merge"); user agreed to merge more
   often, at verified milestones: offer a merge PR when a batch is verified, merge only on their "merge".
-- Latest installed on WSA: r104 (run 38220409243), verified. Plate 2 (temp) is empty. Shape-builder handles not tested: Y
+- Latest installed on WSA: r108 (run 38239878532), verified; AI tools switched off. Plate 2 (temp) is empty. Shape-builder handles not tested: Y
   handle, Shift = 1° turn, handles on a group / nested child, touch (WSA has none).
 - Shape-builder handles: `MeshPreviewView` (`handles()`, `overlay()` -> `PreviewOverlay` points/
   guide/ghost, `HANDLE_VS`), `ShapeController.resize/turn/handles/addDim`, `ScadPreview.kt` listener.
@@ -51,7 +52,7 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
 2. **AI tool layer (MCP server in the app)** on the shape-builder JSON: wrap the ~65 engine JSON
    calls (`android/core/jni/EngineCalls.cpp`) as MCP tools; "vision" cheapest first: CSG tree text,
    scene summary JSON, small offscreen PNG. Streamable HTTP MCP on the device via LAN or
-   `adb forward` (unverified on WSA).
+   `adb forward ... localabstract:orcastudio_mcp` (milestone 1 done, r108).
 3. **Settings tools**: read presets + propose overrides; saving/deleting presets and printing always
    need the user's on-screen confirm.
 
@@ -87,6 +88,10 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
 - WSA stops drawing when its window isn't in front (taps lost, empty ui dump): focus it first
   (`wheel.ps1:17` trick / `tapf.sh`). WSA wedged (no window): stop WsaClient,
   `Start-Service WsaService`, `Start-Process wsa://<package>`. Lost DNS: `wsaclient /shutdown`.
+- **MCP on WSA:** never `adb forward tcp:X tcp:Y` (WSA routes Android loopback to Windows; the
+  forward loops and wedges adb: kill adb.exe). Use `adb forward tcp:8765 localabstract:orcastudio_mcp`.
+  Token: `su -c 'cat .../shared_prefs/app_settings.xml'` into a variable, never print it. Run adb
+  calls in PowerShell jobs with timeouts while testing sockets.
 - WSA -> LAN printer: run `wsa-lan.ps1 <printer-ip>` after each WSA start. Safe print-dialog test:
   `iptables -I OUTPUT -d <ip> -p tcp --dport 990 -j REJECT` (root), Print, Cancel, `iptables -D ...`.
 - Local native build in WSL: `MSYS_NO_PATHCONV=1 wsl -d Ubuntu -- bash /mnt/c/Users/Vince/orca-android-tools/wsl/corebuild.sh`
