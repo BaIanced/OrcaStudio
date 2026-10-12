@@ -31,8 +31,6 @@ Claude Code connected and called a tool). Merge offer for r105-r108 pending the 
   often, at verified milestones: offer a merge PR when a batch is verified, merge only on their "merge".
 - Latest installed on WSA: r108 (run 38239878532), verified; AI tools switched off. Plate 2 (temp) is empty. Shape-builder handles not tested: Y
   handle, Shift = 1° turn, handles on a group / nested child, touch (WSA has none).
-- Shape-builder handles: `MeshPreviewView` (`handles()`, `overlay()` -> `PreviewOverlay` points/
-  guide/ghost, `HANDLE_VS`), `ShapeController.resize/turn/handles/addDim`, `ScadPreview.kt` listener.
 - Draft of the open design: `files/openscad/draft.scad|json` (read with `adb exec-out "su -c 'cat ...'"`,
   handy to check builder edits without screenshots; the Code tab text isn't in the ui dump).
 - WSA 1080p: the editor panel is short; collapse the preview ("Hide preview") to reach buttons
@@ -57,9 +55,7 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
    need the user's on-screen confirm.
 
 ## Open items (details: grep the archive)
-- Sketch untested: point X/Y fields, Bend field, Add a corner, Delete corner, Rectangle tool,
-  pinch/wheel zoom, Esc/Enter/Del keys, Top scale, Turn angle, Revolve-mode edit, revolve Corners,
-  chamfer on cone/pyramid/wedge, edge/wall as sliders. Sketch sliders work in the app only.
+- Sketch editor: many controls untested (list in the archive, 2026-10-12 trim).
 - User to retest: the 325 MB slice that crashed before the r59 OOM fix; pinch zoom on MakerWorld;
   whether a real keyboard's Ctrl+1 works (WSA drops synthetic Ctrl+1..9).
 - Auto-save (r94): untested switching it off / changing the interval.
@@ -74,10 +70,8 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
 - OpenSCAD untested: Save/Open .scad via picker, phone layout, opening .scad from a download/zip,
   painting through a mesh boolean.
 - Models tab untested: MakerWorld sign-in ticket flow, Thingiverse downloads.
-- Flatpak r9 MakerLab tab: user hasn't reported. Weekly upstream bump `upstream/orca-main`: merging
-  is the user's call. Optional: obn patch 0001 upstream report (needs OK); cloud
-  `POST /v1/user-service/my/task` 403 cause; obn deferred-teardown latch (`agent.cpp:117-129` vs `:330`).
 - Wishlist later: filament colour mixing (upstream `FilamentMixer.cpp`). Not wanted: iOS port.
+- Flatpak r9 MakerLab tab, weekly upstream bump, obn follow-ups: see the archive (2026-10-12 trim).
 
 ## Gotchas
 - The app restores `files/session/session.3mf` on start and saves it in `onStop` (and by auto-save

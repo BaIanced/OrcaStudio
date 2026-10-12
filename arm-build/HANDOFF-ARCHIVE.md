@@ -1197,3 +1197,13 @@ no-code = templates + Customizer sliders + native parts/boolean/assemble; new sh
   undone to the original empty design, AI tools + LAN switched off, forward removed, app stopped.
 - Untested: LAN mode from another device; restarting the server while a client is connected;
   request > 4 MB / chunked (refused by design); real USB device forward; Copy setup command paste.
+
+## Moved from HANDOFF.md on 2026-10-12 (trim after MCP milestone 1)
+- Shape-builder handles: `MeshPreviewView` (`handles()`, `overlay()` -> `PreviewOverlay` points/
+  guide/ghost, `HANDLE_VS`), `ShapeController.resize/turn/handles/addDim`, `ScadPreview.kt` listener.
+- Flatpak r9 MakerLab tab: user hasn't reported. Weekly upstream bump `upstream/orca-main`: merging
+  is the user's call. Optional: obn patch 0001 upstream report (needs OK); cloud
+  `POST /v1/user-service/my/task` 403 cause; obn deferred-teardown latch (`agent.cpp:117-129` vs `:330`).
+- Sketch untested: point X/Y fields, Bend field, Add a corner, Delete corner, Rectangle tool,
+  pinch/wheel zoom, Esc/Enter/Del keys, Top scale, Turn angle, Revolve-mode edit, revolve Corners,
+  chamfer on cone/pyramid/wedge, edge/wall as sliders. Sketch sliders work in the app only.
