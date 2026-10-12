@@ -1106,3 +1106,27 @@ no-code = templates + Customizer sliders + native parts/boolean/assemble; new sh
   works. Verified 2026-10-11: cube printed over LAN (FTPS upload, queued), r69.
 - Cloud-only print (no LAN) fails `-2060 upload poll timeout`: server stays "running" (> 2 min;
   obn uploads the full .gcode.3mf as the config file). Patch 0004 tried a longer poll; reverted.
+
+## Shape builder phase 2 rest: edges, hollow, import STL (2026-10-12, r102, run 38214501908)
+- Commit 45ac19d (+ clip fix f5840a4). Extras on `Shape`: `edge` (mm), `chamfer` (0/1), `shell`
+  (wall mm), `open` (0/1); `Shape.EDGED` / `Shape.SHELLED` kinds. Codegen `ShapeDesign.body()`:
+  3D edges = shrink by e + `minkowski` with a sphere (round) or an octahedron (chamfer, hull of two
+  $fn=4 cones), translated up e; sketch corners = 2D `offset` chain in `sketch().mods()`; hollow =
+  `difference()` with the cavity (sketch: outline `offset(delta = -wall)`), open top = cavity up past
+  the top. `Kind.MESH` + `Shape.file` (absolute path) + extras `mx0..mz1` (`Stl.bounds`, binary or
+  ASCII); `ShapeController.importMesh` copies the pick to `files/openscad/meshes` (same name and
+  length = reuse, else `_2`), placed right of the design. UI: `EdgeEditor` / `ShellEditor` in
+  `ShapeBuilder.kt`, palette chip "Import STL" (last chip).
+- WSA verified on r102: sketch drawing clipped to its canvas (pan test, screenshot); box Round 3 ->
+  668 tris, Chamfer -> 44 tris (14 + 2x3 = 20); Hollow wall 2 (cavity 16^3 at z 2), Open top;
+  Import STL (20x10x30 box with min corner 5,5,2) -> centred, at its size, file in `meshes/`, temp
+  pick deleted, W 40 -> scale 40/20; sketch Corners 4 + Hollow 2 + Open top; cylinder Round 2;
+  sphere Hollow 2. Ctrl+Z (`input keycombination`) undid a delete.
+- Found by math, fixed in feaec68 (not built yet): cavity used the outer edge size (walls 2.83 mm
+  at edges for wall 2) -> inner edge e - wall (chamfer e - 0.586 wall); open top left an inward lip
+  (cavity's rounded top) -> cavity reaches past the top by its own edge; revolved sketch's corner
+  offset was applied before scaling to the box -> profile scaled to the box first (`scale([1, d/w, 1])`
+  around the rotate_extrude).
+- Test tips: chip row scrolls left with `input swipe`, but back right only with
+  `input motionevent DOWN/MOVE/UP`; a Del key with no field focused deletes the selected shape.
+  Scratch helper `t.ps1` (focus, tap, dump filtered).

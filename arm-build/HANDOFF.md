@@ -13,23 +13,23 @@ front**; grep them when a question needs them (e.g. `grep -n "AMS mapping" HANDO
   time to `/clear` then `/next`** (and why: task done + handoff updated). Don't suggest it mid-task.
 
 ## Next task
-1. **Shape builder phase 2b** (batch with the pending clip fix f5840a4, then build + test):
-   light constraints in the sketch (fixed side length / dims, equal, parallel), sliders (dims)
-   inside a sketch, fillet/chamfer (2D offset; 3D minkowski), shell/hollow, import STL as a shape.
-   Untested in 2a: point X/Y fields, Bend field, Add a corner, Delete corner, Undo, Rectangle tool,
+1. **Phase 2b rest**: light constraints in the sketch (fixed side length / dims, equal, parallel),
+   sliders (dims) inside a sketch. Untested in 2a: point X/Y fields, Bend field, Add a corner, Delete corner, Undo, Rectangle tool,
    pinch/wheel zoom, Esc/Enter/Del keys, Top scale, Turn angle, Edit sketch in Revolve mode (axis).
+   Pushed but **not built**: feaec68 (even hollow walls at edges, no lip at an open top, revolve
+   edges in mm); build it with the 2b batch and check `draft.scad` of a hollow rounded box (open
+   top: cavity edge = edge - wall, cavity top = h + 0.01 + that edge) and a resized revolve with
+   Corners. Untested in r102: revolve Corners, chamfer on cone/pyramid/wedge, edge/wall as sliders.
 
-Done 2026-10-12: r101 (run 38213296936, phase 2a sketch shapes) verified on WSA: Add Sketch opens
-the editor, select, bend a side to a half circle, circle + Hole, Lines triangle, Done -> correct
-`draft.scad` (pos kept), render; Revolve renders. Bug found + fixed locally: drawing not clipped
-(f5840a4, not built yet). Details in the archive.
+Done 2026-10-12: r102 (run 38214501908: edges, hollow, Import STL, sketch clip) verified on WSA;
+3 geometry flaws found by math, fixed in feaec68. Details in the archive.
 
 ## State
 - Both repos work on branch `claude/handoff-continuation-rseql3` (the "test branch"). Autonomy
   (user, 2026-10-11): decide branch handling and next steps yourself. **Main merges / releases need
   the user.** Main = r99 (merged 2026-10-12 on the user's "merge"); user agreed to merge more
   often, at verified milestones: offer a merge PR when a batch is verified, merge only on their "merge".
-- Latest installed on WSA: r101 (run 38213296936), sketch shapes verified (see Next task). Shape-builder handles not tested: Y
+- Latest installed on WSA: r102 (run 38214501908), verified. Plate 2 (temp) is empty. Shape-builder handles not tested: Y
   handle, Shift = 1° turn, handles on a group / nested child, touch (WSA has none).
 - Shape-builder handles: `MeshPreviewView` (`handles()`, `overlay()` -> `PreviewOverlay` points/
   guide/ghost, `HANDLE_VS`), `ShapeController.resize/turn/handles/addDim`, `ScadPreview.kt` listener.
