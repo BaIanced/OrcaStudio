@@ -13,23 +13,22 @@ front**; grep them when a question needs them (e.g. `grep -n "AMS mapping" HANDO
   time to `/clear` then `/next`** (and why: task done + handoff updated). Don't suggest it mid-task.
 
 ## Next task
-1. **Phase 2b rest**: light constraints in the sketch (fixed side length / dims, equal, parallel),
-   sliders (dims) inside a sketch. Untested in 2a: point X/Y fields, Bend field, Add a corner, Delete corner, Undo, Rectangle tool,
-   pinch/wheel zoom, Esc/Enter/Del keys, Top scale, Turn angle, Edit sketch in Revolve mode (axis).
-   Pushed but **not built**: feaec68 (even hollow walls at edges, no lip at an open top, revolve
-   edges in mm); build it with the 2b batch and check `draft.scad` of a hollow rounded box (open
-   top: cavity edge = edge - wall, cavity top = h + 0.01 + that edge) and a resized revolve with
-   Corners. Untested in r102: revolve Corners, chamfer on cone/pyramid/wedge, edge/wall as sliders.
+1. **Offer the user a merge PR** (test branch -> main): phase 2 of the shape builder (2a sketch,
+   edges/hollow/Import STL, 2b constraints + sketch sliders) is verified through r104. Merge only on
+   the user's "merge". Untested leftovers (not blockers) are listed under Open items.
+2. Then roadmap step 2: **AI tool layer (MCP server in the app)** (see roadmap below); start with a
+   design note: transport (Streamable HTTP on the device, `adb forward`), tool list over the
+   shape-builder JSON + engine calls, confirm-on-screen rules.
 
-Done 2026-10-12: r102 (run 38214501908: edges, hollow, Import STL, sketch clip) verified on WSA;
-3 geometry flaws found by math, fixed in feaec68. Details in the archive.
+Done 2026-10-12: r103/r104 (sketch constraints: length / level / plumb / equal / parallel, side
+lengths as sliders) verified on WSA; details in the archive ("phase 2b").
 
 ## State
 - Both repos work on branch `claude/handoff-continuation-rseql3` (the "test branch"). Autonomy
   (user, 2026-10-11): decide branch handling and next steps yourself. **Main merges / releases need
   the user.** Main = r99 (merged 2026-10-12 on the user's "merge"); user agreed to merge more
   often, at verified milestones: offer a merge PR when a batch is verified, merge only on their "merge".
-- Latest installed on WSA: r102 (run 38214501908), verified. Plate 2 (temp) is empty. Shape-builder handles not tested: Y
+- Latest installed on WSA: r104 (run 38220409243), verified. Plate 2 (temp) is empty. Shape-builder handles not tested: Y
   handle, Shift = 1° turn, handles on a group / nested child, touch (WSA has none).
 - Shape-builder handles: `MeshPreviewView` (`handles()`, `overlay()` -> `PreviewOverlay` points/
   guide/ghost, `HANDLE_VS`), `ShapeController.resize/turn/handles/addDim`, `ScadPreview.kt` listener.
@@ -57,6 +56,9 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
    need the user's on-screen confirm.
 
 ## Open items (details: grep the archive)
+- Sketch untested: point X/Y fields, Bend field, Add a corner, Delete corner, Rectangle tool,
+  pinch/wheel zoom, Esc/Enter/Del keys, Top scale, Turn angle, Revolve-mode edit, revolve Corners,
+  chamfer on cone/pyramid/wedge, edge/wall as sliders. Sketch sliders work in the app only.
 - User to retest: the 325 MB slice that crashed before the r59 OOM fix; pinch zoom on MakerWorld;
   whether a real keyboard's Ctrl+1 works (WSA drops synthetic Ctrl+1..9).
 - Auto-save (r94): untested switching it off / changing the interval.

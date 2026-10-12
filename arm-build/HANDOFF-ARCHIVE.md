@@ -1130,3 +1130,42 @@ no-code = templates + Customizer sliders + native parts/boolean/assemble; new sh
 - Test tips: chip row scrolls left with `input swipe`, but back right only with
   `input motionevent DOWN/MOVE/UP`; a Del key with no field focused deletes the selected shape.
   Scratch helper `t.ps1` (focus, tap, dump filtered).
+
+## Shape builder phase 2b: sketch constraints + sketch sliders (2026-10-12, r103/r104)
+0. **r104 = run 38220409243 (56337ec)**: fixes from the r103 test (r103 passed checks 1,2,4-9 incl.
+   feaec68 hollow box). To retest on r104: rect with top fixed 30, right side Equal to… bottom ->
+   30 x 30, no red warning; removing a "=1" chip re-solves at once; ⋮ "Fix the length" fixes the
+   current value; slider "used N×" counts a sketch length; "Length = name" not clipped.
+1. **(r103 details) Test phase 2b on WSA** (build run 38218657886 = 71600d7, includes feaec68). 2b = sketch
+   constraints: `Con`/`Side` in `scad/Sketch.kt` (LENGTH value or `dim`, EQUAL, PARALLEL, LEVEL,
+   PLUMB; `Sketch.solve` = iterative projection, `pinned` corners stay; `unmet()`; index remaps
+   `withoutLoop/withoutPoint/withSplit`; `plus(rect=true)` adds H/V; `START` has them).
+   `ShapeDesign.withDims` re-solves sketches whose lengths follow a changed slider (box kept to
+   scale, `fitSketch(keepScale)` moved from the controller); used by setDim / withField /
+   Customizer `setValue`; `pushToPlate` = `old.withDims(new.dims) == new`. Editor: picked side ->
+   Length field (typing fixes), ⋮ menu (Free / Make a slider / Follow / Stop following), Level,
+   Plumb, Equal to… / Parallel to… (then tap the other side), remove chips; tags on canvas, red =
+   unmet. Solver math checked by a temp JVM JUnit run (6 tests OK; test kept in session scratchpad
+   only; gradle's test worker crashes here, run JUnitCore by hand with `cygpath -w` classpath).
+   **Test**: rect corner drag keeps a rect; Length 30 on a side; Equal/Parallel pairing; conflict
+   warning; Make a slider then move it in the builder dims list and in Customizer (sketch + box
+   follow, plate object follows); removeDim keeps the length; undo in editor restores dims.
+   Also feaec68: `draft.scad` of a hollow rounded box (open top: cavity edge = edge - wall, cavity
+   top = h + 0.01 + that edge) and a resized revolve with Corners.
+   Untested in 2a: point X/Y fields, Bend field, Add a corner, Delete corner, Undo, Rectangle tool,
+   pinch/wheel zoom, Esc/Enter/Del keys, Top scale, Turn angle, Edit sketch in Revolve mode (axis).
+   Untested in r102: revolve Corners, chamfer on cone/pyramid/wedge, edge/wall as sliders.
+   Known limit: a sketch length slider only works in the app (the .scad polygon is baked numbers).
+- r103 WSA test (run 38218657886): checks 1, 2, 4-9 passed (rect drag stays rect, Length 30,
+  conflict warning + undo, parallel on a drawn quad (slopes 0.2 both), Make a slider -> Customizer 40
+  -> size [30,40,10] + polygon +-20, removeDim keeps value 40, editor undo removes the slider,
+  feaec68 hollow rounded box: `rounded_box([16, 16, 18.01], 3)` at z 2). Failed: Equal with the
+  kept side made a false conflict; chip removal didn't re-solve; typing the current length didn't fix it.
+- r104 = run 38220409243 (56337ec) fixes: `constrain` falls back to a free solve when the pinned one
+  leaves unmet constraints; `unconstrain` re-solves; ⋮ "Fix the length"; "used N×" counts sketch
+  lengths; wider slider-name field. **Verified on WSA 2026-10-12**: Equal -> 30 x 30, no warning;
+  chip removal + Free the length clear the warning at once; Fix the length; "Length = sketch_1_side"
+  readable; "used 1×". Draft left empty, app closed.
+- Notes: a sliders' `value` in a dim-bound LENGTH con stays stale (only used as fallback). The
+  sketch canvas bottom is covered by the bottom bar when a side is picked (Fit helps). Plate 2 (empty)
+  still exists in the session. Temp JUnit test of the solver: session scratchpad only.
