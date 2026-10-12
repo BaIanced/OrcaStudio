@@ -1,6 +1,6 @@
 # Handoff: OrcaStudio-Android + OrcaStudio aarch64 Flatpak (state as of 2026-10-11, AMS mapping)
 
-Read this first. Address the user as Supreme Master. Older history (builds 14-50, past causes,
+Read this first. Don't use any title for the user ("Supreme Master" was a joke; never use it). Older history (builds 14-50, past causes,
 Flatpak details) is in `HANDOFF-ARCHIVE.md`. **Don't read the archive or `README.md` / `NOTES-*.md`
 up front**; open them only when a question needs them (grep first).
 
@@ -74,6 +74,10 @@ about branch handling (there was no "two streams" rule). Main merges / releases 
   "OrcaStudio-Android" window runs onStop (session save verified 2026-10-11), unlike force-stop.
 - **Session handling (user, 2026-10-11):** keep this file current before stopping any task so the
   user can /clear at any point; cheaper (haiku/sonnet) subagents OK for builds/installs/searches.
+  User wants a work loop that clears context between tasks and runs until everything is done
+  (usage saving). Claude can't run /clear itself; `/next` (project skill in
+  `OrcaProjectsGithub/.claude/skills/next`) = "read handoff, continue". A fully automatic loop
+  would be a script running fresh `claude -p` sessions per task (not built; ask the user first).
 - **Local native build in WSL** (25 min cold, seconds incremental): `~/orca-android-tools/wsl/corebuild.sh`
   (`MSYS_NO_PATHCONV=1 wsl -d Ubuntu -- bash /mnt/c/Users/Vince/orca-android-tools/wsl/corebuild.sh`) syncs `android/` from the
   Windows checkout (`syncsrc.py`, CRLF->LF, only changed files) into `~/src/OrcaStudio-Android`
@@ -253,9 +257,57 @@ about branch handling (there was no "two streams" rule). Main merges / releases 
       +6.5/-5 mm); union 46 tris, centre +1.5 mm (no shift). Painting through a boolean: untested.
       Label "(mm) (mm)" fixed after (commit "Part position label", not built yet - goes with the next build). OpenSCAD: a .scad zip with a local include, render, Edit design
       after restart.
+  - **OpenSCAD beginner UX (2026-10-11), r93 = run 38186440697 installed + verified on WSA:**
+    live preview pane (`render/MeshPreviewView.kt`, own GL view, `PreviewMesh.readStl`; controller
+    `preview()` debounced: 1.2 s after edits, 0.3 s after Customizer; Customizer change + object on
+    plate -> preview then `render()` reuses the preview STL via `previewKey`); size chip + "larger than
+    the plate"/"taller" warning; F5/Ctrl+Enter preview, F6 add to plate. Template gallery
+    (`scad/ScadTemplates.kt`: blank, box, lid box, spacer, hook, stand, tag, gear: all 8 render on
+    WSA with the expected sizes). Insert chips + "Add a slider" (`scad/ScadSnippets.kt`), error tips
+    (`ScadHints`, verified: syntax error -> "could not read line 3" + Go to line). Fixed on the way:
+    `ScadClient` lost the reply of a request queued right behind another (pending cleared after
+    resume ran the next request inline) -> preview hung on "Building" in r92.
+    Commit 077e3ca (not built): Insert with no cursor placed appends at the end (was after line 1,
+    above the parameters -> Customizer emptied); Add a slider stops at the first shape call.
+    Untested: phone layout, pinch/orbit on a real touch screen, Insert wrapping a selection.
+    Short panels (WSA 1080p) leave little room under the preview: collapsible, 30% of the height.
   - Plan: separate cached OpenSCAD deps stage (don't touch the Orca deps cache key), JNI
     `renderScad(src, params)` -> TriangleMesh straight into the plate, source + Customizer values
     stored in the 3MF so the object re-renders when edited; Compose code editor + Customizer panel.
+
+### NEXT: modeling roadmap (user agreed 2026-10-11, in this order)
+User goal: model **without writing code**; OpenSCAD code is only a backstop for debugging. Today
+no-code = templates + Customizer sliders + native parts/boolean/assemble; new shapes still need code.
+1. **Shape builder (start here; nothing built yet).** User: "replicate any of the best modeling
+   software in a touchscreen format", with full keyboard + mouse support too. References: Tinkercad
+   (drag shapes onto a workplane, Solid/Hole, Group, Align, Mirror, Ruler, Duplicate-repeat),
+   Shapr3D / Onshape mobile (touch-first: sketch + extrude/push-pull, fillet/chamfer, snapping,
+   numeric entry on tap), Fusion (timeline/feature history, parameters). Design:
+   - Data = a CSG tree (JSON) kept in the object's `module` metadata like `ScadDesign`
+     (`scad/ScadModel.kt`) -> "Edit design" reopens the tree. The tree **generates OpenSCAD code**
+     (shown read-only-by-default in the Code tab) -> rendered by the existing native OpenSCAD
+     (`ScadService`/`ScadClient`), live preview (`MeshPreviewView`), replace-in-place on the plate.
+   - Phase 1: shapes (box, rounded box, cylinder, cone, sphere, torus, wedge/prism, text, polygon
+     extrude), Solid/Hole, Group (union/difference), move/rotate/scale with on-screen handles +
+     numeric fields, snap grid, align, mirror, duplicate, linear/circular repeat, named dimensions ->
+     Customizer sliders, undo/redo, multi-select. Touch: tap select, drag move on the workplane,
+     two-finger orbit/pinch zoom, long-press menu. KB/mouse: click/Shift-click, drag, wheel zoom,
+     right-drag orbit, Delete, Ctrl+D/G/Z/Y, arrows nudge, H = hole, S = solid.
+   - Phase 2: 2D sketch (lines/arcs/rects/circles, constraints light) + extrude/revolve, fillet/
+     chamfer (minkowski/offset), shell/hollow, import STL as a shape (import()).
+   - Then UI test on WSA (WSA has no touch: test touch paths with adb `input`; phone layout untested).
+2. **AI tool layer (MCP server in the app)**, built on the shape-builder JSON. Research (not
+   prototyped): the engine already exposes ~65 JSON calls (`android/core/jni/EngineCalls.cpp`:
+   scene, addPrimitive, setTransform, meshBoolean, assemble, cut, arrange, presetValues,
+   setSelection, savePreset, ...) -> wrap as MCP tools. Cheapest "vision", in order: (a) the CSG
+   tree as text (AI reads/edits it directly), (b) scene summary JSON (objects, bbox, position,
+   parts, volume, tris, fits plate; est. a few hundred tokens for 8 objects, unmeasured),
+   (c) offscreen render of the model only, small PNG from a chosen angle (~350 tokens at 512x512,
+   Claude image cost ~ w*h/750; full screenshot ~1.5k) for spot checks. Transport: Streamable
+   HTTP MCP on the device, reached from Claude Code/Desktop on the PC via LAN or `adb forward`
+   (unverified on WSA). Optional later: in-app chat panel with the user's own API key.
+3. **Settings tools** (bonus): read printer/filament/process presets + propose overrides; saving or
+   deleting presets and starting prints always need the user's on-screen confirm (rule 6).
 
 ### Orca Cloud (Kotlin port of upstream `OrcaCloudServiceAgent.cpp`)
 - `net/OrcaCloud.kt`, `net/OrcaCloudLoopback.kt`, `ui/settings/OrcaCloudSection.kt`.
@@ -317,10 +369,17 @@ about branch handling (there was no "two streams" rule). Main merges / releases 
   PluginPages (40), PythonInterpreter (1).
 
 ### Task list (user, 2026-10-11; not started unless noted)
-- **Auto-save:** the session is saved only in `onStop`, so a crash / force-stop loses edits. Desktop
-  Orca has Preferences "Backup" switch + interval (grep `backup_switch` / `backup_interval` in
-  src-orca) - port as More > Misc "Auto-save every N min" and/or save on plate change (user: a
-  setting would be a nice touch unless saving on build plate change is the logical choice).
+- **Auto-save DONE: r94 = run 38202928758 (also carries 077e3ca + 93b776a), installed + verified on
+  WSA 2026-10-11:** added temp Plate 2 -> session.3mf rewritten ~60 s later, force-stop + relaunch
+  -> Plate 2 restored; deleted it -> next auto-save wrote the clean state (Plate 1, 8 objects).
+  More > Misc shows the switch (on) + "60". Untested: switching off, changing the interval.
+  More > Misc "Auto-save the plate" switch + seconds (10-3600, default 60; 0 = off; pref
+  `auto_save_seconds`). `AppViewModel.autoSave()`: every N s, if scene/presets/overrides/project
+  name/active plate changed since the last save and not busy/slicing -> `files.saveSession()`
+  (now under a Mutex shared with the onStop save). Desktop equivalent: `MainFrame.cpp:755` (backup
+  every 10 s, incremental; ours writes the full session.3mf, so a longer default). Test: edit on a
+  temp Plate 2, wait > 60 s, check session.3mf mtime, force-stop, relaunch -> edit kept; then
+  remove the temp plate and wait for the next auto-save.
 
 ### Other open items
 - WSA: 127.0.0.1 refused a shell connection to the loopback while ::1 worked (browser sign-in

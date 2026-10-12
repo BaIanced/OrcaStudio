@@ -8,8 +8,8 @@ Facts here may be stale; HANDOFF.md wins where they differ.
 
 # Handoff: OrcaStudio aarch64 Flatpak + OrcaStudio-Android (state as of 2026-10-10 10:30 UTC)
 
-Read this first, then `arm-build/README.md` and the `NOTES-*.md` files next to it. The user is
-to be addressed as Supreme Master.
+Read this first, then `arm-build/README.md` and the `NOTES-*.md` files next to it. No title for the user
+(the old one was a joke).
 
 ## Start here: open items, in order
 
