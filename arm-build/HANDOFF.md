@@ -13,20 +13,20 @@ front**; grep them when a question needs them (e.g. `grep -n "AMS mapping" HANDO
   time to `/clear` then `/next`** (and why: task done + handoff updated). Don't suggest it mid-task.
 
 ## Next task
-1. **Offer the user a merge PR** (test branch -> main): phase 2 of the shape builder (2a sketch,
-   edges/hollow/Import STL, 2b constraints + sketch sliders) is verified through r104. Merge only on
-   the user's "merge". Untested leftovers (not blockers) are listed under Open items.
-2. Then roadmap step 2: **AI tool layer (MCP server in the app)** (see roadmap below); start with a
-   design note: transport (Streamable HTTP on the device, `adb forward`), tool list over the
-   shape-builder JSON + engine calls, confirm-on-screen rules.
+1. **AI tool layer, milestone 1** (design note: `OrcaStudio-Android/docs/mcp-tool-layer.md`, read it
+   first): Settings toggle + bearer token, hand-written `ServerSocket` HTTP on `127.0.0.1:8765`
+   `POST /mcp`, JSON-RPC `initialize` / `tools/list` / `tools/call`, tools `design_get`,
+   `design_describe`, `design_set` through `ShapeController` (one undo step each). Test on WSA:
+   `adb forward tcp:8765 tcp:8765` + curl, then `claude mcp add --transport http ...`.
+   Open questions for the user are at the end of the note (defaults: localhost only, port 8765).
 
-Done 2026-10-12: r103/r104 (sketch constraints: length / level / plumb / equal / parallel, side
-lengths as sliders) verified on WSA; details in the archive ("phase 2b").
+Done 2026-10-12: merged test branch -> main (Android PR #5 at r104, OrcaStudio PR #3); MCP design
+note written (Android `7768812`).
 
 ## State
 - Both repos work on branch `claude/handoff-continuation-rseql3` (the "test branch"). Autonomy
   (user, 2026-10-11): decide branch handling and next steps yourself. **Main merges / releases need
-  the user.** Main = r99 (merged 2026-10-12 on the user's "merge"); user agreed to merge more
+  the user.** Main = r104 (merged 2026-10-12, PR #5, on the user's "merge"); user agreed to merge more
   often, at verified milestones: offer a merge PR when a batch is verified, merge only on their "merge".
 - Latest installed on WSA: r104 (run 38220409243), verified. Plate 2 (temp) is empty. Shape-builder handles not tested: Y
   handle, Shift = 1° turn, handles on a group / nested child, touch (WSA has none).
