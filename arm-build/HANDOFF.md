@@ -44,13 +44,12 @@ installed on WSA too. Back on the phone when the user says so / it shows in `adb
    121765c (my filaments), both untested; on top of them, verified: b7d6de2 (milestone 4, WSA r115) and the
    settings tools (WSA r117/r118); then 8334d43 + 80c8d0f (item 4, verified r120). Next merge
    once item 2's untested parts pass (or, if the user wants milestone 4 sooner, ask before splitting it off).
-4. **Shape builder phase 2 gaps fixed + verified on WSA r120** (ungroup exact, rename no render, re-frame;
-   archive "Shape builder phase 2 gaps"). **Next:** UI tests on WSA of align, mirror, dims list edit/remove,
-   keyboard shortcuts; untested: no size/turn handles under a mirrored group. Editor draft holds test shapes
-   (ids 2-4 + 7-9, dim `px`): clear it before UI tests.
+4. **Next on WSA:** the sketch editor's untested controls (list: grep the archive "2026-10-12 trim"), then
+   auto-save off / interval. Editor draft holds a test design (group + sphere, slider `box_1_width`): fine to replace.
 
 Done 2026-10-12 (archive): merges to r112; AI tools milestones 1-4; settings tools; user reports (AMS sync
-button, plate types); shape builder phase 2 gaps (r120).
+button, plate types); shape builder phase 2 gaps (r120); shape builder UI tests: keys, align, mirror,
+sliders, no handles under a mirrored group (r120, evening).
 
 ## State
 - Both repos work on branch `claude/handoff-continuation-rseql3` (the "test branch"). Autonomy
@@ -58,7 +57,7 @@ button, plate types); shape builder phase 2 gaps (r120).
   the user.** Main = r112 (merged 2026-10-12, PR #6, on the user's `/next-merge`); user agreed to merge more
   often, at verified milestones: offer a merge PR when a batch is verified, merge only on their "merge".
 - Installed on WSA: r120 (2026-10-12 evening); AI tools on. Plate 2 (temp) is empty. Shape-builder handles not tested: Y
-  handle, Shift = 1° turn, handles on a group / nested child, touch (WSA has none).
+  handle, Shift = 1° turn, dragging handles on a group / nested child, touch (WSA has none).
 - Draft of the open design: `files/openscad/draft.scad|json` (read with `adb exec-out "su -c 'cat ...'"`,
   handy to check builder edits without screenshots; the Code tab text isn't in the ui dump).
 - WSA 1080p: the editor panel is short; collapse the preview ("Hide preview") to reach buttons
@@ -66,8 +65,8 @@ button, plate types); shape builder phase 2 gaps (r120).
 
 ## Modeling roadmap (user agreed 2026-10-11, in this order)
 User goal: model **without writing code**; OpenSCAD code is only a backstop.
-1. Shape builder: phases 1-2 done (r96-r104, gaps fixed r120; archive). Untested: align, mirror, dims list
-   edit/remove, keyboard shortcuts, phone layout. Design data = CSG
+1. Shape builder: phases 1-2 done (r96-r104, gaps fixed r120, UI tests r120; archive). Untested: phone
+   layout. Design data = CSG
    tree JSON in the object's `module` metadata (`ShapeDesign`, `scad/ShapeModel.kt`) -> OpenSCAD -> `ScadService`.
 2. AI tool layer (MCP server in the app): milestones 1-4 done (archive).
 3. Settings tools: done (archive). Printing from a tool would need the user's OK + on-screen confirm.
@@ -147,10 +146,8 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
 - Test with `ui.ps1` text dumps; screenshots only when the look matters. After launching the app,
   wait until `ui.ps1` lists the tabs before tapping (the first tap after start is often lost).
 - Batch 2-4 changes per build; don't dispatch builds that will be superseded.
-- CI (`android-apk.yml`): Kotlin check, deps cache, then `liborca_jni.so` reused from cache when
-  `android/core`, `android/obn`, `android/scripts`, the toolchain, src-orca and deps are unchanged
-  (key `android-core-*`), else rebuilt with ccache (`android-ccache-*`); old caches pruned. Checks
-  **19** `ObnNative` JNI exports (update when adding one). Release-signed since build 32.
+- CI (`android-apk.yml`, cache details in the archive): checks **19** `ObnNative` JNI exports (update
+  when adding one). Release-signed since build 32.
 
 ## Environment and tools (Windows PC, local session)
 - Working dir `C:\Users\Vince\OrcaProjectsGithub` with `OrcaStudio` (Flatpak; holds this file) and
@@ -160,18 +157,15 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
   the Alt + SetForegroundWindow trick from `wheel.ps1:17`.
 - `~\orca-android-tools`: `install-build.ps1 -Run <id>` (WSA default), `ui.ps1 [-Shot png]`,
   `step.ps1`, `wheel.ps1` (real mouse wheel / drags), `drag.ps1`, `reinstall-with-data.ps1`.
-- Logs: `adb shell setprop log.tag.OrcaInput DEBUG` (mouse events), `log.tag.OrcaWeb DEBUG` then
-  restart = Models WebView debuggable: `adb forward tcp:9222 localabstract:webview_devtools_remote_<pid>`;
-  helpers `cdp.mjs` / `cdplog.mjs` / `ua.mjs` in the session scratchpad (recreate if gone).
-  A CDP UA override only lasts while that CDP connection is open.
-- System file picker: close with `adb shell am force-stop com.android.documentsui`.
-- WSA lost DNS once: `wsaclient /shutdown` and relaunch fixed it. adb `input` has no Shift/Alt state.
+- Debug logs / Models WebView CDP: archive "Logs and CDP (moved 2026-10-12)".
+- System file picker: close with `adb shell am force-stop com.android.documentsui`. adb `input` has no
+  Shift/Alt state: use `keys.ps1 -Keys <vk codes>` (real key presses; tap a row first for focus).
 - The user's Chromebook (Crostini, aarch64) runs the Flatpak; A1 printer is cloud-bound
   (Developer Mode off); the app is signed in to their Bambu account with PEMs imported.
 
 ## Repos
 | Repo | Notes |
 |---|---|
-| `BaIanced/OrcaStudio-Android` | cl1x/Orca-Android + signed Bambu printing via obn (static in `liborca_jni.so`, `android/obn`). main = PR #3 merge (pre-release `android-v0.1.2-r37`). Bot branch `upstream/orca-main` (never commit). Builds run on dispatch only (`gh workflow run android-apk.yml --ref <branch>`). |
+| `BaIanced/OrcaStudio-Android` | cl1x/Orca-Android + signed Bambu printing via obn (static in `liborca_jni.so`, `android/obn`). main = r112 (PR #6). Bot branch `upstream/orca-main` (never commit). Builds run on dispatch only (`gh workflow run android-apk.yml --ref <branch>`). |
 | `BaIanced/OrcaStudio` | Flatpak fork; ours: `arm-build/`, `.github/workflows/arm-*.yml`. Latest release r9 (MakerLab tab). Details in the archive. |
 | `ClusterM/open-bamboo-networking` | obn pinned v2.2.0 + local patches 0001 (cloud callbacks), 0002 (start_print try LAN first), 0003 (MQTT CA from `SSL_CERT_FILE`). |

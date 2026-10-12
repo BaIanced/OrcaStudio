@@ -1328,3 +1328,27 @@ shaded, `plate_describe` live; details in the archive "AI tools milestone 3").
   beside -> all in view.
 - Test method: MCP (`mcptest.sh @tok 'tool:{json}'`), preview STLs in `cache/openscad/preview` pulled with
   `su -c cat` and compared vertex sets; rename check = no new STL file.
+
+## Shape builder UI tests: keys, align, mirror, sliders (verified 2026-10-12 evening, WSA r120)
+- Fresh design (Add -> Shape builder replaced the old test draft): Box 1, Box 2, Sphere 1. Checked through
+  `files/openscad/draft.json` / `draft.scad` (the draft is saved ~1-2 s after a change; read after 3 s).
+- Keys (real Windows key presses via `keys.ps1`, focus = tap a shape row first): Left/Right/Up/Down = 1 mm,
+  Shift+arrow = 10 mm, PageUp/PageDown = Z, H = hole, S = solid, Ctrl+D duplicate (+10/+10), Del, Ctrl+Z,
+  Ctrl+Y, Ctrl+Shift+Z, Ctrl+A, Ctrl+G, Ctrl+Shift+G, Esc clears the selection (arrows then do nothing).
+- Align menu (9 items, X/Y/Z low/centre/high) with all selected: Y low, X high correct (equal sizes only).
+- Mirror menu (along X/Y/Z): toggles the flag per selected shape; codegen `mirror([..])` per axis.
+- Sliders: size ⋮ -> "Make a slider" (`box_1_width`, 0..100 step 1), second box "Follow" it ("used 2×");
+  Value / Min / Max / Step edits saved; value above max raises max; codegen uses the variable; Remove
+  unbinds and keeps the value in the shapes; Ctrl+Z brings the slider and both binds back.
+- Child of a mirrored group: outline only, no size/turn handles (un-mirrored: turn handle shows).
+- Panel on WSA 1080p: the scroll area is only ~160 px tall (y 600-760); swipe inside it.
+- Draft left as a test design (group of two boxes + sphere, slider `box_1_width` = 250).
+
+## Logs and CDP (moved 2026-10-12)
+- Logs: `adb shell setprop log.tag.OrcaInput DEBUG` (mouse events), `log.tag.OrcaWeb DEBUG` then
+  restart = Models WebView debuggable: `adb forward tcp:9222 localabstract:webview_devtools_remote_<pid>`;
+  helpers `cdp.mjs` / `cdplog.mjs` / `ua.mjs` in the session scratchpad (recreate if gone).
+  A CDP UA override only lasts while that CDP connection is open.
+- CI (`android-apk.yml`): Kotlin check, deps cache, then `liborca_jni.so` reused from cache when
+  `android/core`, `android/obn`, `android/scripts`, the toolchain, src-orca and deps are unchanged
+  (key `android-core-*`), else rebuilt with ccache (`android-ccache-*`); old caches pruned.
