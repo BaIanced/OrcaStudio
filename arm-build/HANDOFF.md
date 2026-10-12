@@ -41,13 +41,13 @@ installed on WSA too. Back on the phone when the user says so / it shows in `adb
      applied after sync and for a new printer's default slot. **Untested** (needs the printer online and the
      preset re-link, else sync only finds generic filaments).
 3. Merge: main = r112 (6f8560c, Android PR #6, 2026-10-12). Left on the branch: 46a694e (nozzle match) and
-   121765c (my filaments), both untested; on top of them, verified: b7d6de2 (milestone 4, WSA r115) and the
+   121765c (my filaments), both untested, d87dcdb + cd4177c (.scad Save/Open, verified r124/r125); on top of the first two, verified: b7d6de2 (milestone 4, WSA r115) and the
    settings tools (WSA r117/r118); then 8334d43 + 80c8d0f (verified r120), 4f4697e + bc021f4 (verified r123). Next merge
-   once item 2's untested parts pass (or, if the user wants milestone 4 sooner, ask before splitting it off).
-4. Done 2026-10-12 late: sketch editor + auto-save fixes (4f4697e, bc021f4, WSA r123); shape-builder handles
-   (Y, Shift = 1° turn, group turn, child / nested child handles) all pass on r123 (archive "Shape-builder handles").
-   **Next on WSA:** OpenSCAD Save/Open .scad via the picker (Open items). Untested still: pinch zoom (touch),
-   pyramid/wedge chamfer renders, handles by touch.
+   once item 2's untested parts pass. User asked on `/next-merge` 2026-10-12 and chose **wait** (no split, no
+   merge-as-is); OrcaStudio repo only has handoff commits ahead of main (no merge needed).
+4. Shape builder untested still: pinch zoom (touch), pyramid/wedge chamfer renders, handles by touch.
+5. **Next on WSA:** opening a .scad from a download / a model site zip (Open items). Save/Open via the picker is
+   done (d87dcdb + cd4177c, verified r124/r125; archive "OpenSCAD Save/Open via the picker").
 
 Done 2026-10-12 (archive): merge to r112, AI tools 1-4, settings tools, user reports, shape builder gaps + UI tests.
 
@@ -56,7 +56,7 @@ Done 2026-10-12 (archive): merge to r112, AI tools 1-4, settings tools, user rep
   (user, 2026-10-11): decide branch handling and next steps yourself. **Main merges / releases need
   the user.** Main = r112 (merged 2026-10-12, PR #6, on the user's `/next-merge`); user agreed to merge more
   often, at verified milestones: offer a merge PR when a batch is verified, merge only on their "merge".
-- Installed on WSA: r123 (2026-10-12 late); AI tools on; auto-save 60 s. Plate 1 empty, no Plate 2. Shape-builder
+- Installed on WSA: r125 (2026-10-12 late); AI tools on; auto-save 60 s. Plate 1 empty, no Plate 2. Shape-builder
   handles by touch untested (WSA has none). Real mouse drags (+Shift): `mdrag.ps1 x1 y1 x2 y2 [-Shift]`
   (Android coords = Windows pixels on WSA); the builder's shape list scrolls only with a real mouse wheel.
 - Draft of the open design: `files/openscad/draft.scad|json` (read with `adb exec-out "su -c 'cat ...'"`,
@@ -83,7 +83,7 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
 - AMS mapping verified (user printed from A1). User's AMS lite: A1 yellow, A2 matte black, A3
   white, A4 PETG. **Any test print needs the user's OK.**
 - Section view: travels/markers not clipped, picking ignores the cut.
-- OpenSCAD untested: Save/Open .scad via picker, phone layout, opening .scad from a download/zip,
+- OpenSCAD untested: phone layout, opening .scad from a download/zip,
   painting through a mesh boolean.
 - Models tab untested: MakerWorld sign-in ticket flow, Thingiverse downloads.
 - REA MCP (github.com/morluto/rea), looked at 2026-10-12, not installed (needs the user's OK; changes MCP config):
@@ -157,7 +157,8 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
 - `~\orca-android-tools`: `install-build.ps1 -Run <id>` (WSA default), `ui.ps1 [-Shot png]`,
   `step.ps1`, `wheel.ps1` (real mouse wheel / drags), `drag.ps1`, `reinstall-with-data.ps1`.
 - Debug logs / Models WebView CDP: archive "Logs and CDP (moved 2026-10-12)".
-- System file picker: close with `adb shell am force-stop com.android.documentsui`. adb `input` has no
+- System file picker: plain `adb input tap` (focus.ps1 finds no app window while it is up), scroll with
+  `input swipe`, avoid its Search (list broke); delete test files from `/sdcard/Download` after. Close with `adb shell am force-stop com.android.documentsui`. adb `input` has no
   Shift/Alt state: use `keys.ps1 -Keys <vk codes>` (real key presses; tap a row first for focus).
 - The user's Chromebook (Crostini, aarch64) runs the Flatpak; A1 printer is cloud-bound
   (Developer Mode off); the app is signed in to their Bambu account with PEMs imported.

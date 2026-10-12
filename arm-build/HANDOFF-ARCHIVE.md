@@ -1384,3 +1384,15 @@ shaded, `plate_describe` live; details in the archive "AI tools milestone 3").
 - Nested (Group 5 > Group 3 > Box 2): handles shown; Z 20 -> 31 (bottom kept); turn -> rot.z 45.
 - Shape list scrolls with a real mouse wheel (adb swipe didn't scroll it). Plate 1 untouched; app closed via window close.
 - Draft left as this test design (Group 5 with Group 3 + Box 3).
+
+## OpenSCAD Save/Open via the picker (moved from HANDOFF.md on 2026-10-12)
+- r123 (WSA): Save wrote correct code but named the file "Shape design" (no extension; Android adds none for
+  `application/x-openscad`); Open worked (code view, same size) but a builder design came back as plain code.
+- d87dcdb, verified WSA r124: save name gets `.scad` (`ScadEditor.kt` `saveName`); a shape design saves its JSON as a
+  last line `// OrcaStudio shapes: {...}` (`SHAPES_MARK`, `ScadController.save`) and `openFile` reopens it in the
+  builder (Shapes tab, same 45 x 20 x 20 mm) only if the code above still equals `toScad()`; an externally edited
+  copy opens as code with the edit applied.
+- cd4177c, verified WSA r125: an edited file opens without the stale shapes line (draft.scad had 0); a code design
+  saves without the line.
+- Known: the picker names a 2nd copy `x.scad (1)` (DocumentsUI, unknown MIME).
+- Sketch editor + auto-save fixes (4f4697e, bc021f4) and shape-builder handles verified r123 (see "Shape-builder handles").
