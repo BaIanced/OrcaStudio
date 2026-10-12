@@ -19,13 +19,9 @@ front**; grep them when a question needs them (e.g. `grep -n "AMS mapping" HANDO
   time to `/clear` then `/next`** (and why: task done + handoff updated). Don't suggest it mid-task.
 
 ## Next task
-**Test target is the user's phone, not WSA** (user, 2026-10-12): wireless adb, serial = the non-TV entry
-in `adb devices -l` (port changes after re-pairing). **Rooted (Magisk), user granted root use**:
-`su -c ...` works from adb shell. Plain `input tap` is ignored (ColorOS); tap as root.
-`~/orca-android-tools/phone-ui.py <serial> dump|find <re>|tap <label>` (root taps, label dump).
-MCP token: read from `shared_prefs/app_settings.xml` (`ai_token`) via `su` straight into
-`~/orca-android-tools/phone-token.txt`, never printed; `mcptest.sh @phone-token.txt <steps>`.
-r114 (CI 38291985223, all of today's work) is installed on the phone.
+**Test target: WSA while the user is away from home** (user, 2026-10-12 evening: phone off the network). r114 is
+installed on WSA too. Back on the phone when the user says so / it shows in `adb devices`. Phone setup (wireless adb, root taps,
+`phone-ui.py`, token file): archive "Phone test setup" and memory `test-on-phone`.
 
 1. **Waiting on the user:** OK to **re-link the detached printer preset** "Bambu Lab A1 0.4 nozzle -No cut No vibe"?
    Its JSON (`files/data/user/default/machine/base/...`) has `"inherits": ""`, so the app and the desktop treat it as
@@ -34,13 +30,8 @@ r114 (CI 38291985223, all of today's work) is installed on the phone.
    it from `machine/base/` to `machine/`, restart, check the custom G-code survived and the A1 processes / Bambu
    filaments appear; restore the backup on any problem. Never without the user's OK (their preset).
 2. **User reports 2026-10-12** (commits after 5b7ee35, all in r114):
-   - AMS sync button gone on that detached preset: **verified fixed on the phone r114** (button back). Cause
-     confirmed: `inherits` empty -> `base` empty (`OrcaEngine.cpp:202`); fallback to the system preset of the same
-     model + nozzle (`PresetController.selectPrinterNow`).
-   - Plate type: default was the enum's first value (Cool Plate) in the UI and in slicing; now
-     `OrcaEngine::default_bed_type()` = user choice, else desktop `Preset::get_default_bed_type`. Verified on the
-     phone: Prepare shows "High Temp Plate" for the A1. **Untested:** More > Plate types dialog (visible plates +
-     default radio, engine call `setDefaultBedType`), slicing with the chosen default (Super Tack for the user).
+   - Verified: AMS sync button on the detached preset (phone r114); plate type default + Plate types dialog
+     (phone + WSA r114). Details: archive "User reports 2026-10-12, verified".
    - Match the installed nozzle (More, default on): `BambuReport.nozzleDiameter` -> `installedNozzles[model]`,
      `UiState.visiblePrinters` hides other nozzles, Prepare hint + "Use <preset>". **Untested:** the printer was
      offline (no report); newer-firmware `device.nozzle.info` path; stale status after switching printer models.
@@ -49,21 +40,20 @@ r114 (CI 38291985223, all of today's work) is installed on the phone.
      `AppSettings.myFilaments` (system -> user preset; set by picking / saving, cleared by picking the system one),
      applied after sync and for a new printer's default slot. **Untested** (needs the printer online and the
      preset re-link, else sync only finds generic filaments).
-   - Answered, no change: MCP token is already in the backup (all `app_settings` prefs, `AppBackup.kt:39,129`).
-3. Merge: r105-r110 (milestones 1-2, WSA) and milestone 3 (phone) are verified; the user-report batch above is
+3. Merge: r105-r110 (milestones 1-2, WSA), milestone 3 (phone) and milestone 4 (WSA r115) are verified; the user-report batch above is
    only partly verified. Cue `/clear` then `/next-merge` when the user wants the verified part merged.
-4. Milestone 4: plate edit tools (arrange, setTransform, duplicate, layOnFace, autoOrient), then settings.
+4. **Next: settings tools** (roadmap 3): read presets (printer / process / filament values, compare to the system
+   parent) and propose overrides; saving / deleting presets and printing always need the user's on-screen confirm
+   (`confirm()` in `McpTools.kt`). Test on WSA (AI tools on there; token via su into `~/orca-android-tools/wsa-token.txt`).
 
-Done 2026-10-12: merges to main (Android PR #5 at r104, OrcaStudio PR #3); **AI tools milestones 1-2
-verified on WSA r110**; **milestone 3 verified on the phone r114** (19 tools, `design_snapshot` PNG upright and
-shaded, `plate_describe` live; details in the archive "AI tools milestone 3").
+Done 2026-10-12: merges (Android PR #5 at r104, OrcaStudio PR #3); AI tools milestones 1-4 verified (archive; 4 = plate tools, WSA r115).
 
 ## State
 - Both repos work on branch `claude/handoff-continuation-rseql3` (the "test branch"). Autonomy
   (user, 2026-10-11): decide branch handling and next steps yourself. **Main merges / releases need
   the user.** Main = r104 (merged 2026-10-12, PR #5, on the user's "merge"); user agreed to merge more
   often, at verified milestones: offer a merge PR when a batch is verified, merge only on their "merge".
-- Latest installed on WSA: r110 (run 38242367499), verified; AI tools switched off. Plate 2 (temp) is empty. Shape-builder handles not tested: Y
+- Installed on WSA: r115 (2026-10-12 evening); AI tools on. Plate 2 (temp) is empty. Shape-builder handles not tested: Y
   handle, Shift = 1° turn, handles on a group / nested child, touch (WSA has none).
 - Draft of the open design: `files/openscad/draft.scad|json` (read with `adb exec-out "su -c 'cat ...'"`,
   handy to check builder edits without screenshots; the Code tab text isn't in the ui dump).
@@ -120,15 +110,8 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
   forward loops and wedges adb: kill adb.exe). Use `adb forward tcp:8765 localabstract:orcastudio_mcp`.
   Token: `su -c 'cat .../shared_prefs/app_settings.xml'` into a variable, never print it. Run adb
   calls in PowerShell jobs with timeouts while testing sockets.
-- **MCP on a real phone (verified 2026-10-12, the user's phone, r110):** the
-  `localabstract:orcastudio_mcp` forward works unchanged over wireless adb; 17 tools listed,
-  `design_describe` returned live state. Pair via Wireless debugging (`adb pair <ip>:<pairPort>
-  <code>`, ports/code rotate per dialog), then `adb connect <ip>:<connectPort>`. The abstract socket
-  only binds **after the app is (re)started** with AI tools on (toggling while running isn't enough).
-  The phone is rooted: read the token with `su` into the token file (see Next task). Without root the
-  user reads it off More > AI tools: the TWO shown parts joined (the "Hide" button sits between them),
-  48 hex chars. A real phone doesn't route loopback to
-  Windows, so the WSA `tcp:tcp` wedge doesn't apply there.
+- **MCP on a real phone:** the `localabstract` forward works over wireless adb; the socket binds only after an
+  app restart with AI tools on (archive "MCP on a real phone").
 - WSA -> LAN printer: run `wsa-lan.ps1 <printer-ip>` after each WSA start. Safe print-dialog test:
   `iptables -I OUTPUT -d <ip> -p tcp --dport 990 -j REJECT` (root), Print, Cancel, `iptables -D ...`.
 - Local native build in WSL: `MSYS_NO_PATHCONV=1 wsl -d Ubuntu -- bash /mnt/c/Users/Vince/orca-android-tools/wsl/corebuild.sh`

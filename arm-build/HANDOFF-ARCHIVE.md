@@ -1247,3 +1247,54 @@ no-code = templates + Customizer sliders + native parts/boolean/assemble; new sh
 - Test: `mcptest.sh @phone-token.txt list platedesc describe snapshot` -> 19 tools; plate_describe showed the
   live printer / process / filament; snapshot of the box draft 384 px, 4 KB PNG, upright and shaded,
   caption "60 x 40 x 30 mm". `mcptest_print.py` prints text items and saves image items ($SNAP).
+
+
+## Moved from HANDOFF.md on 2026-10-12 (evening): phone setup, user reports verified, MCP on a real phone
+
+### Phone test setup
+Phone notes: wireless adb, serial = the non-TV entry
+in `adb devices -l` (port changes after re-pairing). **Rooted (Magisk), user granted root use**:
+`su -c ...` works from adb shell. Plain `input tap` is ignored (ColorOS); tap as root.
+`~/orca-android-tools/phone-ui.py <serial> dump|find <re>|tap <label>` (root taps, label dump).
+MCP token: read from `shared_prefs/app_settings.xml` (`ai_token`) via `su` straight into
+`~/orca-android-tools/phone-token.txt`, never printed; `mcptest.sh @phone-token.txt <steps>`.
+r114 (CI 38291985223, all of today's work) is installed on the phone.
+
+### User reports 2026-10-12, verified
+   - AMS sync button gone on that detached preset: **verified fixed on the phone r114** (button back). Cause
+     confirmed: `inherits` empty -> `base` empty (`OrcaEngine.cpp:202`); fallback to the system preset of the same
+     model + nozzle (`PresetController.selectPrinterNow`).
+   - Plate type: default was the enum's first value (Cool Plate) in the UI and in slicing; now
+     `OrcaEngine::default_bed_type()` = user choice, else desktop `Preset::get_default_bed_type`. Verified on the
+     phone: Prepare shows "High Temp Plate" for the A1. More > Plate types dialog **verified on WSA r114** (default radio
+     shows in Prepare, hidden plate left out of the picker, slice G-code `curr_bed_type = Supertack Plate`).
+   - Answered, no change: MCP token is already in the backup (all `app_settings` prefs, `AppBackup.kt:39,129`).
+
+Done 2026-10-12: merges to main (Android PR #5 at r104, OrcaStudio PR #3); **AI tools milestones 1-2
+verified on WSA r110**; **milestone 3 verified on the phone r114** (19 tools, `design_snapshot` PNG upright and
+shaded, `plate_describe` live; details in the archive "AI tools milestone 3").
+
+### MCP on a real phone
+- **MCP on a real phone (verified 2026-10-12, the user's phone, r110):** the
+  `localabstract:orcastudio_mcp` forward works unchanged over wireless adb; 17 tools listed,
+  `design_describe` returned live state. Pair via Wireless debugging (`adb pair <ip>:<pairPort>
+  <code>`, ports/code rotate per dialog), then `adb connect <ip>:<connectPort>`. The abstract socket
+  only binds **after the app is (re)started** with AI tools on (toggling while running isn't enough).
+  The phone is rooted: read the token with `su` into the token file (see Next task). Without root the
+  user reads it off More > AI tools: the TWO shown parts joined (the "Hide" button sits between them),
+  48 hex chars. A real phone doesn't route loopback to
+  Windows, so the WSA `tcp:tcp` wedge doesn't apply there.
+
+## AI tools milestone 4: plate edit tools (verified 2026-10-12 on WSA, r115, CI 38294661415)
+
+- Commit "AI tools milestone 4: plate edit tools" (OrcaStudio-Android). `McpTools.kt` "Plate edits": object_transform
+  (pos = footprint centre [x, y] on a plate, optional plate to move it there; rot absolute degrees; scale %; pos with
+  rot / scale = two engine calls / undo steps), object_lay_on_face (world normal of the face to put down),
+  object_auto_orient (one object or all), object_duplicate (1..100), plate_arrange (plate or all). Each calls the
+  engine directly, applies the scene on main, toasts "AI: ...", returns plate_describe. plate_describe now lists
+  plate size, 1-based object / copy numbers, footprint centre (plate frame = world - plate origin), size, rot, scale.
+  More switch text: "...shape designs and the plate".
+- Test: `OBJ=2 PL=2 mcptest.sh @wsa-token.txt list platedesc plateedit plateerrors` -> 24 tools; cube on temp Plate 2:
+  transform to [60,60] rot 45 scale 150 % (footprint 35.355 both ways, right), lay on face [1,0,0], 2 copies,
+  arrange (row at y 128), auto orient, move copy 3 to [30,200]; all 8 error cases rejected before any change; app
+  Undo reverted the AI move and 7 more undos returned Plate 2 to empty. Plate 1 unchanged throughout.
