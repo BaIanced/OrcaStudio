@@ -1,441 +1,95 @@
-# Handoff: OrcaStudio-Android + OrcaStudio aarch64 Flatpak (state as of 2026-10-11, AMS mapping)
+# Handoff: OrcaStudio-Android + OrcaStudio aarch64 Flatpak (hot file, 2026-10-12)
 
-Read this first. Don't use any title for the user ("Supreme Master" was a joke; never use it). Older history (builds 14-50, past causes,
-Flatpak details) is in `HANDOFF-ARCHIVE.md`. **Don't read the archive or `README.md` / `NOTES-*.md`
-up front**; open them only when a question needs them (grep first).
+Read this first. Don't use any title for the user ("Supreme Master" was a joke; never use it).
+History, verified features, file maps and past causes live in `HANDOFF-ARCHIVE.md` (latest dump:
+"Moved from HANDOFF.md on 2026-10-12"). **Don't read the archive, `README.md` or `NOTES-*.md` up
+front**; grep them when a question needs them (e.g. `grep -n "AMS mapping" HANDOFF-ARCHIVE.md`).
 
-## Now
+## Rolling handoff rules (user, 2026-10-12)
+- Keep this file **under ~12 KB**: only the next task, open/untested items, gotchas and the rules.
+- When a task is verified, move its details (runs, files, causes) to the end of
+  `HANDOFF-ARCHIVE.md` under a dated heading and leave at most a one-line summary here.
+- Update "Next task" before stopping any task. At each task boundary, **tell the user it is a good
+  time to `/clear` then `/next`** (and why: task done + handoff updated). Don't suggest it mid-task.
 
-Both repos work on branch `claude/handoff-continuation-rseql3` (the "test branch").
-**Autonomy (user, 2026-10-11):** decide and act on whatever makes the most sense; don't stop to ask
-about branch handling (there was no "two streams" rule). Main merges / releases still need the user.
+## Next task
+1. **Verify r99 = run 38211644743 (commit 3283f1c) on WSA**, then this item is done: install
+   (`install-build.ps1 -Run 38211644743`), temp Plate 2, Shape builder, add a box, press Frame
+   (top-right of the preview): the amber turn dot + arc must be fully inside the preview (on r98 it
+   was cut off at the bottom edge). Customizer tab with no sliders shows the builder hint
+   (`shape_dims_hint`), not the code-annotation text. Delete Plate 2, close via window close.
+2. **Shape builder phase 2: sketch + extrude** (next in the modeling roadmap below).
 
-- Run 38072645925 (test branch, Orca Cloud sync merge + CI cache) green, ~20 min; not installed.
-- **r59 = run 38074555972 (test branch) installed on WSA:** OOM fix (user crash: a big slice's 325 MB
-  `extrusions.bin` was copied into a direct ByteBuffer twice, `Viewport.kt:161` and
-  `PreviewPanel.kt:268`, over the 512 MB heap). Now `Buffers.kt` memory-maps, and `Preview.cpp`
-  FloatWriter writes `.tmp` + rename like the scene/paint meshes. WSA: the user's plate (97 MB
-  extrusions.bin) slices and previews, Java heap 5 MB. The 325 MB slice itself: user to retest.
-- **Orca plugin runtime (general capability, kept for future plugins).** User, 2026-10-11: uses no
-  Orca plugins today; wants the ability kept. **FilamentHub is dropped for good (user dislikes its
-  ToS); never suggest, test with, or mention it again.** The user's real filament site is
-  3dfilamentprofiles.com (built in, below). Verified on WSA with a test plugin 2026-10-10/11: install
-  from Orca Cloud, load, Pages page renders + messages, process option "Slicing Pipeline Plugin"
-  picker (`SettingsEditor.kt` PluginPicker; engine `selection_config()` calls
-  `update_plugin_manifest()`), post-process runs on Share (logcat tag OrcaPlugins), capability
-  settings (r71, below). Pieces: embedded CPython 3.12.12 (Chaquopy build,
-  `android/scripts/stage_python.py`) + upstream plugin host compiled unchanged
-  (`android/core/plugins.cmake`); Android replacements in `android/core/plugin/` (PluginManager,
-  PluginAuditManager = no sandbox hook yet, orca.host app/ui); `PluginConfig.cpp` extracted by
-  `android/scripts/extract_plugin_config.py`. JNI `jni/OrcaPlugins.cpp` <-> `plugins/PluginNative.kt` /
-  `Plugins.kt`; pages `ui/settings/PluginPage.kt`. Installs to
-  `files/data/orca_plugins/_subscribed/<user>/<uuid>`. Not done: audit prompts, create_window,
-  per-preset config overrides, printerAgent capability. Pure-Python plugins only. Uninstall (r80):
-  subscribed list has Remove (`PluginManager::delete_plugin` in `AndroidPluginManager.cpp`);
-  Install over a loaded plugin now replaces it (was "restart to update"). Verified on WSA with Orca
-  Inspector (install, reinstall, remove; it was not installed before, so removed again).
-  WSA wedged once (no app window): stop WsaClient, `Start-Service WsaService`, `Start-Process wsa://<package>`.
-  "Plugins Used" restore fix (1fcfb56) verified. G-code save picker remembers a folder in the user's
-  own project dir: test saves via Share + logcat.
-- **3D Filament Profiles (3dfilamentprofiles.com) = r67, run 38108434060, verified on WSA
-  2026-10-10.** The utility the user actually uses (all features wanted). No public API (issue #134),
-  Vercel bot checkpoint (scripted fetches 429; WebView passes). Built in, not a plugin:
-  - Models tab 4th site (`ModelSite.FILAMENT_PROFILES`); the user is signed in there (email/GitHub/
-    Discord; Google likely blocks WebView sign-in).
-  - Preview > More > "Log print to 3D Filament Profiles": `net/FilamentProfiles.kt` builds
-    `/my/print/log?v=1&f=&p=&d=<base64url G-code comment lines>` like the site's own
-    `tools/slicer-print-log/3dfp-print-log.py`; opens in the Models tab (`UiState.modelsUrl`). Verified:
-    page lists printer, time, 66.70 g per filament + spool picker. Never press Subtract in tests.
-  - Spool profile export (My Spools row > Actions > Export slicer profile > OrcaSlicer/A1/0.4) is a
-    blob: JSON revoked on click: BRIDGE_JS keeps blobs 60 s (`__orcaBlobs`), the download listener
-    reads them back; `.json`/`.orca_*`/zips of JSON go to the preset import (`FileController.openDownloaded`).
-    Imported "Overture PETG White (3DFP T41GBvwn4) @A1" (user approved exporting any spool).
-  - CDP on its page: `cdp.mjs` / `pick.mjs` (Radix selects need pointer events) in the scratchpad.
-- Branches: `claude/orca-plugins` was fast-forwarded into the test branch; work on the test branch.
-- **Session gotcha:** the app restores `files/session/session.3mf` on start and saves it only in
-  `onStop` (41 MB, takes a while). `am force-stop` skips the save, so test edits reset before a
-  force-stop come back. WSA: HOME / another app did not trigger onStop.
-- **AMS mapping (2026-10-11, b361cad, r70 = run 38119747043, installed on WSA).** Verified (FTPS :990
-  blocked by iptables during the test so nothing could print): dialog maps "1 · PLA" (#FEC600) to
-  A1 PLA Basic (yellow), dropdown lists A1-A4; Cancel; export slice_info now has prediction, weight,
-  `<filament id="1" type="PLA" color="#FEC600" .../>`. Real print (user OK'd): 10 mm cube on a temp
-  Plate 2, dialog -> A1, "Print started", obn log `use_ams=1` (all earlier prints 0). **User confirmed
-  2026-10-11: printed yellow from A1 = AMS mapping verified.** Temp plate deleted, app closed via window close. User: the r69
-  LAN cube printed from AMS A4 (PETG) instead of yellow PLA and globbed the nozzle. Cause: obn print
-  got `use_ams=false`, empty `ams_mapping` (`ObnHost.kt` print call; `BambuHost.kt` same). Fix:
-  `net/AmsMapping.kt` (port of `DevMapping.cpp:122` ams_filament_mapping: same type, closest CIE76;
-  serialization as `SelectMachine.cpp:1343`), Print on Bambu -> `ui/preview/AmsMappingDialog.kt`
-  (pre-filled, pick per filament) -> `DeviceController.confirmPrint`; JNI `ObnNative.print` gained
-  `amsMapping2`. Also fixed: `.gcode.3mf` slice_info had no filaments/time/weight since plugin
-  post-process made exports a copy (lookup by path; `exportGcode3mf(..., sliced)`).
-  User's AMS lite: A1 yellow, A2 matte black, A3 white, A4 PETG. **Test print needs the user's OK.**
-  Safe dialog test: `iptables -I OUTPUT -d <ip> -p tcp --dport 990 -j REJECT` (root), Print, Cancel,
-  then `iptables -D ...`. Closing the WSA window via `CloseMainWindow()` on the WsaClient
-  "OrcaStudio-Android" window runs onStop (session save verified 2026-10-11), unlike force-stop.
-- **Session handling (user, 2026-10-11):** keep this file current before stopping any task so the
-  user can /clear at any point; cheaper (haiku/sonnet) subagents OK for builds/installs/searches.
-  User wants a work loop that clears context between tasks and runs until everything is done
-  (usage saving). Claude can't run /clear itself; `/next` (project skill in
-  `OrcaProjectsGithub/.claude/skills/next`) = "read handoff, continue". A fully automatic loop
-  would be a script running fresh `claude -p` sessions per task (not built; ask the user first).
-- **Local native build in WSL** (25 min cold, seconds incremental): `~/orca-android-tools/wsl/corebuild.sh`
-  (`MSYS_NO_PATHCONV=1 wsl -d Ubuntu -- bash /mnt/c/Users/Vince/orca-android-tools/wsl/corebuild.sh`) syncs `android/` from the
-  Windows checkout (`syncsrc.py`, CRLF->LF, only changed files) into `~/src/OrcaStudio-Android`
-  (branch clone, src-orca pinned) and builds in `~/orca-build` (deps from the CI artifact of run
-  38078498928, `deps_artifact=true` dispatch input; NDK r28c, cmake 3.31 + pkgconf + ccache in
-  `~/.local/bin`; `~/build` is root-owned, don't use). `undef.sh` lists undefined symbols / NEEDED.
-- CI: ccache never hit (fresh NDK mtime) -> `CCACHE_COMPILERCHECK=string:$NDK_VERSION`; caches are
-  per branch (a feature branch's first build is cold); prune is per branch now.
-- Verified on WSA 2026-10-10:
-  - Orca Cloud sign-in (user: Google round trip works, 4 subscribed plugins listed, sign-in
-    survives a restart; the account has no password, GitHub not tried).
-  - Mouse back (adb `input mouse keyevent 4`): More -> Prepare; on Prepare it is eaten instead
-    of backgrounding the app (user report: "acts like minimise"). Real mouse button (user).
-  - MakerWorld: dark web pages, native links row, blank strip trimmed, Collections opens the
-    user's collections.
-- Verified 2026-10-11 (r77): MakerWorld "Full site" chip (header, no BBL UA, back to slicer mode);
-  theme switch recreates the Models browser (page prefers-color-scheme follows Light/Dark); CI
-  cache works (builds ~6 min). Orca Cloud pull/upload: user tested on r72 (see below).
-- **r79 = run 38155435432 (Models zoom fix), installed + verified on WSA 2026-10-11:** Ctrl+wheel / pinch did nothing on MakerWorld because
-  its viewport meta has `maximum-scale=1.0, user-scalable=no`. `ZOOM_JS` in `ModelsScreen.kt` strips
-  those (MutationObserver re-applies). Verified on r79 (CDP + real Ctrl+wheel): meta unlocked on load, scale 1 -> 1.21 -> 1.46 -> 1.
-  (The first Ctrl+wheel right after a meta change is ignored; later ones work.) Pinch: user to test.
-- **Section view (r80 = run 38157697528; r82 = 38158608656 panel fit + mirrored winding; r83 =
-  38159448169 panel clears the tool column; r84 = 38159995534 two-row panel, installed on WSA, layout
-  verified), verified on WSA r80/r82/r84:**
-  port of GLCanvas3D's section view. `render/SectionView.kt` (ratio, normal = camera direction at
-  first use, plane over the objects' bounding sphere as `_get_section_view_plane`), shaders discard
-  the camera side (`uSection`), back faces through the cut drawn dark grey as cut faces (no
-  MeshClipper). View menu > Section view toggles + opens the panel (`SectionViewPanel.kt`: slider,
-  Set viewing angle, Reset, Close); Alt+wheel +/-0.01 (verified 0.50 -> 0.52 -> 0.48); Esc closes the
-  panel. Mirrored copies: scene/paint export now keeps triangles facing out (`OrcaScene.cpp`
-  transform(..., true), `OrcaTools.cpp` emit swaps corners); verified r82 by mirroring a copy on the
-  user's plate, then force-stop (no session save) -> plate unchanged. Reset/Close verified r82.
-  Not done: travels/markers aren't clipped, picking ignores the cut.
-  WSA gotcha: screenshots go stale while the window isn't foreground; run focus.ps1 first.
-- **Plugin capability settings (2026-10-11), r71 = run 38122146536 (38eb085), installed + verified
-  on WSA:** More > Orca Cloud section: "<capability> settings" button per capability ->
-  `ui/settings/PluginConfigDialog.kt` (custom page from get_config_ui with the plugin-config-ui.js
-  bridge via JS interface `orcaConfigHost`, host theme vars; else JSON editor); native
-  `config_open/save/restore` in `AndroidPluginRuntime.cpp` (global config layer only). Saves land in
-  `files/data/orca_plugins/config.json` and reload correctly.
-- **r77 = run 38128522536 (f80e7a0), installed + verified on WSA 2026-10-11:** Ctrl camera
-  shortcuts fixed. Two causes: (1) Android offers Ctrl keys to `onKeyShortcut` only when normal
-  dispatch leaves them unused, which never happened with the 3D view focused ->
-  `MainActivity.dispatchKeyEvent` runs `onKeyShortcut` first for Ctrl key-downs while the view has
-  focus; (2) the view only took focus on a click -> `PlateView.onGenericMotionEvent` takes focus on
-  any hover/scroll unless a text field has it (desktop `GLCanvas3D.cpp:4472-4482`). Verified: View
-  menu used, hover only, Ctrl+0 resets the view; `adb shell input keycombination 113 8` (Ctrl+1) ->
-  Top view. **Windows-side Ctrl+1..9 (keys.ps1 keybd_event) never reach Android** (log shows only the
-  Ctrl key; Ctrl+0 arrives): WSA or something on the PC drops them, not fixable in the app. Ask the
-  user whether a real keyboard's Ctrl+1 works. OrcaInput DEBUG logs "focus" / "shortcut" / "key".
-- **r74 = run 38126545229, installed on WSA 2026-10-11:** Quit dialog verified (centred title, note,
-  equal No/Yes). Modifier input verified with modin.ps1 (synthetic real-OS input): Ctrl/Alt/Shift+wheel
-  arrive as ACTION_SCROLL (meta CTRL 0x3000 / ALT 0x12 / SHIFT 0x41, Shift as h=-1) and zoom (screenshot
-  diff); Ctrl/Alt/Shift+middle-drag pan (WSA sends touch DOWN + hover moves buttons=4, no touch MOVE/UP).
-  The saved r72 log (`~/orca-android-tools/orcainput-r72.log`) has no modifier events in the new
-  format, so the user's earlier "deliver nothing / plain drag" reports aren't reproduced; ask the
-  user to retest on r75 if they still see it. Alt+wheel section view: done in r80 (below).
-  modin drags shift the camera: restore with View (camera icon) > Fit plate.
-- **r73 = run 38125719209 (built, superseded by r74):** undo limit setting (More > Misc, 1-5000, default 200; was a
-  fixed 30, `OrcaScene.cpp` m_undo_limit / engine call setUndoLimit). Verified on r71 (temp plate,
-  removed): Delete key (adb + real keyboard), real Ctrl+Z, arrows 10 mm / Shift+arrow 1 mm all work
-  already. Scratch tools: `keys.ps1 -Keys <vk...>` (real keys), `click.ps1` (picks the wrong WsaClient
-  window, unfinished).
-- **r72 = run 38125329109 (installed on WSA 2026-10-11, OrcaInput DEBUG on):** Back on Prepare with nothing to clear asks
-  "Quit?" Yes/No (Back closes it); More > Misc > "Press Back twice to quit" option (toast, 2 s).
-  Shift+wheel in the 3D view used AXIS_HSCROLL (=0 -> always zoom out): fixed. OrcaInput log now
-  has meta/axes/tool/source. User test results 2026-10-11: Orca Cloud pull no error (same presets),
-  upload "0 uploaded" (fine); plain wheel zooms 3D view (= desktop). Ctrl/Alt+wheel and modifier+middle-drag:
-  see r74 (work in synthetic tests). Capture tool: `scratchpad/modin.ps1 -Key 0x10|0x11|0x12 -Mode
-  middle|wheel` + `setprop log.tag.OrcaInput DEBUG` (WSA input isn't visible to getevent/dumpsys).
-- Order (user): Orca Cloud login (done), preset sync (built, testing), plugin runtime (done as a
-  general capability; no plugin in active use). **Next (user, 2026-10-11): modeling in the app**
-  - OpenSCAD, or any other way to use the slicer as 3D-printing modeling software. Not started;
-  no code yet. Ideas to check first (all unverified): upstream src-orca may already have a
-  "Design" tab (GLCanvas3D.hpp comment mentions "the Design tab's canvas" + studio lighting) -
-  grep `src-orca/src/slic3r/GUI` for it; OpenSCAD's WebAssembly build (openscad-wasm /
-  openscad-playground) could run in a WebView and hand the STL to the import path; upstream
-  shapes + mesh boolean gizmo as a native option. Present options to the user before building.
-  **Checked 2026-10-11 (recommended: native OpenSCAD core in `liborca_jni.so`, not WASM):**
-  - WASM build forces `MANIFOLD_PAR OFF` (single-threaded) and NULLGL; native gets Manifold + TBB
-    on all cores. OpenSCAD @c0ac828 has `HEADLESS`/`NULLGL` and a static `OpenSCADLibInternal`.
-  - Shared with our Android deps prefix: Boost (has regex; lacks program_options, used only by
-    `openscad.cc` main -> patch out), CGAL, GMP/MPFR, Eigen, TBB, FreeType, OpenSSL, zlib, expat.
-    New: Manifold + Clipper2 (submodules; Orca's `deps_src/clipper2` is 2.0.1 -> watch duplicate
-    symbols), double-conversion, libzip, libxml2, harfbuzz, fontconfig, flex/bison (host).
-  - glib use outside `src/gui` is ~10 `g_utf8_*`/`gunichar` calls (`str_utf8_wrapper.h`,
-    `UnicodeIdentifier.cc`, `Value.cc`, `FreetypeRenderer.cc`) -> small shim over utf8proc
-    (minSdk 29, so NDK ICU (API 31) is out).
-  - Upstream "Design tab" (`src/slic3r/GUI/CAD/*`, `libslic3r/CAD/*`, OCCT B-rep sketch/primitives)
-    exists but is wx GUI; Android builds with `SLIC3R_CAD OFF` (`android/core/CMakeLists.txt:38`).
-  - **Step 1 started (user said "start", 2026-10-11):** `android/openscad/` superbuild ->
-    `libopenscad.so` (C API `bridge/scad_bridge.h`: `scad_render(src, file, params_json)` ->
-    triangle soup + log, `scad_parameters()`), only `scad_*` exported (`--exclude-libs,ALL`).
-    `shim/` = glib subset over utf8proc + gettext no-ops. `patch_openscad.cmake` drops
-    `src/openscad.cc` + program_options and adds the bridge subdir. CI `android-openscad.yml`
-    (push to `claude/**` touching android/openscad; restores the apk deps cache, own deps cache +
-    ccache; artifact `libopenscad-arm64-v8a` incl. `scad_smoke`, fonts, MCAD). **Step 1 DONE: run 38168198443 green, verified on WSA 2026-10-11** (lib 12 MB stripped; scad_smoke:
-    parameters JSON, CSG render 1792 tris, Customizer override works; `text()`/fonts/perf untested). Test:
-    `gh run download <id> -n libopenscad-arm64-v8a`, `MSYS_NO_PATHCONV=1 adb push` lib+bin+resources to
-    /data/local/tmp/scad, `LD_LIBRARY_PATH=. ./scad_smoke /data/local/tmp/scad/resources`. Fixed on the way:
-    pipx meson >=1.6.1, expat.pc, libxml2 pinned (NDK host .so), target `scad_core` (name clash).
-  - **Step 2 DONE (2026-10-11): r85 = run 38170713625, r86 = 38172403593, r87 = 38173875723 (installed
-    on WSA, verified below); r88 = 38174598085 (gear example pitch fix only, not installed).**
-    `bridge/scad_jni.cc` (JNI for `app.orcaandroid.scad.ScadNative`, writes binary STL, returns
-    {ok,dimension,triangles,log}; OPENSCAD_FONT_PATH=/system/fonts, HOME/XDG_CACHE_HOME=cache).
-    CI: android-openscad.yml caches `out/` as `android-openscad-out-<tree hash of android/openscad>`;
-    android-apk.yml restores it and stages `$BUILD_ROOT/openscad-jniLibs` + `openscad-assets/openscad`
-    (gradle adds both; miss = warning, APK without OpenSCAD -> "This build does not include OpenSCAD").
-    App: `scad/ScadService.kt` (process `:scad`, Messenger, 256 MB-stack thread, unpacks assets to
-    `files/openscad-resources` per lastUpdateTime; `OrcaApp.onCreate` returns early in `:scad`),
-    `scad/ScadClient.kt` (cancel = kill the :scad process via runningAppProcesses),
-    `scad/ScadModel.kt` (Customizer JSON parse/encode, vectors as "[a, b]" strings; 3 examples),
-    `ui/ScadController.kt` (UiState.scad; draft in `files/openscad/draft.scad|json`; render -> loadModels,
-    replaces the object it placed (by name) keeping offset xy/rotation/scale/mirror; auto-render on
-    Customizer change once an object is on the plate), `ui/scad/ScadEditor.kt` (panel: Code tab with
-    highlighting/line numbers/auto-indent/Tab, Customizer tab, console with clickable "line N",
-    Render/Update/Add as new/Stop; F5/F6/Ctrl+Enter render, Ctrl+S save). Entry: Prepare + menu and
-    bed context menu "OpenSCAD model"; opening .scad files (also in zips; main = file no other includes).
-    Wide: panel replaces the 380 dp side panel (45% width, 420-640 dp); phones: over the view with
-    "Show plate". **Verified on WSA (r85/r86):** editor look (highlighting, line numbers, tabs);
-    box renders + places (414 tris, 0.4 s); Customizer slider auto re-renders in place; text tag
-    (fonts) 3,506 tris; error log auto-opens console; Stop kills :scad and a fresh one serves the next
-    request; 6000-sphere for() renders after the RLIMIT_STACK raise (was a false "Recursion detected");
-    new objects go to a free spot (2nd box beside the 1st). Fixed on the way: `parser_init()` (library
-    path), RLIMIT_STACK 240 MB in scad_init, client restarts :scad after a "Recursion detected" log
-    (OpenSCAD's 1M tail-call limit left the process rejecting all calls), `handleDependencies()`.
-    r87: MCAD gear renders (use<> works; the example's pitch was in old units -> 2.5 m gear, fixed in
-    r88: MCAD spur gear takes mm per tooth, involute_gears.scad:324). Console "line N" tap switches
-    to Code and scrolls to the line (r86). Untested: Save/Open .scad via the picker, phone layout,
-    Ctrl+Enter/F6/Ctrl+S, Tab/auto-indent, opening .scad from a download/zip.
-    Test helper: `~/orca-android-tools/tapf.sh x y` (focus + tap; unfocused WSA taps are lost).
-    **WSA session gotcha (2026-10-11):** the session got saved mid-test (14:22) with test objects;
-    `CloseMainWindow()` now kills the app without onStop (no save). Reliable save: open the system
-    file picker from the app (Add > Import model), wait for session.3mf mtime, force-stop
-    documentsui. Test on a temp Plate 2 and remove it after. When deleting objects by list
-    position, verify the selection first (the list shifts; Pose08 got deleted once, undone).
-  - **Step 3 DONE: r89 = run 38178385444 (commit "keep the design with the object in the 3MF"), installed +
-    verified on WSA 2026-10-11:** box with a modifier, Customizer width 60->90 replaced the mesh in
-    place, modifier kept; session.3mf held `module` = openscad JSON (source newlines intact); after
-    force-stop + restart the restored box offered "Edit OpenSCAD design", which loaded the box (draft
-    was the gear) and Update on plate replaced it (object count unchanged). Painting remap untested.
-    Temp plate deleted, session saved clean (8 objects). Details: design kept in
-    `ModelObject::module_name` = "openscad:" + compact JSON {name, source, values} (`ScadDesign` in
-    `scad/ScadModel.kt`; 3MF writes it as `<metadata key="module">`, desktop Orca round-trips it;
-    no submodule change). Scene JSON `module` -> `SceneObject.module`. Engine calls `replaceMesh`
-    (port of `Plater.cpp:11602` replace_volume_with_stl: keeps settings/modifiers/instances, remaps
-    painting) and `setObjectModule` (no undo step) in `OrcaScene.cpp`. Object context menu "Edit
-    OpenSCAD design" -> `ScadController.editObject`. Native + Kotlin compiled locally. To test:
-    render, paint/setting on it, Customizer change keeps both; save project, reload, Edit design.
-    Not done: small in-editor preview; relative include<> files aren't embedded.
-  - **r90 = run 38182983535 (commit "Modeling: Assemble ..."), CI green, installed on WSA;
-    results below:**
-    - Engine `assemble(items)` (port of `GUI_ObjectList.cpp:3045` merge: copies become parts of one
-      "Assembly", world placement kept) and `mesh_boolean(object, src, tool, op, keepTool)` (port of
-      `GLGizmoMeshBoolean.cpp:381-431` via `MeshBoolean::mcut::make_boolean`, painting remapped).
-      Deviation: the gizmo sets the result's offset to the old part's offset (`:503`), which shifts a
-      union with an off-centre part; we keep add_volume's centred offset. Added parts are named "Part N".
-    - UI: multi-select toolbar + context menu "Assemble"; object More menu "Add part" (box at the
-      object centre) and "Mesh boolean" (dialog `PrepareDialogs.kt` MeshBooleanDialog; context menu
-      entry when the object has 2+ parts).
-    - OpenSCAD: `ScadDeps.collect` embeds local include<>/use<> files (relative to the main file,
-      2 MB cap, library files excluded) in the design JSON `files`; `ScadDesign.unpack` restores them
-      under `files/openscad/designs/<hash>/` on Edit design. Draft meta now always keeps an opened
-      file as the include base (was dropped once the text changed).
-    - **r90 on WSA (temp Plate 2, 2026-10-11):** Assemble verified (cube + cylinder -> "Assembly",
-      positions kept, 732 tris). Mesh boolean dialog verified; difference ran (cylinder didn't overlap,
-      so result = cube). Found: "Add part" threw "Unsupported volume type" (code 0 missing) and parts
-      couldn't be moved at all.
-    - **r91 = run 38183994457:** fixes Add part (placed beside the object at +X like
-      `GUI_ObjectList.cpp:2565-2578`), part/modifier Position-in-object / Rotation / Size fields under
-      the selected part in the object card (engine `setTransform` takes `volume`; scene JSON volumes
-      carry rotation + scale).
-    - **r91 verified on WSA 2026-10-11 (temp Plate 2, deleted after; session saved clean, 8 objects):**
-      Add part = 10 mm box beside the 20 mm cube; part X 15 -> 8 via the new field moved it into the
-      corner; difference 12 -> 38 tris; undo -> 2 parts; intersection = 7x10x10 box in place (centre
-      +6.5/-5 mm); union 46 tris, centre +1.5 mm (no shift). Painting through a boolean: untested.
-      Label "(mm) (mm)" fixed after (commit "Part position label", not built yet - goes with the next build). OpenSCAD: a .scad zip with a local include, render, Edit design
-      after restart.
-  - **OpenSCAD beginner UX (2026-10-11), r93 = run 38186440697 installed + verified on WSA:**
-    live preview pane (`render/MeshPreviewView.kt`, own GL view, `PreviewMesh.readStl`; controller
-    `preview()` debounced: 1.2 s after edits, 0.3 s after Customizer; Customizer change + object on
-    plate -> preview then `render()` reuses the preview STL via `previewKey`); size chip + "larger than
-    the plate"/"taller" warning; F5/Ctrl+Enter preview, F6 add to plate. Template gallery
-    (`scad/ScadTemplates.kt`: blank, box, lid box, spacer, hook, stand, tag, gear: all 8 render on
-    WSA with the expected sizes). Insert chips + "Add a slider" (`scad/ScadSnippets.kt`), error tips
-    (`ScadHints`, verified: syntax error -> "could not read line 3" + Go to line). Fixed on the way:
-    `ScadClient` lost the reply of a request queued right behind another (pending cleared after
-    resume ran the next request inline) -> preview hung on "Building" in r92.
-    Commit 077e3ca (not built): Insert with no cursor placed appends at the end (was after line 1,
-    above the parameters -> Customizer emptied); Add a slider stops at the first shape call.
-    Untested: phone layout, pinch/orbit on a real touch screen, Insert wrapping a selection.
-    Short panels (WSA 1080p) leave little room under the preview: collapsible, 30% of the height.
-  - Plan: separate cached OpenSCAD deps stage (don't touch the Orca deps cache key), JNI
-    `renderScad(src, params)` -> TriangleMesh straight into the plate, source + Customizer values
-    stored in the 3MF so the object re-renders when edited; Compose code editor + Customizer panel.
+## State
+- Both repos work on branch `claude/handoff-continuation-rseql3` (the "test branch"). Autonomy
+  (user, 2026-10-11): decide branch handling and next steps yourself. **Main merges / releases need
+  the user.** Main is still at r37 (PR #3); user agreed (2026-10-12) to merge more often, at
+  verified milestones: offer a merge PR when a batch is verified, merge only on their "merge".
+- Latest installed on WSA: r98 (run 38210814654). r98 verified 2026-10-12 (temp Plate 2, deleted;
+  user's Plate 1 with 1 object untouched; app closed via window close): size handles X (20->26,
+  pos.x +3, min side kept) and Z (20->25, bottom kept); turn handle -> rot.z 90; builder Undo
+  reverts the turn in one step, Redo; a turned shape shows only the turn dot; Customizer "Add a
+  slider" adds dim `lid` (draft.json `dims`). Not tested: Y handle, Shift = 1° turn, handles on a
+  group / nested child, touch (WSA has none).
+- Shape-builder handles: `MeshPreviewView` (`handles()`, `overlay()` -> `PreviewOverlay` points/
+  guide/ghost, `HANDLE_VS`), `ShapeController.resize/turn/handles/addDim`, `ScadPreview.kt` listener.
+- Draft of the open design: `files/openscad/draft.scad|json` (read with `adb exec-out "su -c 'cat ...'"`,
+  handy to check builder edits without screenshots; the Code tab text isn't in the ui dump).
+- WSA 1080p: the editor panel is short; collapse the preview ("Hide preview") to reach buttons
+  below the Customizer notice.
 
-### NEXT: modeling roadmap (user agreed 2026-10-11, in this order)
-User goal: model **without writing code**; OpenSCAD code is only a backstop for debugging. Today
-no-code = templates + Customizer sliders + native parts/boolean/assemble; new shapes still need code.
-1. **Shape builder phase 1: r96 = run 38208190893 installed + verified on WSA 2026-10-11** (temp
-   Plate 2, deleted after; user's plate untouched = Plate 1, 1 object Pose05.step): Add menu ->
-   Shape builder opens; box + cylinder added side by side; Hole cut (12 -> 48 tris); X/W fields;
-   preview overlay (blue selection box) + tap pick + drag moved the box to (26, 15) on 1 mm snap;
-   toolbar Undo; long-press multi-select + Group (cut kept); ⋮ Make a slider on W -> Customizer
-   slider 20 -> 30 changed the size; Add to plate; auto-save, force-stop, relaunch, long-press
-   object > Edit OpenSCAD design reopened the Shapes tab at 30 mm. Bugs found -> fixed in
-   **r97 = run 38209274086, installed + verified on WSA 2026-10-11 (temp Plate 2 deleted, session
-   saved clean, app closed)**: new design starts empty; cylinder 312 tris (round); all 12 kinds
-   render (box..text, ring/dome/text codegen OK); repeat row + circle (circle turns about the
-   design origin 0,0 by default); group -> ungroup leaves every translate identical. Still
-   untested: align, mirror, dims list edit/remove, keyboard shortcuts, phone layout. Small: the
-   preview doesn't re-frame as the design grows (Frame button works). NEXT for the builder: on-screen
-   scale/rotate handles in the preview (phase 1 leftover), then phase 2 (sketch + extrude).
-   Fixed in r97: new design showed the previous
-   draft's preview (late preview result now dropped when the key changed, `runPreview`); round
-   shapes had 7 sides (scaled 1 mm primitives + $fs -> generated `function sides(d)` sets $fn);
-   palette FlowRow filled the short panel (now one scrolling row); slider names were
-   "box_1_size_mm_w" (now "box_1_width"); placed objects were named after the preview STL
-   ("4795...stl", also hit plain OpenSCAD designs; now a copy named after the design).
-   To verify on r97: cylinder looks round, new design starts with an empty preview, object name.
-   Untested: align, mirror, repeat, ungroup, dims section edit/remove, text/torus/tube/dome codegen,
-   keyboard shortcuts (need focus on the Shapes tab), phone layout.
-   Files: `scad/ShapeModel.kt` (Shape/Dim/Repeat/ShapeDesign: JSON, bounds, `toScad()` codegen;
-   pos = bottom-centre of the box, rotate about box centre, holes cut solids of their own group
-   AND at top level), `ui/ShapeController.kt` (add/update/setField/delete/duplicate/group/ungroup/
-   align/drop/mirror/move/repeat/sliders, undo 200), `ui/scad/ShapeBuilder.kt` (Shapes tab:
-   palette, toolbar, tree list (long-press = multi-select), properties, ⋮ per field row = make /
-   follow / stop following a slider, Sliders section; keys Del, Ctrl+D/G/Shift+G/Z/Y/A, arrows
-   1 mm (Shift 10), PgUp/PgDn z, H/S, Esc), `MeshPreviewView` PreviewBox overlay (selection blue,
-   holes grey, drawn on top), tap pick (slab test), drag on a shape moves the selection (1 mm snap,
-   plane = box bottom), empty drag still orbits. ScadController: `shapes`/`selected` in
-   ScadEditorState, `newShapes()`, `setShapes()` (regenerates source; dims-only change pushes to
-   the plate like the Customizer), `detachShapes()` ("Edit as code"), draft + ScadDesign carry
-   `shapes`. Entries: Prepare Add menu + bed context menu "Shape builder", template gallery card.
-   Code tab is read-only for shape designs. Customizer slider changes write the dim value.
-   Known gaps: on-screen scale/rotate handles, Customizer "Add a slider" does nothing in builder
-   mode, ungroup of a rotated group with rotated children is approximate, renaming a shape
-   re-renders (name is a code comment). Test plan: open via Add menu, add box + cylinder, make
-   cylinder a hole, group, preview shows the cut; drag in preview; slider on box width + Customizer;
-   Add to plate, restart, Edit OpenSCAD design -> Shapes tab back. Use a temp Plate 2.
-   Reuse check (user asked 2026-10-11 to reuse public projects where logical): no public
-   touch shape-builder -> OpenSCAD exists (search 2026-10-11). Materializr (F-Droid, GPL-3,
-   OpenCASCADE, Dear ImGui UI) is the only Android touch CAD found: UI not reusable in Compose;
-   look at it (and FreeCAD's planegcs solver) for phase 2 sketch/extrude/revolve.
-   Original brief: User: "replicate any of the best modeling
-   software in a touchscreen format", with full keyboard + mouse support too. References: Tinkercad
-   (drag shapes onto a workplane, Solid/Hole, Group, Align, Mirror, Ruler, Duplicate-repeat),
-   Shapr3D / Onshape mobile (touch-first: sketch + extrude/push-pull, fillet/chamfer, snapping,
-   numeric entry on tap), Fusion (timeline/feature history, parameters). Design:
-   - Data = a CSG tree (JSON) kept in the object's `module` metadata like `ScadDesign`
-     (`scad/ScadModel.kt`) -> "Edit design" reopens the tree. The tree **generates OpenSCAD code**
-     (shown read-only-by-default in the Code tab) -> rendered by the existing native OpenSCAD
-     (`ScadService`/`ScadClient`), live preview (`MeshPreviewView`), replace-in-place on the plate.
-   - Phase 1: shapes (box, rounded box, cylinder, cone, sphere, torus, wedge/prism, text, polygon
-     extrude), Solid/Hole, Group (union/difference), move/rotate/scale with on-screen handles +
-     numeric fields, snap grid, align, mirror, duplicate, linear/circular repeat, named dimensions ->
-     Customizer sliders, undo/redo, multi-select. Touch: tap select, drag move on the workplane,
-     two-finger orbit/pinch zoom, long-press menu. KB/mouse: click/Shift-click, drag, wheel zoom,
-     right-drag orbit, Delete, Ctrl+D/G/Z/Y, arrows nudge, H = hole, S = solid.
-   - Phase 2: 2D sketch (lines/arcs/rects/circles, constraints light) + extrude/revolve, fillet/
-     chamfer (minkowski/offset), shell/hollow, import STL as a shape (import()).
-   - Then UI test on WSA (WSA has no touch: test touch paths with adb `input`; phone layout untested).
-2. **AI tool layer (MCP server in the app)**, built on the shape-builder JSON. Research (not
-   prototyped): the engine already exposes ~65 JSON calls (`android/core/jni/EngineCalls.cpp`:
-   scene, addPrimitive, setTransform, meshBoolean, assemble, cut, arrange, presetValues,
-   setSelection, savePreset, ...) -> wrap as MCP tools. Cheapest "vision", in order: (a) the CSG
-   tree as text (AI reads/edits it directly), (b) scene summary JSON (objects, bbox, position,
-   parts, volume, tris, fits plate; est. a few hundred tokens for 8 objects, unmeasured),
-   (c) offscreen render of the model only, small PNG from a chosen angle (~350 tokens at 512x512,
-   Claude image cost ~ w*h/750; full screenshot ~1.5k) for spot checks. Transport: Streamable
-   HTTP MCP on the device, reached from Claude Code/Desktop on the PC via LAN or `adb forward`
-   (unverified on WSA). Optional later: in-app chat panel with the user's own API key.
-3. **Settings tools** (bonus): read printer/filament/process presets + propose overrides; saving or
-   deleting presets and starting prints always need the user's on-screen confirm (rule 6).
+## Modeling roadmap (user agreed 2026-10-11, in this order)
+User goal: model **without writing code**; OpenSCAD code is only a backstop.
+1. Shape builder: phase 1 done (r96-r99; details in the archive). Known gaps: ungroup of a rotated
+   group with rotated children is approximate; renaming a shape re-renders; preview doesn't
+   re-frame as the design grows (Frame works). Untested: align, mirror, dims list edit/remove,
+   keyboard shortcuts, phone layout. **Phase 2:** 2D sketch (lines/arcs/rects/circles, light
+   constraints) + extrude/revolve, fillet/chamfer (minkowski/offset), shell/hollow, import STL as a
+   shape (import()). Look at Materializr (F-Droid, GPL-3, OpenCASCADE) and FreeCAD's planegcs
+   solver for sketch ideas; no reusable touch UI exists (searched 2026-10-11).
+   Design data = CSG tree JSON in the object's `module` metadata (`ShapeDesign` in
+   `scad/ShapeModel.kt`) -> generated OpenSCAD -> native OpenSCAD render (`ScadService`).
+2. **AI tool layer (MCP server in the app)** on the shape-builder JSON: wrap the ~65 engine JSON
+   calls (`android/core/jni/EngineCalls.cpp`) as MCP tools; "vision" cheapest first: CSG tree text,
+   scene summary JSON, small offscreen PNG. Streamable HTTP MCP on the device via LAN or
+   `adb forward` (unverified on WSA).
+3. **Settings tools**: read presets + propose overrides; saving/deleting presets and printing always
+   need the user's on-screen confirm.
 
-### Orca Cloud (Kotlin port of upstream `OrcaCloudServiceAgent.cpp`)
-- `net/OrcaCloud.kt`, `net/OrcaCloudLoopback.kt`, `ui/settings/OrcaCloudSection.kt`.
-- Sign-in page `https://cloud.orcaslicer.com/orcaslicer-login`, JS bridge registered as `wx`;
-  `get_login_cmd` -> `window.postMessage(login_config)` (PKCE S256, loopback
-  `http://localhost:41172..41174/callback`). Code exchange `POST auth.orcaslicer.com/auth/v1/token
-  ?grant_type=pkce`. Refresh with 15 min skew; 400/401/403 signs out. Session: AES-GCM with an
-  AndroidKeyStore key in `noBackupFilesDir/orca_cloud/session.sec`; the app backup carries it
-  decrypted inside its passphrase-encrypted zip (`AppBackup.kt`), plus `orca_plugins/config.json` (r80).
-- API `https://api.orcaslicer.com`: plugins `GET /api/v1/plugins/subscriptions`; pull
-  `GET /api/v1/sync/pull` (full, no cursor) -> engine `loadCloudPresets` (shared with the Bambu
-  sync; cannot delete presets: `remove_users_preset` only touches presets whose user_id equals the
-  engine's empty `preset_folder`).
-- Upload (user approved 2026-10-10): engine `cloudUploads(userId)` (get_user_presets +
-  get_differed_values_to_update) / `markUploaded` (set_sync_info_and_save); `POST /api/v1/sync/push`
-  {id, name, content, original_updated_time}. New ids = UUIDv5(ns `f47ac10b-58cc-4372-a567-
-  0e02b2c3d479`, "<user_id>/<name>"). 409 reported, never forced; 413 -> will_not_sync; deletes never
-  uploaded; presets with another account's user_id (Bambu-synced) skipped.
+## Open items (details: grep the archive)
+- User to retest: the 325 MB slice that crashed before the r59 OOM fix; pinch zoom on MakerWorld;
+  whether a real keyboard's Ctrl+1 works (WSA drops synthetic Ctrl+1..9).
+- Auto-save (r94): untested switching it off / changing the interval.
+- Orca plugin runtime: kept as a general capability (no plugin in use). **FilamentHub is dropped
+  for good; never suggest, test with, or mention it.** Not done: audit prompts, create_window,
+  per-preset config overrides, printerAgent capability.
+- 3D Filament Profiles (3dfilamentprofiles.com) is built in (Models tab site + "Log print"). Never
+  press Subtract in tests.
+- AMS mapping verified (user printed from A1). User's AMS lite: A1 yellow, A2 matte black, A3
+  white, A4 PETG. **Any test print needs the user's OK.**
+- Section view: travels/markers not clipped, picking ignores the cut.
+- OpenSCAD untested: Save/Open .scad via picker, phone layout, opening .scad from a download/zip,
+  painting through a mesh boolean.
+- Models tab untested: MakerWorld sign-in ticket flow, Thingiverse downloads.
+- Flatpak r9 MakerLab tab: user hasn't reported. Weekly upstream bump `upstream/orca-main`: merging
+  is the user's call. Optional: obn patch 0001 upstream report (needs OK); cloud
+  `POST /v1/user-service/my/task` 403 cause; obn deferred-teardown latch (`agent.cpp:117-129` vs `:330`).
+- Wishlist later: filament colour mixing (upstream `FilamentMixer.cpp`). Not wanted: iOS port.
 
-### Models tab (`ui/models/ModelsScreen.kt`, `net/ModelDownloads.kt`)
-- MakerWorld uses a desktop Chrome UA + `BBL-Slicer/v<ver> BBL-Language/en` ("slicer mode"):
-  needed for "Open in Bambu Studio" (`bambustudio://open?file=` -> download -> import). In slicer
-  mode MakerWorld renders no header; the app adds a links row (handle = `name` from
-  `/api/v1/user-service/my/profile`, fetched by the page) and MW_TRIM_JS moves the fixed
-  `.global_new` bar from top:60px to 0 (home only; model pages have no strip, don't overlay).
-  "Full site" chip = no BBL suffix (header, sidebar, Collections; no slicer import).
-- `?modelid=` changes load `<lang>/models/<id>`; downloads go to `cache/downloads`; names from
-  page / header / URL, else sniffed (3MF/zip/STL/OBJ). All WebViews need MATCH_PARENT layout params
-  (WRAP_CONTENT makes CSS 100vh = 0) and are made by `themedWebView` (app light/dark).
-- Untested: MakerWorld sign-in ticket flow, Thingiverse downloads.
+## Gotchas
+- The app restores `files/session/session.3mf` on start and saves it in `onStop` (and by auto-save
+  every 60 s when changed). `am force-stop` skips the onStop save. Closing the WSA window
+  (`CloseMainWindow()` on the "OrcaStudio-Android" window) ran onStop on 2026-10-11/12.
+- Test on a temp Plate 2 and delete it after; don't change the user's Plate 1. When deleting
+  objects by list position, verify the selection first.
+- WSA stops drawing when its window isn't in front (taps lost, empty ui dump): focus it first
+  (`wheel.ps1:17` trick / `tapf.sh`). WSA wedged (no window): stop WsaClient,
+  `Start-Service WsaService`, `Start-Process wsa://<package>`. Lost DNS: `wsaclient /shutdown`.
+- WSA -> LAN printer: run `wsa-lan.ps1 <printer-ip>` after each WSA start. Safe print-dialog test:
+  `iptables -I OUTPUT -d <ip> -p tcp --dport 990 -j REJECT` (root), Print, Cancel, `iptables -D ...`.
+- Local native build in WSL: `MSYS_NO_PATHCONV=1 wsl -d Ubuntu -- bash /mnt/c/Users/Vince/orca-android-tools/wsl/corebuild.sh`
+  (25 min cold, seconds incremental; details in the archive).
 
-### Plugin host surface (what upstream plugins expect; implemented)
-- orca.base, @orca.plugin, orca.register_capability, orca.ExecutionResult.{success, skipped},
-  capability get_name/get_icon/has_config_ui/get_config_ui/get_default_config/get_config/on_load/
-  on_unload/on_message/post_message/get_ui, orca.host.preset_bundle(), orca.host.plugin.storage(),
-  orca.host.app_language(); `webbrowser.open` routed to the app. Page JS bridge = upstream
-  ORCA_BRIDGE_JS (`src-orca/src/slic3r/GUI/Widgets/WebHosting.cpp`). SlicingPipeline runs only
-  at `psGCodePostProcess` on Android (on the exported G-code, in place).
-- Pull files from WSA with `adb exec-out "su -c 'cat ...'"` (plain `adb shell` mangles binaries).
-
-### Orca plugins: research (2026-10-10)
-- Upstream `src-orca/src/slic3r/plugin` (~14k lines): CPython 3.12 embedded via pybind11
-  (`PythonInterpreter.cpp`); capability types PrinterConnection, Pages, Analysis, Importer,
-  Exporter, Visualization, Script, SlicingPipeline. SlicingPipeline hooks libslic3r
-  (`Print::set_slicing_pipeline_hook_fn`; the engine already has the seam). Host APIs in
-  `plugin/host/*`: geometry, model, presets, slicing are GUI-free; ui / app / pages use wx. wx also
-  in PluginManager, PluginConfig, PluginResolver, PluginAuditManager, PythonInterpreter.
-- Plan: CPython for Android linked into the engine with the NDK + pybind11 (vendored in
-  `src-orca/deps_src/pybind11`); Script + SlicingPipeline first. Plugins with native-code wheels
-  can't run on Android (pure Python only); upstream installs PEP 723 deps with `uv` (none on Android).
-- python.org ships Android tarballs only from **3.14** (latest 3.14.8; upstream bundles 3.12.13):
-  `python-3.14.x-aarch64-linux-android.tar.gz` = `prefix/lib/libpython3.14.so` + stdlib (lib-dynload
-  .so) + headers + a `testbed` app showing the embedding (stdlib in assets, extracted to files/,
-  `PyConfig.home`; libpython*.so in jniLibs). 3.12 for Android only via Chaquopy builds.
-- wx-free as-is: CloudPluginService, PluginFsUtils, PluginLoader, PluginHooks, PythonPluginBridge,
-  host/{PluginHost,Geometry,Mesh,Model,Presets,Slicing}, pluginTypes/*. wx/GUI to replace in
-  `android/core` (submodule stays unpatched): PluginManager (21 refs), PluginConfig (14),
-  PluginResolver (9), PluginAuditManager (43, I18N), host/PluginHostUi (84), PluginHostApp (10),
-  PluginPages (40), PythonInterpreter (1).
-
-### Task list (user, 2026-10-11; not started unless noted)
-- **Auto-save DONE: r94 = run 38202928758 (also carries 077e3ca + 93b776a), installed + verified on
-  WSA 2026-10-11:** added temp Plate 2 -> session.3mf rewritten ~60 s later, force-stop + relaunch
-  -> Plate 2 restored; deleted it -> next auto-save wrote the clean state (Plate 1, 8 objects).
-  More > Misc shows the switch (on) + "60". Untested: switching off, changing the interval.
-  More > Misc "Auto-save the plate" switch + seconds (10-3600, default 60; 0 = off; pref
-  `auto_save_seconds`). `AppViewModel.autoSave()`: every N s, if scene/presets/overrides/project
-  name/active plate changed since the last save and not busy/slicing -> `files.saveSession()`
-  (now under a Mutex shared with the onStop save). Desktop equivalent: `MainFrame.cpp:755` (backup
-  every 10 s, incremental; ours writes the full session.3mf, so a longer default). Test: edit on a
-  temp Plate 2, wait > 60 s, check session.3mf mtime, force-stop, relaunch -> edit kept; then
-  remove the temp plate and wait for the next auto-save.
-
-### Other open items
-- WSA: 127.0.0.1 refused a shell connection to the loopback while ::1 worked (browser sign-in
-  worked anyway).
-- Flatpak r9 MakerLab tab: user hasn't reported (ticket sign-in, 3MF/STL round trip).
-- Weekly upstream bump `upstream/orca-main`: merging into main is the user's call.
-- Optional: obn patch 0001 upstream report (prepare it, give the user a link; needs OK); the cloud
-  `POST /v1/user-service/my/task` 403 cause; obn deferred-teardown latch (`agent.cpp:117-129`
-  vs `:330`).
-- Wishlist later: filament colour mixing (upstream `FilamentMixer.cpp` exists; see archive).
-  Not wanted: iOS port.
 
 ## Working rules (the user asked for these)
 
