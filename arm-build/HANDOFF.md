@@ -42,10 +42,13 @@ installed on WSA too. Back on the phone when the user says so / it shows in `adb
      preset re-link, else sync only finds generic filaments).
 3. Merge: main = r112 (6f8560c, Android PR #6, 2026-10-12). Left on the branch: 46a694e (nozzle match) and
    121765c (my filaments), both untested; on top of them, verified: b7d6de2 (milestone 4, WSA r115) and the
-   settings tools (WSA r117/r118); then 8334d43 + 80c8d0f (item 4, verified r120). Next merge
+   settings tools (WSA r117/r118); then 8334d43 + 80c8d0f (verified r120), 4f4697e + bc021f4 (verified r123). Next merge
    once item 2's untested parts pass (or, if the user wants milestone 4 sooner, ask before splitting it off).
-4. **Next on WSA:** the sketch editor's untested controls (list: grep the archive "2026-10-12 trim"), then
-   auto-save off / interval. Editor draft holds a test design (group + sphere, slider `box_1_width`): fine to replace.
+4. Done 2026-10-12 late (archive "Sketch editor + auto-save tests"): sketch editor controls + auto-save tested; fixes
+   4f4697e (editor keeps the keys: Esc no longer cancels after a field edit; slider ranges) + bc021f4 (auto-save
+   keeps its interval) verified on WSA r123. Untested: pinch zoom (touch), pyramid/wedge chamfer renders.
+   **Next on WSA:** shape-builder handles still untested (Y handle, Shift = 1° turn, handles on a group / nested
+   child; see State), or OpenSCAD Save/Open .scad via the picker (Open items).
 
 Done 2026-10-12 (archive): merges to r112; AI tools milestones 1-4; settings tools; user reports (AMS sync
 button, plate types); shape builder phase 2 gaps (r120); shape builder UI tests: keys, align, mirror,
@@ -56,7 +59,7 @@ sliders, no handles under a mirrored group (r120, evening).
   (user, 2026-10-11): decide branch handling and next steps yourself. **Main merges / releases need
   the user.** Main = r112 (merged 2026-10-12, PR #6, on the user's `/next-merge`); user agreed to merge more
   often, at verified milestones: offer a merge PR when a batch is verified, merge only on their "merge".
-- Installed on WSA: r120 (2026-10-12 evening); AI tools on. Plate 2 (temp) is empty. Shape-builder handles not tested: Y
+- Installed on WSA: r123 (2026-10-12 late); AI tools on; auto-save 60 s. Plate 1 empty, no Plate 2, no session file (test plate removed 2026-10-12 late). Shape-builder handles not tested: Y
   handle, Shift = 1° turn, dragging handles on a group / nested child, touch (WSA has none).
 - Draft of the open design: `files/openscad/draft.scad|json` (read with `adb exec-out "su -c 'cat ...'"`,
   handy to check builder edits without screenshots; the Code tab text isn't in the ui dump).
@@ -72,10 +75,10 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
 3. Settings tools: done (archive). Printing from a tool would need the user's OK + on-screen confirm.
 
 ## Open items (details: grep the archive)
-- Sketch editor: many controls untested (list in the archive, 2026-10-12 trim).
+- Sketch editor: untested pinch zoom (touch) and pyramid/wedge chamfer renders; rest tested (Next task item 4).
 - User to retest: the 325 MB slice that crashed before the r59 OOM fix; pinch zoom on MakerWorld;
   whether a real keyboard's Ctrl+1 works (WSA drops synthetic Ctrl+1..9).
-- Auto-save (r94): untested switching it off / changing the interval.
+- Auto-save: off / interval tested on r120; the "keeps its interval" fix awaits r121 (item 4).
 - Orca plugin runtime: kept as a general capability (no plugin in use). **FilamentHub is dropped
   for good; never suggest, test with, or mention it.** Not done: audit prompts, create_window,
   per-preset config overrides, printerAgent capability.

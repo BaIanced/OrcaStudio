@@ -1352,3 +1352,24 @@ shaded, `plate_describe` live; details in the archive "AI tools milestone 3").
 - CI (`android-apk.yml`): Kotlin check, deps cache, then `liborca_jni.so` reused from cache when
   `android/core`, `android/obn`, `android/scripts`, the toolchain, src-orca and deps are unchanged
   (key `android-core-*`), else rebuilt with ccache (`android-ccache-*`); old caches pruned.
+
+## Sketch editor + auto-save tests (2026-10-12 late, WSA r120, fixes verified r123)
+4. **Sketch editor + auto-save tests (2026-10-12 late, WSA r120): passed** point X/Y fields, Undo button, Bend
+   field, Straighten, Add a corner, Delete corner (trash), Rectangle tool, wheel zoom, Fit, Enter closes a Lines
+   outline, Esc clears the pick, Del + Ctrl+Z (with the editor focused), Top scale (`linear_extrude scale`), Revolve
+   + Turn angle 180, Revolve-mode editor (title + dashed axis), revolve Corners (edge 2 renders), cone chamfer
+   (renders), edge and wall as sliders (Customizer 4 -> code), auto-save 10 s cadence, off = no save, on again saves.
+   **Found + fixed, build run 38314883049 (bc021f4, r121?) to verify on WSA:**
+   - 4f4697e: after typing in a number field and changing the pick, the editor had no focus: Del did nothing and
+     **Esc closed the editor as Cancel (drawing lost)**. Now a canvas press and each pick change re-focus the
+     editor root. Verify: pick a corner, type X, tap another corner, press Esc (pick clears, editor stays), Del.
+     Same commit: Bend field 190 dp (label was clipped), pick-bar row scrolls; new edge/wall sliders
+     `[0:0.1:10+]` (were `[0:1:100]`), Turn angle slider max 360.
+   - bc021f4: auto-save switched off then on after leaving More came back at 60 s, not the set interval. Off is
+     now stored as -interval. Verify: set 10, leave More, switch off, leave, switch on -> 10.
+   Not testable on WSA: pinch zoom (no touch). Pyramid/wedge chamfer: same minkowski code as the cone
+   (`ShapeModel.kt:367-373`), render not tried. Editor draft holds Sketch 1 (revolve) + Cone 1 (chamfer, wall
+   slider): fine to replace.
+- **r123 (run 38314883049, bc021f4) verified on WSA:** typed X then tapped another corner -> value committed, Esc
+  cleared the pick and the editor stayed; Del removed a corner after a Y field edit, Ctrl+Z restored it; Bend label
+  fits; new edge slider `[0:0.1:10]`; auto-save off -> pref -10, on again after leaving More -> 10 (reset to 60 after).
