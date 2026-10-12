@@ -1169,3 +1169,132 @@ no-code = templates + Customizer sliders + native parts/boolean/assemble; new sh
 - Notes: a sliders' `value` in a dim-bound LENGTH con stays stale (only used as fallback). The
   sketch canvas bottom is covered by the bottom bar when a side is picked (Fit helps). Plate 2 (empty)
   still exists in the session. Temp JUnit test of the solver: session scratchpad only.
+
+## AI tool layer milestone 1 (2026-10-12, Android r106-r108, verified on WSA r108)
+- Commits `c1f7c48`, `ae3a01b`, `7dd50e0`. Files: `ai/McpServer.kt` (hand-written HTTP/1.1 +
+  JSON-RPC: `initialize` / `ping` / `tools/list` / `tools/call`; `Mcp-Session-Id` issued, unknown id
+  -> 404; notifications -> 202; Origin -> 403; no / wrong bearer -> 401; GET -> 405),
+  `ai/McpTools.kt` (`design_get`, `design_describe`, `design_set` with validation: kinds, unique ids,
+  size > 0, dim names = identifiers, bind targets exist, no new mesh files, no control chars in
+  names), `ShapeController.replace` (one undo step via `commit`), `AppSettings.aiTools / aiToolsLan /
+  aiToken` (48 hex chars, SecureRandom), More > "AI tools (MCP)" (switch, LAN switch + addresses,
+  token show/hide, Copy setup command, New token), `AppViewModel.setAiTools` (bind on IO; restored at
+  startup after READY; stopped in `onCleared`). Debug: `setprop log.tag.OrcaMcp DEBUG` logs each request.
+- **WSA cause:** WSA's ip rules (`from 127.0.0.1 iif lo lookup 127`, `iif lo lookup 128`) send
+  Android loopback traffic to Windows, so `adb forward tcp:8765 tcp:8765` made adbd connect to
+  adb's own Windows listener: 2,000+ looping sockets, adb wedged (kill adb.exe to recover). Inbound
+  TCP from Windows to a WSA listener (127.0.0.1, loopback0 169.254.x, PC LAN IP) is not routed either.
+  toybox `nc` inside WSA can't reach any loopback listener for the same reason.
+- Fix: also listen on abstract unix socket `orcastudio_mcp`; `adb forward tcp:8765
+  localabstract:orcastudio_mcp`. `LocalServerSocket.close()` doesn't wake `accept()`, so `stop()`
+  connects once first (verified: both sockets gone after switching off).
+- Verified r108: curl suite (401 / 403 / 405 / initialize 2025-06-18 + session / 202 / bad session
+  404 / tools/list / describe + get with editor closed / invalid design_set lists 3 errors / valid
+  design_set opened the editor on the draft, preview 40 x 30 x 20 mm, generated code right, toast
+  "AI: changed the design (3 shapes)"); builder Undo -> empty, Redo -> 3 shapes (one step each);
+  `claude mcp add --transport http` -> `claude mcp list` "Connected"; headless `claude -p` called
+  `design_describe` ("3 shapes: Base, Peg, Hole"). Cleanup: temp `orca-test` MCP entry removed, draft
+  undone to the original empty design, AI tools + LAN switched off, forward removed, app stopped.
+- Untested: LAN mode from another device; restarting the server while a client is connected;
+  request > 4 MB / chunked (refused by design); real USB device forward; Copy setup command paste.
+
+## Moved from HANDOFF.md on 2026-10-12 (trim after MCP milestone 1)
+- Shape-builder handles: `MeshPreviewView` (`handles()`, `overlay()` -> `PreviewOverlay` points/
+  guide/ghost, `HANDLE_VS`), `ShapeController.resize/turn/handles/addDim`, `ScadPreview.kt` listener.
+- Flatpak r9 MakerLab tab: user hasn't reported. Weekly upstream bump `upstream/orca-main`: merging
+  is the user's call. Optional: obn patch 0001 upstream report (needs OK); cloud
+  `POST /v1/user-service/my/task` 403 cause; obn deferred-teardown latch (`agent.cpp:117-129` vs `:330`).
+- Sketch untested: point X/Y fields, Bend field, Add a corner, Delete corner, Rectangle tool,
+  pinch/wheel zoom, Esc/Enter/Del keys, Top scale, Turn angle, Revolve-mode edit, revolve Corners,
+  chamfer on cone/pyramid/wedge, edge/wall as sliders. Sketch sliders work in the app only.
+
+## AI tool layer milestone 2 (2026-10-12, Android r109-r110, verified on WSA r110)
+- Commits: milestone 2 + "read tools open the editor" (Android branch, after `7dd50e0`). 17 tools,
+  tools/list = 10.3 KB. New in `ai/McpTools.kt`: `shape_add/update/delete/move/align/group/ungroup/
+  duplicate`, `sketch_set` (parses `Sketch.of`, solves cons with dims, `fitSketch`, optional revolve),
+  `dim_set/bind/remove`, `design_preview` (`ScadController.awaitIdle`, status + size + ERROR/WARNING
+  log lines), `design_to_plate` (`UiState.aiConfirm` dialog in `AppScaffold`, `McpTools.answer` via
+  `AppViewModel.answerAi`, 60 s = deny, then `render()` + awaitIdle). Each edit = one commit through
+  `ShapeController` (`replace(next, sel)`, `withField` now public, new `beside()` shared with add /
+  importMesh); "AI: <summary>" toast (`R.string.ai_edit`). Read tools now open the editor on the
+  saved draft (a closed editor made haiku stop at "editor closed").
+- Verified r109/r110 (script now `~/orca-android-tools/mcptest.sh`, `call <tool> <json>`):
+  add (placed beside when no pos), update (pos + extra edge), add hole, group 3 -> group #5 with
+  child frames, ungroup back to the same positions, duplicate (+10/+10), move, align x min; dim_set
+  new, dim_bind size.x, dim_set 50 -> box 50 wide, shape_update size.x 60 on a bound field -> dim 60,
+  dim_remove keeps 60; sketch add + sketch_set triangle with length con 25 -> side solved to 25;
+  delete; 7 error cases with clear messages; design_preview "OK ... size 60 x 40 x 15.966 mm";
+  design_to_plate Deny -> "Declined by the user", Allow -> placed on Plate 2 as "Shape design.stl"
+  (removed again with the plate Undo; Objects back to 1); dialog shows the quoted name (screenshot;
+  `ui.ps1` drops text lines containing quotes). Headless `claude -p --model haiku` with the tools:
+  read the design, added "Cap" 10 x 10 x 3 on the Pin's top (#8 pos [0,0,16]), previewed 60 x 40 x 19.
+- Cleanup: draft restored from `/data/local/tmp/mcpbak` (original empty shape design), AI tools off,
+  forward removed, temp `orca-test` MCP entry removed, app stopped.
+- Not built: Undo action in the toast, "AI connected" chip. Untested: confirm dialog timeout (60 s),
+  `design_to_plate` replacing an existing object, `repeat` / `mirror` / `text` fields over MCP,
+  revolve via sketch_set.
+
+
+## AI tools milestone 3 (verified 2026-10-12 on the user's phone, r114)
+
+- Commit 5b7ee35 (OrcaStudio-Android). `design_snapshot`: new engine call `snapshot` (`OrcaEngine::snapshot`,
+  `OrcaProject.cpp`; dispatch key `snapshot` in `EngineCalls.cpp`) loads the preview STL into a temporary
+  `Model`, renders with `render_thumbnail`, PNG via `GCodeThumbnails::compress_thumbnail` (flips the bottom-up
+  rows upright), base64 via beast. Tool refreshes the preview, reads `ScadController.previewStlPath`, returns
+  MCP `image` content + caption. Reuses the `OrcaNative.call` export (CI JNI-export count unchanged).
+- `plate_describe`: printer / process / filaments, per-plate objects with on-plate size, slice estimate; reads
+  `UiState`, no raw engine calls. `McpTools.Tool.run` may return a content `JSONArray` (image + text).
+- Test: `mcptest.sh @phone-token.txt list platedesc describe snapshot` -> 19 tools; plate_describe showed the
+  live printer / process / filament; snapshot of the box draft 384 px, 4 KB PNG, upright and shaded,
+  caption "60 x 40 x 30 mm". `mcptest_print.py` prints text items and saves image items ($SNAP).
+
+
+## Moved from HANDOFF.md on 2026-10-12 (evening): phone setup, user reports verified, MCP on a real phone
+
+### Phone test setup
+Phone notes: wireless adb, serial = the non-TV entry
+in `adb devices -l` (port changes after re-pairing). **Rooted (Magisk), user granted root use**:
+`su -c ...` works from adb shell. Plain `input tap` is ignored (ColorOS); tap as root.
+`~/orca-android-tools/phone-ui.py <serial> dump|find <re>|tap <label>` (root taps, label dump).
+MCP token: read from `shared_prefs/app_settings.xml` (`ai_token`) via `su` straight into
+`~/orca-android-tools/phone-token.txt`, never printed; `mcptest.sh @phone-token.txt <steps>`.
+r114 (CI 38291985223, all of today's work) is installed on the phone.
+
+### User reports 2026-10-12, verified
+   - AMS sync button gone on that detached preset: **verified fixed on the phone r114** (button back). Cause
+     confirmed: `inherits` empty -> `base` empty (`OrcaEngine.cpp:202`); fallback to the system preset of the same
+     model + nozzle (`PresetController.selectPrinterNow`).
+   - Plate type: default was the enum's first value (Cool Plate) in the UI and in slicing; now
+     `OrcaEngine::default_bed_type()` = user choice, else desktop `Preset::get_default_bed_type`. Verified on the
+     phone: Prepare shows "High Temp Plate" for the A1. More > Plate types dialog **verified on WSA r114** (default radio
+     shows in Prepare, hidden plate left out of the picker, slice G-code `curr_bed_type = Supertack Plate`).
+   - Answered, no change: MCP token is already in the backup (all `app_settings` prefs, `AppBackup.kt:39,129`).
+
+Done 2026-10-12: merges to main (Android PR #5 at r104, OrcaStudio PR #3); **AI tools milestones 1-2
+verified on WSA r110**; **milestone 3 verified on the phone r114** (19 tools, `design_snapshot` PNG upright and
+shaded, `plate_describe` live; details in the archive "AI tools milestone 3").
+
+### MCP on a real phone
+- **MCP on a real phone (verified 2026-10-12, the user's phone, r110):** the
+  `localabstract:orcastudio_mcp` forward works unchanged over wireless adb; 17 tools listed,
+  `design_describe` returned live state. Pair via Wireless debugging (`adb pair <ip>:<pairPort>
+  <code>`, ports/code rotate per dialog), then `adb connect <ip>:<connectPort>`. The abstract socket
+  only binds **after the app is (re)started** with AI tools on (toggling while running isn't enough).
+  The phone is rooted: read the token with `su` into the token file (see Next task). Without root the
+  user reads it off More > AI tools: the TWO shown parts joined (the "Hide" button sits between them),
+  48 hex chars. A real phone doesn't route loopback to
+  Windows, so the WSA `tcp:tcp` wedge doesn't apply there.
+
+## AI tools milestone 4: plate edit tools (verified 2026-10-12 on WSA, r115, CI 38294661415)
+
+- Commit "AI tools milestone 4: plate edit tools" (OrcaStudio-Android). `McpTools.kt` "Plate edits": object_transform
+  (pos = footprint centre [x, y] on a plate, optional plate to move it there; rot absolute degrees; scale %; pos with
+  rot / scale = two engine calls / undo steps), object_lay_on_face (world normal of the face to put down),
+  object_auto_orient (one object or all), object_duplicate (1..100), plate_arrange (plate or all). Each calls the
+  engine directly, applies the scene on main, toasts "AI: ...", returns plate_describe. plate_describe now lists
+  plate size, 1-based object / copy numbers, footprint centre (plate frame = world - plate origin), size, rot, scale.
+  More switch text: "...shape designs and the plate".
+- Test: `OBJ=2 PL=2 mcptest.sh @wsa-token.txt list platedesc plateedit plateerrors` -> 24 tools; cube on temp Plate 2:
+  transform to [60,60] rot 45 scale 150 % (footprint 35.355 both ways, right), lay on face [1,0,0], 2 copies,
+  arrange (row at y 128), auto orient, move copy 3 to [30,200]; all 8 error cases rejected before any change; app
+  Undo reverted the AI move and 7 more undos returned Plate 2 to empty. Plate 1 unchanged throughout.

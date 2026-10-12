@@ -9,29 +9,53 @@ front**; grep them when a question needs them (e.g. `grep -n "AMS mapping" HANDO
 - Keep this file **under ~12 KB**: only the next task, open/untested items, gotchas and the rules.
 - When a task is verified, move its details (runs, files, causes) to the end of
   `HANDOFF-ARCHIVE.md` under a dated heading and leave at most a one-line summary here.
+- **Never move pending, open or untested information out of this file** (user, 2026-10-12), even to
+  meet the size target; only verified, finished work goes to the archive.
+- **Merge cue** (user, 2026-10-12): like the /clear cue, tell the user when it's a good time to merge to
+  main (a batch is verified), with what it contains and what's still unverified. Merge only on "merge"
+  or `/next-merge` (= merge the verified, unmerged work, then carry on like /next; never untested commits).
+  The cue is one line: "`/clear` then `/next`", or "`/clear` then `/next-merge`" when verified work awaits a merge.
 - Update "Next task" before stopping any task. At each task boundary, **tell the user it is a good
   time to `/clear` then `/next`** (and why: task done + handoff updated). Don't suggest it mid-task.
 
 ## Next task
-1. **Offer the user a merge PR** (test branch -> main): phase 2 of the shape builder (2a sketch,
-   edges/hollow/Import STL, 2b constraints + sketch sliders) is verified through r104. Merge only on
-   the user's "merge". Untested leftovers (not blockers) are listed under Open items.
-2. Then roadmap step 2: **AI tool layer (MCP server in the app)** (see roadmap below); start with a
-   design note: transport (Streamable HTTP on the device, `adb forward`), tool list over the
-   shape-builder JSON + engine calls, confirm-on-screen rules.
+**Test target: WSA while the user is away from home** (user, 2026-10-12 evening: phone off the network). r114 is
+installed on WSA too. Back on the phone when the user says so / it shows in `adb devices`. Phone setup (wireless adb, root taps,
+`phone-ui.py`, token file): archive "Phone test setup" and memory `test-on-phone`.
 
-Done 2026-10-12: r103/r104 (sketch constraints: length / level / plumb / equal / parallel, side
-lengths as sliders) verified on WSA; details in the archive ("phase 2b").
+1. **Waiting on the user:** OK to **re-link the detached printer preset** "Bambu Lab A1 0.4 nozzle -No cut No vibe"?
+   Its JSON (`files/data/user/default/machine/base/...`) has `"inherits": ""`, so the app and the desktop treat it as
+   no A1: only generic presets are compatible (process "Default Setting", "Generic PLA @System"), and AMS sync can
+   only pick generic filaments. Plan: back up the file to the PC, set `inherits` to "Bambu Lab A1 0.4 nozzle", move
+   it from `machine/base/` to `machine/`, restart, check the custom G-code survived and the A1 processes / Bambu
+   filaments appear; restore the backup on any problem. Never without the user's OK (their preset).
+2. **User reports 2026-10-12** (commits after 5b7ee35, all in r114):
+   - Verified: AMS sync button on the detached preset (phone r114); plate type default + Plate types dialog
+     (phone + WSA r114). Details: archive "User reports 2026-10-12, verified".
+   - Match the installed nozzle (More, default on): `BambuReport.nozzleDiameter` -> `installedNozzles[model]`,
+     `UiState.visiblePrinters` hides other nozzles, Prepare hint + "Use <preset>". **Untested:** the printer was
+     offline (no report); newer-firmware `device.nozzle.info` path; stale status after switching printer models.
+   - Use my filament presets (More, default on): AMS sync (`PresetBundle::sync_ams_list`) only picks base presets,
+     so the user's saved filament presets were replaced on every sync. `PresetRef.base` from the engine,
+     `AppSettings.myFilaments` (system -> user preset; set by picking / saving, cleared by picking the system one),
+     applied after sync and for a new printer's default slot. **Untested** (needs the printer online and the
+     preset re-link, else sync only finds generic filaments).
+3. Merge: main = r112 (6f8560c, Android PR #6, 2026-10-12). Left on the branch: 46a694e (nozzle match) and
+   121765c (my filaments), both untested, and b7d6de2 (milestone 4, verified on WSA r115) on top of them. Next merge
+   once item 2's untested parts pass (or, if the user wants milestone 4 sooner, ask before splitting it off).
+4. **Next: settings tools** (roadmap 3): read presets (printer / process / filament values, compare to the system
+   parent) and propose overrides; saving / deleting presets and printing always need the user's on-screen confirm
+   (`confirm()` in `McpTools.kt`). Test on WSA (AI tools on there; token via su into `~/orca-android-tools/wsa-token.txt`).
+
+Done 2026-10-12: merges (Android PR #5 at r104, #6 at r112; OrcaStudio PR #3, #4); AI tools milestones 1-4 verified (archive; 4 = plate tools, WSA r115).
 
 ## State
 - Both repos work on branch `claude/handoff-continuation-rseql3` (the "test branch"). Autonomy
   (user, 2026-10-11): decide branch handling and next steps yourself. **Main merges / releases need
-  the user.** Main = r99 (merged 2026-10-12 on the user's "merge"); user agreed to merge more
+  the user.** Main = r112 (merged 2026-10-12, PR #6, on the user's `/next-merge`); user agreed to merge more
   often, at verified milestones: offer a merge PR when a batch is verified, merge only on their "merge".
-- Latest installed on WSA: r104 (run 38220409243), verified. Plate 2 (temp) is empty. Shape-builder handles not tested: Y
+- Installed on WSA: r115 (2026-10-12 evening); AI tools on. Plate 2 (temp) is empty. Shape-builder handles not tested: Y
   handle, Shift = 1° turn, handles on a group / nested child, touch (WSA has none).
-- Shape-builder handles: `MeshPreviewView` (`handles()`, `overlay()` -> `PreviewOverlay` points/
-  guide/ghost, `HANDLE_VS`), `ShapeController.resize/turn/handles/addDim`, `ScadPreview.kt` listener.
 - Draft of the open design: `files/openscad/draft.scad|json` (read with `adb exec-out "su -c 'cat ...'"`,
   handy to check builder edits without screenshots; the Code tab text isn't in the ui dump).
 - WSA 1080p: the editor panel is short; collapse the preview ("Hide preview") to reach buttons
@@ -51,14 +75,12 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
 2. **AI tool layer (MCP server in the app)** on the shape-builder JSON: wrap the ~65 engine JSON
    calls (`android/core/jni/EngineCalls.cpp`) as MCP tools; "vision" cheapest first: CSG tree text,
    scene summary JSON, small offscreen PNG. Streamable HTTP MCP on the device via LAN or
-   `adb forward` (unverified on WSA).
+   `adb forward ... localabstract:orcastudio_mcp` (milestone 1 done, r108).
 3. **Settings tools**: read presets + propose overrides; saving/deleting presets and printing always
    need the user's on-screen confirm.
 
 ## Open items (details: grep the archive)
-- Sketch untested: point X/Y fields, Bend field, Add a corner, Delete corner, Rectangle tool,
-  pinch/wheel zoom, Esc/Enter/Del keys, Top scale, Turn angle, Revolve-mode edit, revolve Corners,
-  chamfer on cone/pyramid/wedge, edge/wall as sliders. Sketch sliders work in the app only.
+- Sketch editor: many controls untested (list in the archive, 2026-10-12 trim).
 - User to retest: the 325 MB slice that crashed before the r59 OOM fix; pinch zoom on MakerWorld;
   whether a real keyboard's Ctrl+1 works (WSA drops synthetic Ctrl+1..9).
 - Auto-save (r94): untested switching it off / changing the interval.
@@ -73,10 +95,8 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
 - OpenSCAD untested: Save/Open .scad via picker, phone layout, opening .scad from a download/zip,
   painting through a mesh boolean.
 - Models tab untested: MakerWorld sign-in ticket flow, Thingiverse downloads.
-- Flatpak r9 MakerLab tab: user hasn't reported. Weekly upstream bump `upstream/orca-main`: merging
-  is the user's call. Optional: obn patch 0001 upstream report (needs OK); cloud
-  `POST /v1/user-service/my/task` 403 cause; obn deferred-teardown latch (`agent.cpp:117-129` vs `:330`).
 - Wishlist later: filament colour mixing (upstream `FilamentMixer.cpp`). Not wanted: iOS port.
+- Flatpak r9 MakerLab tab, weekly upstream bump, obn follow-ups: see the archive (2026-10-12 trim).
 
 ## Gotchas
 - The app restores `files/session/session.3mf` on start and saves it in `onStop` (and by auto-save
@@ -87,6 +107,12 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
 - WSA stops drawing when its window isn't in front (taps lost, empty ui dump): focus it first
   (`wheel.ps1:17` trick / `tapf.sh`). WSA wedged (no window): stop WsaClient,
   `Start-Service WsaService`, `Start-Process wsa://<package>`. Lost DNS: `wsaclient /shutdown`.
+- **MCP on WSA:** never `adb forward tcp:X tcp:Y` (WSA routes Android loopback to Windows; the
+  forward loops and wedges adb: kill adb.exe). Use `adb forward tcp:8765 localabstract:orcastudio_mcp`.
+  Token: `su -c 'cat .../shared_prefs/app_settings.xml'` into a variable, never print it. Run adb
+  calls in PowerShell jobs with timeouts while testing sockets.
+- **MCP on a real phone:** the `localabstract` forward works over wireless adb; the socket binds only after an
+  app restart with AI tools on (archive "MCP on a real phone").
 - WSA -> LAN printer: run `wsa-lan.ps1 <printer-ip>` after each WSA start. Safe print-dialog test:
   `iptables -I OUTPUT -d <ip> -p tcp --dport 990 -j REJECT` (root), Print, Cancel, `iptables -D ...`.
 - Local native build in WSL: `MSYS_NO_PATHCONV=1 wsl -d Ubuntu -- bash /mnt/c/Users/Vince/orca-android-tools/wsl/corebuild.sh`
