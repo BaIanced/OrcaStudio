@@ -40,18 +40,19 @@ installed on WSA too. Back on the phone when the user says so / it shows in `adb
      `AppSettings.myFilaments` (system -> user preset; set by picking / saving, cleared by picking the system one),
      applied after sync and for a new printer's default slot. **Untested** (needs the printer online and the
      preset re-link, else sync only finds generic filaments).
-3. Merge: r105-r110 (milestones 1-2, WSA), milestone 3 (phone) and milestone 4 (WSA r115) are verified; the user-report batch above is
-   only partly verified. Cue `/clear` then `/next-merge` when the user wants the verified part merged.
+3. Merge: main = r112 (6f8560c, Android PR #6, 2026-10-12). Left on the branch: 46a694e (nozzle match) and
+   121765c (my filaments), both untested, and b7d6de2 (milestone 4, verified on WSA r115) on top of them. Next merge
+   once item 2's untested parts pass (or, if the user wants milestone 4 sooner, ask before splitting it off).
 4. **Next: settings tools** (roadmap 3): read presets (printer / process / filament values, compare to the system
    parent) and propose overrides; saving / deleting presets and printing always need the user's on-screen confirm
    (`confirm()` in `McpTools.kt`). Test on WSA (AI tools on there; token via su into `~/orca-android-tools/wsa-token.txt`).
 
-Done 2026-10-12: merges (Android PR #5 at r104, OrcaStudio PR #3); AI tools milestones 1-4 verified (archive; 4 = plate tools, WSA r115).
+Done 2026-10-12: merges (Android PR #5 at r104, #6 at r112; OrcaStudio PR #3, #4); AI tools milestones 1-4 verified (archive; 4 = plate tools, WSA r115).
 
 ## State
 - Both repos work on branch `claude/handoff-continuation-rseql3` (the "test branch"). Autonomy
   (user, 2026-10-11): decide branch handling and next steps yourself. **Main merges / releases need
-  the user.** Main = r104 (merged 2026-10-12, PR #5, on the user's "merge"); user agreed to merge more
+  the user.** Main = r112 (merged 2026-10-12, PR #6, on the user's `/next-merge`); user agreed to merge more
   often, at verified milestones: offer a merge PR when a batch is verified, merge only on their "merge".
 - Installed on WSA: r115 (2026-10-12 evening); AI tools on. Plate 2 (temp) is empty. Shape-builder handles not tested: Y
   handle, Shift = 1° turn, handles on a group / nested child, touch (WSA has none).
