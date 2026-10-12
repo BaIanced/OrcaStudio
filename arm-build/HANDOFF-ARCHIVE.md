@@ -1298,3 +1298,17 @@ shaded, `plate_describe` live; details in the archive "AI tools milestone 3").
   transform to [60,60] rot 45 scale 150 % (footprint 35.355 both ways, right), lay on face [1,0,0], 2 copies,
   arrange (row at y 128), auto orient, move copy 3 to [30,200]; all 8 error cases rejected before any change; app
   Undo reverted the AI move and 7 more undos returned Plate 2 to empty. Plate 1 unchanged throughout.
+
+## Settings tools (AI tools roadmap 3), verified 2026-10-12 (WSA r117 + r118)
+- Android commits after b7d6de2: settings tools (r117) + output fixes (r118). `ai/PresetTools.kt`: preset_list,
+  preset_get (diff to the system parent + unsaved edits; keys / all; a printer preset without parent is compared
+  with the system preset of its model + nozzle), setting_find, settings_edit (unsaved overrides via
+  `PresetController.editOverridesNow`, validated against `OptionDef`: range, enum, bool, int, percent), preset_select
+  (process / filament only), preset_save + preset_delete (on-screen Allow via `McpTools.confirm`; delete refuses
+  selected presets). `PresetController` gained suspend variants (`savePresetNow`, `selectPrintNow`,
+  `setFilamentNow`, `setActiveFilamentNow`, `deleteUnusedPresetNow`).
+- Test: `mcptest.sh @wsa-token.txt list presetread presetedit preseterrors` (31 tools), any tool as
+  `name:'{json}'`. Save flow on filament slot 1 (edit 215 C, Deny -> declined, Allow -> saved + selected, diff
+  shown), delete refused while selected, select back, delete dialog text checked, Allow -> gone. WSA left as found.
+- Confirm dialog text isn't in the ui dump: screenshot with `adb exec-out screencap -p` (ui.ps1 -Shot from bash
+  wrote UTF-16 text instead of a PNG).

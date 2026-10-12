@@ -41,20 +41,20 @@ installed on WSA too. Back on the phone when the user says so / it shows in `adb
      applied after sync and for a new printer's default slot. **Untested** (needs the printer online and the
      preset re-link, else sync only finds generic filaments).
 3. Merge: main = r112 (6f8560c, Android PR #6, 2026-10-12). Left on the branch: 46a694e (nozzle match) and
-   121765c (my filaments), both untested, and b7d6de2 (milestone 4, verified on WSA r115) on top of them. Next merge
+   121765c (my filaments), both untested; on top of them, verified: b7d6de2 (milestone 4, WSA r115) and the
+   settings tools (WSA r117/r118). Next merge
    once item 2's untested parts pass (or, if the user wants milestone 4 sooner, ask before splitting it off).
-4. **Next: settings tools** (roadmap 3): read presets (printer / process / filament values, compare to the system
-   parent) and propose overrides; saving / deleting presets and printing always need the user's on-screen confirm
-   (`confirm()` in `McpTools.kt`). Test on WSA (AI tools on there; token via su into `~/orca-android-tools/wsa-token.txt`).
+4. **Next:** wait for the user on item 1; otherwise pick from the roadmap (shape builder phase 2 gaps, or a
+   print tool: printing always needs the user's OK + on-screen confirm) and ask the user which one when back.
 
-Done 2026-10-12: merges (Android PR #5 at r104, #6 at r112; OrcaStudio PR #3, #4); AI tools milestones 1-4 verified (archive; 4 = plate tools, WSA r115).
+Done 2026-10-12: merges (Android PR #5 at r104, #6 at r112; OrcaStudio PR #3, #4); AI tools milestones 1-4 verified (archive; 4 = plate tools, WSA r115); settings tools verified (WSA r117/r118, archive).
 
 ## State
 - Both repos work on branch `claude/handoff-continuation-rseql3` (the "test branch"). Autonomy
   (user, 2026-10-11): decide branch handling and next steps yourself. **Main merges / releases need
   the user.** Main = r112 (merged 2026-10-12, PR #6, on the user's `/next-merge`); user agreed to merge more
   often, at verified milestones: offer a merge PR when a batch is verified, merge only on their "merge".
-- Installed on WSA: r115 (2026-10-12 evening); AI tools on. Plate 2 (temp) is empty. Shape-builder handles not tested: Y
+- Installed on WSA: r118 (2026-10-12 evening); AI tools on. Plate 2 (temp) is empty. Shape-builder handles not tested: Y
   handle, Shift = 1° turn, handles on a group / nested child, touch (WSA has none).
 - Draft of the open design: `files/openscad/draft.scad|json` (read with `adb exec-out "su -c 'cat ...'"`,
   handy to check builder edits without screenshots; the Code tab text isn't in the ui dump).
@@ -63,21 +63,12 @@ Done 2026-10-12: merges (Android PR #5 at r104, #6 at r112; OrcaStudio PR #3, #4
 
 ## Modeling roadmap (user agreed 2026-10-11, in this order)
 User goal: model **without writing code**; OpenSCAD code is only a backstop.
-1. Shape builder: phase 1 done (r96-r99; details in the archive). Known gaps: ungroup of a rotated
-   group with rotated children is approximate; renaming a shape re-renders; preview doesn't
-   re-frame as the design grows (Frame works). Untested: align, mirror, dims list edit/remove,
-   keyboard shortcuts, phone layout. **Phase 2:** 2D sketch (lines/arcs/rects/circles, light
-   constraints) + extrude/revolve, fillet/chamfer (minkowski/offset), shell/hollow, import STL as a
-   shape (import()). Look at Materializr (F-Droid, GPL-3, OpenCASCADE) and FreeCAD's planegcs
-   solver for sketch ideas; no reusable touch UI exists (searched 2026-10-11).
-   Design data = CSG tree JSON in the object's `module` metadata (`ShapeDesign` in
-   `scad/ShapeModel.kt`) -> generated OpenSCAD -> native OpenSCAD render (`ScadService`).
-2. **AI tool layer (MCP server in the app)** on the shape-builder JSON: wrap the ~65 engine JSON
-   calls (`android/core/jni/EngineCalls.cpp`) as MCP tools; "vision" cheapest first: CSG tree text,
-   scene summary JSON, small offscreen PNG. Streamable HTTP MCP on the device via LAN or
-   `adb forward ... localabstract:orcastudio_mcp` (milestone 1 done, r108).
-3. **Settings tools**: read presets + propose overrides; saving/deleting presets and printing always
-   need the user's on-screen confirm.
+1. Shape builder: phases 1-2 done (r96-r104; archive). Known gaps: ungroup of a rotated group with rotated
+   children is approximate; renaming a shape re-renders; preview doesn't re-frame as the design grows (Frame
+   works). Untested: align, mirror, dims list edit/remove, keyboard shortcuts, phone layout. Design data = CSG
+   tree JSON in the object's `module` metadata (`ShapeDesign`, `scad/ShapeModel.kt`) -> OpenSCAD -> `ScadService`.
+2. AI tool layer (MCP server in the app): milestones 1-4 done (archive).
+3. Settings tools: done (archive). Printing from a tool would need the user's OK + on-screen confirm.
 
 ## Open items (details: grep the archive)
 - Sketch editor: many controls untested (list in the archive, 2026-10-12 trim).
