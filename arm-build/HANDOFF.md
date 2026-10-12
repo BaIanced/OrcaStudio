@@ -13,23 +13,23 @@ front**; grep them when a question needs them (e.g. `grep -n "AMS mapping" HANDO
   time to `/clear` then `/next`** (and why: task done + handoff updated). Don't suggest it mid-task.
 
 ## Next task
-1. **AI tool layer, milestone 2** (design note `OrcaStudio-Android/docs/mcp-tool-layer.md`, tables
-   "Tools v1" + "Confirm-on-screen rules"): shape edit tools (`shape_add/update/delete/move/turn/
-   resize/align/mirror/hole/group/ungroup/repeat`, `dim_*`, `sketch_set`) taking explicit `ids`,
-   `design_preview` (returns render errors), `design_to_plate` behind an Allow/Deny dialog (60 s =
-   deny), "AI: ..." toast with Undo. Add to `ai/McpTools.kt` (validation + `describe` reuse).
-   Test as in milestone 1 (archive: "AI tool layer milestone 1"); curl script pattern there.
+1. **AI tool layer, milestone 3** (design note `OrcaStudio-Android/docs/mcp-tool-layer.md`,
+   "design_snapshot" + "Tools v2"): `design_snapshot` = new engine call rendering the preview STL with
+   `render_thumbnail` (`core/jni/Thumbnails.cpp:49`) into a 256-512 px PNG as MCP `image` content
+   (update the CI JNI-export count if it adds one); plate read tools (scene, plates, objects with
+   sizes, printer / filament / process names, slice estimate) via `AppViewModel` state, not raw calls.
+   Test: `~/orca-android-tools/mcptest.sh` (steps list/edits/dims/...; archive "AI tool layer milestone 2").
 
-Done 2026-10-12: merged test branch -> main (Android PR #5 at r104, OrcaStudio PR #3); MCP design
-note; **AI tools milestone 1 verified on WSA r108** (server, token, `design_get/describe/set`,
-Claude Code connected and called a tool). Merge offer for r105-r108 pending the user's "merge".
+Done 2026-10-12: merges to main (Android PR #5 at r104, OrcaStudio PR #3); **AI tools milestones 1-2
+verified on WSA r110** (17 tools, Allow / Deny dialog, haiku modeled through them). Merge offer for
+r105-r110 pending the user's "merge".
 
 ## State
 - Both repos work on branch `claude/handoff-continuation-rseql3` (the "test branch"). Autonomy
   (user, 2026-10-11): decide branch handling and next steps yourself. **Main merges / releases need
   the user.** Main = r104 (merged 2026-10-12, PR #5, on the user's "merge"); user agreed to merge more
   often, at verified milestones: offer a merge PR when a batch is verified, merge only on their "merge".
-- Latest installed on WSA: r108 (run 38239878532), verified; AI tools switched off. Plate 2 (temp) is empty. Shape-builder handles not tested: Y
+- Latest installed on WSA: r110 (run 38242367499), verified; AI tools switched off. Plate 2 (temp) is empty. Shape-builder handles not tested: Y
   handle, Shift = 1° turn, handles on a group / nested child, touch (WSA has none).
 - Draft of the open design: `files/openscad/draft.scad|json` (read with `adb exec-out "su -c 'cat ...'"`,
   handy to check builder edits without screenshots; the Code tab text isn't in the ui dump).

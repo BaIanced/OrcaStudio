@@ -1207,3 +1207,29 @@ no-code = templates + Customizer sliders + native parts/boolean/assemble; new sh
 - Sketch untested: point X/Y fields, Bend field, Add a corner, Delete corner, Rectangle tool,
   pinch/wheel zoom, Esc/Enter/Del keys, Top scale, Turn angle, Revolve-mode edit, revolve Corners,
   chamfer on cone/pyramid/wedge, edge/wall as sliders. Sketch sliders work in the app only.
+
+## AI tool layer milestone 2 (2026-10-12, Android r109-r110, verified on WSA r110)
+- Commits: milestone 2 + "read tools open the editor" (Android branch, after `7dd50e0`). 17 tools,
+  tools/list = 10.3 KB. New in `ai/McpTools.kt`: `shape_add/update/delete/move/align/group/ungroup/
+  duplicate`, `sketch_set` (parses `Sketch.of`, solves cons with dims, `fitSketch`, optional revolve),
+  `dim_set/bind/remove`, `design_preview` (`ScadController.awaitIdle`, status + size + ERROR/WARNING
+  log lines), `design_to_plate` (`UiState.aiConfirm` dialog in `AppScaffold`, `McpTools.answer` via
+  `AppViewModel.answerAi`, 60 s = deny, then `render()` + awaitIdle). Each edit = one commit through
+  `ShapeController` (`replace(next, sel)`, `withField` now public, new `beside()` shared with add /
+  importMesh); "AI: <summary>" toast (`R.string.ai_edit`). Read tools now open the editor on the
+  saved draft (a closed editor made haiku stop at "editor closed").
+- Verified r109/r110 (script now `~/orca-android-tools/mcptest.sh`, `call <tool> <json>`):
+  add (placed beside when no pos), update (pos + extra edge), add hole, group 3 -> group #5 with
+  child frames, ungroup back to the same positions, duplicate (+10/+10), move, align x min; dim_set
+  new, dim_bind size.x, dim_set 50 -> box 50 wide, shape_update size.x 60 on a bound field -> dim 60,
+  dim_remove keeps 60; sketch add + sketch_set triangle with length con 25 -> side solved to 25;
+  delete; 7 error cases with clear messages; design_preview "OK ... size 60 x 40 x 15.966 mm";
+  design_to_plate Deny -> "Declined by the user", Allow -> placed on Plate 2 as "Shape design.stl"
+  (removed again with the plate Undo; Objects back to 1); dialog shows the quoted name (screenshot;
+  `ui.ps1` drops text lines containing quotes). Headless `claude -p --model haiku` with the tools:
+  read the design, added "Cap" 10 x 10 x 3 on the Pin's top (#8 pos [0,0,16]), previewed 60 x 40 x 19.
+- Cleanup: draft restored from `/data/local/tmp/mcpbak` (original empty shape design), AI tools off,
+  forward removed, temp `orca-test` MCP entry removed, app stopped.
+- Not built: Undo action in the toast, "AI connected" chip. Untested: confirm dialog timeout (60 s),
+  `design_to_plate` replacing an existing object, `repeat` / `mirror` / `text` fields over MCP,
+  revolve via sketch_set.
