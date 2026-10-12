@@ -1373,3 +1373,14 @@ shaded, `plate_describe` live; details in the archive "AI tools milestone 3").
 - **r123 (run 38314883049, bc021f4) verified on WSA:** typed X then tapped another corner -> value committed, Esc
   cleared the pick and the editor stayed; Del removed a corner after a Y field edit, Ctrl+Z restored it; Bend label
   fits; new edge slider `[0:0.1:10]`; auto-save off -> pref -10, on again after leaving More -> 10 (reset to 60 after).
+
+## Shape-builder handles: Y, Shift turn, groups, nested child (verified 2026-10-12 late, WSA r123)
+- Fresh design via Add -> Shape builder (old test draft replaced); checked through `files/openscad/draft.json`.
+- Y handle (adb swipe on the green dot): Box 1 size.y 20 -> 42, pos.y +11 (low side kept).
+- Shift = 1° turn: real mouse drag with Shift held (`~\orca-android-tools\mdrag.ps1 x1 y1 x2 y2 -Shift`) -> rot.z 17;
+  the same drag without Shift -> +15 (32). WSA mirrors the Windows desktop: Android screen coords = Windows pixels.
+- Group (Box 1 turned + Box 2, Ctrl+A, Ctrl+G): group shows only the turn dot; turn -> group rot.z 15. Child of the
+  unturned group: all handles, X 20 -> 29. Child of the turned group: outline only. Builder Ctrl+Z undid the turn.
+- Nested (Group 5 > Group 3 > Box 2): handles shown; Z 20 -> 31 (bottom kept); turn -> rot.z 45.
+- Shape list scrolls with a real mouse wheel (adb swipe didn't scroll it). Plate 1 untouched; app closed via window close.
+- Draft left as this test design (Group 5 with Group 3 + Box 3).
