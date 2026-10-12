@@ -1,265 +1,156 @@
-# Handoff: OrcaStudio aarch64 Flatpak + OrcaStudio-Android (state as of 2026-10-06 03:05 UTC)
+# Handoff: OrcaStudio-Android + OrcaStudio aarch64 Flatpak (hot file, 2026-10-12)
 
-Read this first, then `arm-build/README.md` and the `NOTES-*.md` files next to it.
+Read this first. Don't use any title for the user ("Supreme Master" was a joke; never use it).
+History, verified features, file maps and past causes live in `HANDOFF-ARCHIVE.md` (latest dump:
+"Moved from HANDOFF.md on 2026-10-12"). **Don't read the archive, `README.md` or `NOTES-*.md` up
+front**; grep them when a question needs them (e.g. `grep -n "AMS mapping" HANDOFF-ARCHIVE.md`).
 
-## Working rules for the next session (the user asked for these; the last session broke them)
+## Rolling handoff rules (user, 2026-10-12)
+- Keep this file **under ~12 KB**: only the next task, open/untested items, gotchas and the rules.
+- When a task is verified, move its details (runs, files, causes) to the end of
+  `HANDOFF-ARCHIVE.md` under a dated heading and leave at most a one-line summary here.
+- Update "Next task" before stopping any task. At each task boundary, **tell the user it is a good
+  time to `/clear` then `/next`** (and why: task done + handoff updated). Don't suggest it mid-task.
 
-1. **Verify against source before recommending any change.** Before telling the user to change a
-   setting or try a workaround, read the obn / OrcaStudio code path that decides whether it works,
-   and cite file:line. Last session's mistakes all came from skipping this step:
-   - `cloud_print = try_lan_first` was suggested without checking that v2.2.0 only applies it to
-     `start_local_print_with_record`, not to `start_print`.
-   - "Sign out and back in" was suggested without checking that logout keeps the cloud MQTT
-     session alive.
-   - A push_status count was run at `debug` level, which never logs incoming frames.
-2. Label anything untested as untested, inline: "I need to verify [X] for [Y]".
-3. **User's output rules** (from his saved preferences):
-   - Before any shell command, print a pre-flight block: 1. BLIND SPOTS, 2. EXTRAPOLATED RISKS
-     (2), 3. CAPABILITY VALIDATION (YES/NO).
-   - Show calculations instead of doing them silently.
-   - Give a direct verdict, briefly, with nothing left out.
-4. Keep check-ins cheap: scheduled single checks, not live monitors.
-   - Builds run on GitHub (free for these public repos).
-   - The user's environment is a Chromebook Linux container (Crostini, Debian 13, **aarch64**).
-     It's the host side, not inside the Flatpak.
+## Next task
+1. **Shape builder phase 2: sketch + extrude** (modeling roadmap below). Start by reading
+   `scad/ShapeModel.kt` (`ShapeDesign`) and planning the sketch data model + touch UI.
+
+Done 2026-10-12: r99 verified (Frame keeps the turn dot inside; Customizer builder hint);
+main merged (see State).
+
+## State
+- Both repos work on branch `claude/handoff-continuation-rseql3` (the "test branch"). Autonomy
+  (user, 2026-10-11): decide branch handling and next steps yourself. **Main merges / releases need
+  the user.** Main = r99 (merged 2026-10-12 on the user's "merge"); user agreed to merge more
+  often, at verified milestones: offer a merge PR when a batch is verified, merge only on their "merge".
+- Latest installed on WSA: r99 (run 38211644743), verified. Shape-builder handles not tested: Y
+  handle, Shift = 1° turn, handles on a group / nested child, touch (WSA has none).
+- Shape-builder handles: `MeshPreviewView` (`handles()`, `overlay()` -> `PreviewOverlay` points/
+  guide/ghost, `HANDLE_VS`), `ShapeController.resize/turn/handles/addDim`, `ScadPreview.kt` listener.
+- Draft of the open design: `files/openscad/draft.scad|json` (read with `adb exec-out "su -c 'cat ...'"`,
+  handy to check builder edits without screenshots; the Code tab text isn't in the ui dump).
+- WSA 1080p: the editor panel is short; collapse the preview ("Hide preview") to reach buttons
+  below the Customizer notice.
+
+## Modeling roadmap (user agreed 2026-10-11, in this order)
+User goal: model **without writing code**; OpenSCAD code is only a backstop.
+1. Shape builder: phase 1 done (r96-r99; details in the archive). Known gaps: ungroup of a rotated
+   group with rotated children is approximate; renaming a shape re-renders; preview doesn't
+   re-frame as the design grows (Frame works). Untested: align, mirror, dims list edit/remove,
+   keyboard shortcuts, phone layout. **Phase 2:** 2D sketch (lines/arcs/rects/circles, light
+   constraints) + extrude/revolve, fillet/chamfer (minkowski/offset), shell/hollow, import STL as a
+   shape (import()). Look at Materializr (F-Droid, GPL-3, OpenCASCADE) and FreeCAD's planegcs
+   solver for sketch ideas; no reusable touch UI exists (searched 2026-10-11).
+   Design data = CSG tree JSON in the object's `module` metadata (`ShapeDesign` in
+   `scad/ShapeModel.kt`) -> generated OpenSCAD -> native OpenSCAD render (`ScadService`).
+2. **AI tool layer (MCP server in the app)** on the shape-builder JSON: wrap the ~65 engine JSON
+   calls (`android/core/jni/EngineCalls.cpp`) as MCP tools; "vision" cheapest first: CSG tree text,
+   scene summary JSON, small offscreen PNG. Streamable HTTP MCP on the device via LAN or
+   `adb forward` (unverified on WSA).
+3. **Settings tools**: read presets + propose overrides; saving/deleting presets and printing always
+   need the user's on-screen confirm.
+
+## Open items (details: grep the archive)
+- User to retest: the 325 MB slice that crashed before the r59 OOM fix; pinch zoom on MakerWorld;
+  whether a real keyboard's Ctrl+1 works (WSA drops synthetic Ctrl+1..9).
+- Auto-save (r94): untested switching it off / changing the interval.
+- Orca plugin runtime: kept as a general capability (no plugin in use). **FilamentHub is dropped
+  for good; never suggest, test with, or mention it.** Not done: audit prompts, create_window,
+  per-preset config overrides, printerAgent capability.
+- 3D Filament Profiles (3dfilamentprofiles.com) is built in (Models tab site + "Log print"). Never
+  press Subtract in tests.
+- AMS mapping verified (user printed from A1). User's AMS lite: A1 yellow, A2 matte black, A3
+  white, A4 PETG. **Any test print needs the user's OK.**
+- Section view: travels/markers not clipped, picking ignores the cut.
+- OpenSCAD untested: Save/Open .scad via picker, phone layout, opening .scad from a download/zip,
+  painting through a mesh boolean.
+- Models tab untested: MakerWorld sign-in ticket flow, Thingiverse downloads.
+- Flatpak r9 MakerLab tab: user hasn't reported. Weekly upstream bump `upstream/orca-main`: merging
+  is the user's call. Optional: obn patch 0001 upstream report (needs OK); cloud
+  `POST /v1/user-service/my/task` 403 cause; obn deferred-teardown latch (`agent.cpp:117-129` vs `:330`).
+- Wishlist later: filament colour mixing (upstream `FilamentMixer.cpp`). Not wanted: iOS port.
+
+## Gotchas
+- The app restores `files/session/session.3mf` on start and saves it in `onStop` (and by auto-save
+  every 60 s when changed). `am force-stop` skips the onStop save. Closing the WSA window
+  (`CloseMainWindow()` on the "OrcaStudio-Android" window) ran onStop on 2026-10-11/12.
+- Test on a temp Plate 2 and delete it after; don't change the user's Plate 1. When deleting
+  objects by list position, verify the selection first.
+- WSA stops drawing when its window isn't in front (taps lost, empty ui dump): focus it first
+  (`wheel.ps1:17` trick / `tapf.sh`). WSA wedged (no window): stop WsaClient,
+  `Start-Service WsaService`, `Start-Process wsa://<package>`. Lost DNS: `wsaclient /shutdown`.
+- WSA -> LAN printer: run `wsa-lan.ps1 <printer-ip>` after each WSA start. Safe print-dialog test:
+  `iptables -I OUTPUT -d <ip> -p tcp --dport 990 -j REJECT` (root), Print, Cancel, `iptables -D ...`.
+- Local native build in WSL: `MSYS_NO_PATHCONV=1 wsl -d Ubuntu -- bash /mnt/c/Users/Vince/orca-android-tools/wsl/corebuild.sh`
+  (25 min cold, seconds incremental; details in the archive).
+
+
+## Working rules (the user asked for these)
+
+1. **Verify against source before recommending any change**; cite file:line.
+2. Label anything untested as untested, inline.
+3. Before any shell command the **user** must run, print a pre-flight block: 1. BLIND SPOTS,
+   2. EXTRAPOLATED RISKS (2), 3. CAPABILITY VALIDATION (YES/NO). Direct verdicts, brief.
+4. Keep check-ins cheap: one background `gh run watch`, not polling loops.
+5. Approved: pushes and `android-apk.yml` dispatches on the work branches without asking. **Merging
+   to main or publishing releases needs the user's go-ahead.**
+6. **Never print, sign out or delete presets without asking.** Standing permission for an
+   autonomous test-and-fix loop on WSA otherwise. Don't change the user's plate (their project is
+   on it); close the app when done:
+   `adb -s 127.0.0.1:58526 shell am force-stop io.github.baianced.orcastudio_android`.
+7. **Secrets:** the user's `slicer_cert.pem` / `slicer_key.pem` / `slicer_crl.pem` never go in a
+   repo or bundle; never explain how to obtain them. `obn.auth.json`, trace logs and session files
+   contain tokens: ask only for filtered output.
+8. **Both repos are public: no identifying details** (serials, IPs, e-mail, account / display names,
+   MakerWorld handle, device models, tokens) in files, commits or PR text. Use placeholders. Run the
+   privacy scan before every push (python is `python` on this PC):
+   - Android: `python .claude/hooks/privacy_scan.py range "HEAD --not --remotes" . ':(exclude)src-orca'`
+   - OrcaStudio: `python .claude/hooks/privacy_scan.py range "HEAD --not --remotes" arm-build '.github/workflows/arm-*' .claude`
+9. Commit trailer: `Co-Authored-By` + `Claude-Session` lines as given in the session.
+
+## Efficiency (user, 2026-10-10)
+- Compile Kotlin locally before every push (12 s warm):
+  `cd OrcaStudio-Android/android && JAVA_HOME="/c/Program Files/Java/jdk-22" ANDROID_HOME='C:\android_sdk' ./gradlew --console=plain -q :app:compileReleaseKotlin`
+- Add `:app:mergeReleaseResources` to that check when strings change, and read the exit code (a
+  grep on the output hid a resource failure once). Bash heredocs with python break in this tool:
+  write the script with Write, then run it.
+- Write code with Edit or python raw strings, never plain python heredocs (they ate backslashes 5x).
+- Test with `ui.ps1` text dumps; screenshots only when the look matters. After launching the app,
+  wait until `ui.ps1` lists the tabs before tapping (the first tap after start is often lost).
+- Batch 2-4 changes per build; don't dispatch builds that will be superseded.
+- CI (`android-apk.yml`): Kotlin check, deps cache, then `liborca_jni.so` reused from cache when
+  `android/core`, `android/obn`, `android/scripts`, the toolchain, src-orca and deps are unchanged
+  (key `android-core-*`), else rebuilt with ccache (`android-ccache-*`); old caches pruned. Checks
+  **19** `ObnNative` JNI exports (update when adding one). Release-signed since build 32.
+
+## Environment and tools (Windows PC, local session)
+- Working dir `C:\Users\Vince\OrcaProjectsGithub` with `OrcaStudio` (Flatpak; holds this file) and
+  `OrcaStudio-Android` (`src-orca` submodule = OrcaSlicer). gh CLI logged in.
+- WSA adb `127.0.0.1:58526` (root via `su -c '...'`, Android 13 / API 33; `run-as` fails, release build); an Android TV box is also attached, so always
+  pass `-s`. WSA stops drawing the app when its window isn't in front (taps are lost, ui dump empty): focus it with
+  the Alt + SetForegroundWindow trick from `wheel.ps1:17`.
+- `~\orca-android-tools`: `install-build.ps1 -Run <id>` (WSA default), `ui.ps1 [-Shot png]`,
+  `step.ps1`, `wheel.ps1` (real mouse wheel / drags), `drag.ps1`, `reinstall-with-data.ps1`.
+- Logs: `adb shell setprop log.tag.OrcaInput DEBUG` (mouse events), `log.tag.OrcaWeb DEBUG` then
+  restart = Models WebView debuggable: `adb forward tcp:9222 localabstract:webview_devtools_remote_<pid>`;
+  helpers `cdp.mjs` / `cdplog.mjs` / `ua.mjs` in the session scratchpad (recreate if gone).
+  A CDP UA override only lasts while that CDP connection is open.
+- System file picker: close with `adb shell am force-stop com.android.documentsui`.
+- WSA lost DNS once: `wsaclient /shutdown` and relaunch fixed it. adb `input` has no Shift/Alt state.
+- **WSA -> LAN printer:** WSA shares the PC's address; only its virtual gateway answers ARP, so LAN
+  hosts give "No route to host" (Local network access is on; no effect). Fix after each WSA start:
+  `wsa-lan.ps1 <printer-ip>` (routes the host via the gateway in table 1002). Ping stays dead, TCP
+  works. Verified 2026-10-11: cube printed over LAN (FTPS upload, queued), r69.
+- Cloud-only print (no LAN) fails `-2060 upload poll timeout`: server stays "running" (> 2 min;
+  obn uploads the full .gcode.3mf as the config file). Patch 0004 tried a longer poll; reverted.
+- Printing from the app shows "Log print to 3D Filament Profiles" after success (verified).
+- The user's Chromebook (Crostini, aarch64) runs the Flatpak; A1 printer is cloud-bound
+  (Developer Mode off); the app is signed in to their Bambu account with PEMs imported.
 
 ## Repos
-
-| Repo | Purpose |
+| Repo | Notes |
 |---|---|
-| `BaIanced/OrcaStudio` | Public fork of jarczakpawel/OrcaStudio. Everything we own is in `arm-build/` and `.github/workflows/arm-*.yml`; the rest stays identical to upstream. |
-| `BaIanced/OrcaStudio-Android` | Plain repo (not a GitHub fork) holding cl1x/Orca-Android history, remote `upstream` = cl1x. Adds signed Bambu printing via obn. |
-| `ClusterM/open-bamboo-networking` (obn) | Network plugin, pinned **v2.2.0** (`5e6a359c71a0c07476f5d372bf7ad0f2b43efe94`). We carry local patches. |
-
-## Flatpak pipeline (BaIanced/OrcaStudio)
-
-- `arm-flatpak.yml` builds on `ubuntu-24.04-arm` in two stages:
-  - Deps are cached under a key from `make-manifest.py --print-deps-key`.
-  - The app plus obn is built, then bundled, then smoke-checked, then released as
-    `arm64-<os_tag>-obn-<obn_tag>-r<N>` with `OrcaStudio-aarch64.flatpak` and `SHA256SUMS.txt`.
-- `arm-upstream-watch.yml` runs daily:
-  - It bumps `arm-build/versions.json` on new upstream tags and calls the build.
-  - Its fork merge is best-effort. The build checks out the upstream commit directly.
-- `make-manifest.py` generates the manifest from upstream's
-  `scripts/flatpak/com.orcaslicer.OrcaStudio.yml`. Its transformations:
-  - **a)** FFmpeg prefetch.
-  - **b)** obn module appended.
-  - **c)** `command: orcastudio-arm-launcher`.
-  - **d)** BUILD_INFO.
-  - **e)** orca_deps `type: dir` replaced by a reproducible tar. flatpak-builder gives dir sources
-    a random checksum, so they never cache.
-  - **f)** add `shared/` to the app module. Upstream omits it, but `SlicerLinuxRuntimeForwarderExports.cpp`
-    includes from it.
-  - **g)** wxWidgets `-DCMAKE_INSTALL_LIBDIR=lib`. Without it the libraries landed in `/app/lib64`
-    and the app failed at launch.
-  - **h)** `--env=SSL_CERT_FILE=/etc/pki/tls/certs/ca-bundle.crt`.
-- The smoke check installs the bundle on the runner. It also runs `ldd` inside the sandbox on
-  everything, and fails on "not found".
-- Measured times (4 vCPU ARM runner): deps ≈ 26 min, app ≈ 41 min cold. With cache: ~5 min
-  app + bundle.
-
-### Local obn patches (`arm-build/obn-patches/`, applied by `obn-module.yml` after the obn git source)
-
-- **0001-cloud-callbacks-read-fresh.patch** (released in r6, verified working by the user).
-  - Bug: `Agent::connect_cloud()` snapshots `on_message_` / `on_printer_connected_`.
-  - With a saved sign-in, `bambu_network_start()` auto-connects before OrcaStudio registers them,
-    so every `push_status` was dropped and the Device tab showed "Failed to connect to the printer".
-  - Proved with trace logs: 4.7 KB push_status frames arrived, Studio kept sending pushall every
-    5 s, and nothing was forwarded.
-  - Logout/login does **not** help: the cloud session stays connected, so the stale snapshot
-    persists.
-  - Upstream main fixed `on_printer_connected` but still snapshots `on_msg`.
-- **0002-start-print-try-lan-first.patch** (released in r7, **verified working by the user**
-  2026-10-05 21:52 −0600: the cube printed).
-  - `bambu_network_start_print` (`abi_print.cpp`) in v2.2.0 always calls `run_cloud_print_job`.
-  - That path fails at `POST /v1/user-service/my/task` → **HTTP 403** "The client does not have
-    access rights to the content." on this account, even with `client_name = BambuStudio`
-    (verified present in obn.conf).
-  - Cause of the 403 is unverified. obn's comment names `X-BBL-Client-Name` or `X-BBL-OS-Type`
-    mismatches.
-  - 0002: with `cloud_print = try_lan_first` (and dev_ip plus access code known; the code comes
-    from `lan_access_code_for()`), it runs `run_local_print_job` first: LAN FTPS upload, then the
-    signed `project_file` via `send_message()`, which uses LAN MQTT if connected and the cloud
-    channel otherwise. If that fails, it falls back to the cloud path.
-  - The bundled `obn.conf.default` now ships `cloud_print = try_lan_first`.
-
-### Session 2026-10-06 findings
-
-- Run 37406830869 succeeded on 2bb3a93d. Release `arm64-v02.08.01.55-p6-obn-v2.2.0-r7` was published
-  at 03:08:15Z.
-  - The `Applying patch 0002` line was **not seen**. The job-log API returns only the last 5000
-    lines, and the zip host (results-receiver.actions.githubusercontent.com) is blocked by the
-    session proxy.
-  - Indirect evidence: the obn module lists 0002 as a `type: patch` source, flatpak-builder aborts
-    the build if a patch fails, and the job was green.
-- When OrcaStudio calls `start_print` at all (`src/slic3r/GUI/Jobs/PrintJob.cpp:569-633`, cloud
-  connection, not `lan_mode_only`):
-  - Studio already runs `start_local_print_with_record` first when `!cloud_print_only &&
-    password && dev_ip && has_sdcard`. It calls `start_print` only as a fallback (`:611`, `:626`).
-  - Otherwise it goes straight to `start_print` (`:632`). In that case `params.comments` records
-    why: `no_ip` / `low_version` (= `is_support_cloud_print_only`, `SelectMachine.cpp:3777`) /
-    `no_sdcard` / `no_password` (`:574-581`).
-  - So 0002 changes the outcome only when `dev_ip` is set. With `no_ip`, 0002 logs
-    `try_lan_first skipped (missing dev_ip)` and the 403 cloud path still runs.
-  - `dev_ip` for a cloud printer comes from push_status `net.info[].ip`
-    (`DeviceManager.cpp:3546-3553`), which arrives only with 0001 in place.
-- Studio's own log: `<data_dir>/log/debug_<Day>_<Mon>_<dd>_<HH>_<MM>_<SS>_<pid>.log.0`
-  (`GUI_App.cpp:2879-2882`, `utils.cpp:384-391`). The default level is `info` (`AppConfig.cpp:349`),
-  so the `print_job:` branch lines are logged.
-
-- First user test (21:42 −0600) proved nothing about r7.
-  - Both cube prints were at 20:56 and 20:57 −0600. r7 was published at 03:08Z, which is
-    21:08 −0600, so both prints ran on r6.
-  - The obn line shows `start_print ... ip=<printer LAN IP>`, so Studio does pass `dev_ip`.
-    `no_ip` is ruled out, and 0002's LAN branch should be reachable.
-  - The Studio log is detected as binary, so grep it with `grep -a`.
-  - The Studio log for those prints shows `print_job: send with cloud`, i.e. the direct
-    `start_print` branch (`PrintJob.cpp:629-632`). With `dev_ip` set, the cause is
-    `cloud_print_only`, an empty access code, or no SD card; Studio does not log which.
-    Either way 0002 should take the LAN path, since it needs only dev_ip, an access code
-    (from `lan_access_code_for`) and a file.
-  - The result was `-2120` = `BAMBU_NETWORK_ERR_PRINT_WR_POST_TASK_FAILED`
-    (`bambu_networking.hpp:81`), which is the obn create_task 403.
-
-### Next steps (Flatpak)
-
-1. DONE. Patch 0002 is verified on r7.
-   - The installed `libbambu_networking.so` contains the 0002 string (`grep -a -c` = 1).
-   - BUILD_INFO shows `release_tag=...-r7`.
-   - The 21:51:57 print logged, in order: `start_print: cloud_print=try_lan_first -> local print
-     over LAN` → `local_print: upload path=ftps :990` → `ftps: logged in to <printer LAN IP>:990` →
-     `STOR /Cube.gcode.3mf ok (97646 bytes)` → `queued for printing`. Studio logged
-     `print_job: send ok.`, which it logs at error severity (`PrintJob.cpp:701`, harmless).
-   - The cube printed.
-   - Still unknown: whether `project_file` went over LAN MQTT or the cloud channel. The grep filter
-     did not include obn's send_message lines.
-2. Watch for regressions on other print types (AMS mapping, timelapse, multi-plate). They are
-   untested with 0002.
-3. Optional: find the real 403 cause by running at `log_level = debug`.
-   - `cloud_print.cpp` logs `X-BBL-Client-Name` / `X-BBL-OS-Type` and PoP headers for create_task.
-   - Compare with upstream issues.
-4. Consider reporting 0001 upstream (ClusterM/open-bamboo-networking). The user said he doesn't
-   want to learn PR mechanics, so do it for him and give him a link.
-
-### Session 2026-10-06 later findings
-
-- **Dark mode.** The Preferences toggle exists only on Windows (`Preferences.cpp:1624-1627`). On
-  Linux the app takes `dark_color_mode` from `wxSystemAppearance::IsDark()` at every start
-  (`GUI_App.cpp:3291-3294`). In wx 3.3.2 that check compares window text brightness against the
-  window background.
-  - Fix (user-confirmed, the whole UI is dark):
-    `flatpak override --user --env=GTK_THEME=Adwaita:dark com.orcaslicer.OrcaStudio`.
-  - Upstream bug: after a theme change it takes two launches. `init_label_colours()` and
-    `Update_dark_mode_flag()` (`:3227-3229`) run before the new value is written (`:3293`).
-    The `:3314` re-check compares against the already-written value.
-  - Offered the user an optional patch; not done.
-- **OrcaStudio-Android:** patch 0002 was added (`android/obn/obn.cmake`), pushed on branch
-  `claude/handoff-continuation-rseql3`, and **not merged to main**. A push to main that touches
-  `android/**` triggers the APK build.
-  - The app calls only `start_local_print` and writes `cloud_print = lan_only`, so 0002 has no
-    runtime effect there.
-- **Should Android be based on OrcaStudio?** Compared
-  jarczakpawel/OrcaStudio `bef044f4` with OrcaSlicer `2769b12` (the Android `src-orca`
-  submodule) using a tree-only fetch.
-  - `src/libslic3r`: OrcaStudio adds 0 files, lacks 53 (CAD/sketch, FilamentMixer,
-    TextureToColor, PreciseSeam, FillSpiralInset, FillCornerSmoothing, AssimpImport, ...), and
-    differs in 149. Its only engine commits are the initial import and "update 02.08.01.55";
-    the only engine marker is `SLIC3R_APP_FULL_NAME "OrcaStudio"`.
-  - `resources/profiles`: OrcaStudio lacks 3289 files and has 1655 extra.
-  - OrcaStudio's additions are all in the desktop GUI and network glue (`src/slic3r`): Linux
-    runtime forwarder, gstreamer camera, PluginWebDialog, BMCU retry and X1C wait fixes in
-    PrintJob/SelectMachine. Android doesn't build `src/slic3r`.
-  - So rebasing Android onto OrcaStudio would subtract features. The only portable candidate
-    is the BMCU retry logic, which needs the user's go-ahead.
-
-- **OrcaStudio-Android tracks OrcaSlicer main** (branch `claude/handoff-continuation-rseql3`,
-  not merged to main):
-  - `0c4012c` adds `.github/workflows/orca-upstream-watch.yml`. It runs daily, and when
-    OrcaSlicer main has moved it recreates and force-pushes bot branch `upstream/orca-main`
-    (= main + src-orca bump), then dispatches android-apk.yml there. Releases come only from
-    main.
-  - `android/scripts/bump_upstream.py` updates the UPSTREAM.md table and lists the
-    port-dependent files that changed.
-  - The deps cache key now hashes `src-orca` `deps/` + `cmake/modules` trees instead of the
-    commit.
-  - `534db60` moves src-orca from `2769b12` to `f8dd5605` (172 commits; OCCT recipe changed, so
-    the deps rebuild once).
-  - Test build: run 37435400715, dispatched 08:20Z; check-in scheduled for 10:01Z. The user
-    wants builds only for changes that might break.
-  - The watch only becomes active once the branch is merged into main, which also publishes a
-    release.
-  - Run 37435400715 failed: `deps_src/clipper` was removed upstream (OrcaSlicer `222c6a2d`,
-    Clipper2 2.0.1). Fixed by `2b16b85`, which drops it from `android/core/CMakeLists.txt`.
-  - Run 37447164478 is **green**: deps restored from the new cache key, native core and APK
-    built in 18 min, 8 ObnNative JNI exports, APK uploaded as an artifact, no release.
-  - Watch changed to weekly (Mondays, `82daec0`). Builds are free here: run usage showed 0
-    billable ms, including the ARM jobs.
-  - Not done: on-device tests; merge to main (awaits the user).
-- **2026-10-06 18:30Z, user approved both:**
-  - OrcaStudio-Android main was fast-forwarded to `2b16b85`; release build run 37511333837.
-  - MakerLab was implemented as `arm-build/orcastudio-patches/0001-makerlab-tab.patch`
-    (`bc2e1d77`): new MakerLabPanel.{hpp,cpp}, MainFrame tab and show_device() ordering, tab icon,
-    CMake entries.
-  - make-manifest transformation i) applies the patch; arm-flatpak.yml has a `publish` input.
-  - Test build run 37512203230 (publish=false); check-in at 19:24Z.
-  - **Not compiled locally** (no wx/deps here). Runtime is untested: ticket sign-in, the 3MF/STL
-    round trip, and whether MakerWorld shows its "open in slicer" actions.
-- **MakerLab tab (original proposal):** a MakerLab tab in the top bar loading
-  `makerworld.com/makerlab?from=bambustudio`, signed in via
-  `agent->request_bind_ticket` + `api/sign-in/ticket?to=..&ticket=..` (obn `abi_bind.cpp`
-  implements it; untested).
-  - Handlers: `homepage_makerlab_open_3mf_binary` (`3mf`, `3mf_name`) and
-    `homepage_makerlab_stl_download` (`file_data`, `sequence_id`, `file_name`).
-  - The tab gets a command allowlist: OrcaStudio forwards every web message to
-    `handle_web_request` (`WebViewDialog.cpp:692`).
-  - Carry it as a build-time patch in arm-build.
-
-## User's Chromebook state
-
-- **Installed:** com.orcaslicer.OrcaStudio from release **r7**, via the updater
-  (`~/.local/bin/orcastudio-update.sh`, systemd user timer).
-- **Data dir:** `~/.var/app/com.orcaslicer.OrcaStudio/config/BambuStudio_OrcaSlicer/`.
-- **Keys:** `slicer_cert.pem` / `slicer_key.pem` / `slicer_crl.pem` are in that data dir, with a
-  backup copy in `~/obn-keys/`. **Never** put them in a repo or bundle, and never explain how to
-  obtain them.
-- **obn.conf:** `block_cloud = 0`, `client_name = BambuStudio`, `cloud_print = try_lan_first`,
-  `log_to_file = 1`, `log_level = info` (set 2026-10-05 21:42 −0600).
-- **A1:** cloud-bound, Developer Mode OFF. Its serial and LAN IP are deliberately not recorded here. The
-  firmware advertises the new authorization-control system (flag3 bit16).
-  - The app-certificate exchange succeeds: `device certificate installed, pubkey cached`.
-  - Bambu Handy works.
-- **Backup:** an older copy of the data dir is at
-  `~/.var/app/com.orcaslicer.OrcaStudio.bak-<date>` (from a reset). It's safe to delete once
-  everything works.
-- **Workaround status:** the temporary `LD_LIBRARY_PATH` flatpak override was supposed to be
-  removed with `flatpak override --user --reset com.orcaslicer.OrcaStudio`. Confirm with the user.
-
-## OrcaStudio-Android (BaIanced/OrcaStudio-Android)
-
-- **What it adds:**
-  - obn compiled with NDK r28c as a static lib inside `liborca_jni.so`
-    (`android/obn/obn.cmake` and `obn-android.patch`).
-  - Patch 0001 is applied too.
-  - JNI bridge in `android/core/jni/ObnBridge.cpp`.
-  - Kotlin: `net/ObnNative.kt`, `net/ObnHost.kt` (printer type "Bambu Lab (signed, no LAN mode)"),
-    and `net/ObnCredentials.kt` (PEM import into `noBackupFilesDir/obn`).
-  - App id `io.github.baianced.orcastudio_android`.
-- **Releases:** `android-v0.1.2-r2` includes patch 0001 (run 37404624478, success).
-  - Debug-signed. The keystore is cached in Actions.
-  - Release-signing secrets are not set up yet: `ANDROID_KEYSTORE_B64`,
-    `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`.
-- **Untested on a real phone or printer.**
-  - It prints with `start_local_print` (pure LAN), so patch 0002 is not needed there.
-  - The camera is out of scope.
-  - The user's phones are a OnePlus 15, a OnePlus 11 and a Note 10+, all arm64.
-
-## Useful facts
-
-- `gh` in Claude Code sessions is REST-only. `gh release download` (GraphQL) fails; use
-  `gh api -H "Accept: application/octet-stream" repos/<r>/releases/assets/<id>`.
-- Tag pushes are blocked from the session. Actions can create tags and releases.
-- Run logs: `gh api repos/<r>/actions/jobs/<job_id>/logs`. Dispatch:
-  `gh api -X POST repos/<r>/actions/workflows/<file>/dispatches -f ref=main`.
-- obn logs per-frame MQTT only at `log_level = trace` (`mqtt_client.cpp` `s_on_message`). The
-  user should share only filtered output (`grep -o 'mqtt msg topic=[^ ]* bytes=[0-9]*'`), never
-  raw trace logs. They contain tokens.
+| `BaIanced/OrcaStudio-Android` | cl1x/Orca-Android + signed Bambu printing via obn (static in `liborca_jni.so`, `android/obn`). main = PR #3 merge (pre-release `android-v0.1.2-r37`). Bot branch `upstream/orca-main` (never commit). Builds run on dispatch only (`gh workflow run android-apk.yml --ref <branch>`). |
+| `BaIanced/OrcaStudio` | Flatpak fork; ours: `arm-build/`, `.github/workflows/arm-*.yml`. Latest release r9 (MakerLab tab). Details in the archive. |
+| `ClusterM/open-bamboo-networking` | obn pinned v2.2.0 + local patches 0001 (cloud callbacks), 0002 (start_print try LAN first), 0003 (MQTT CA from `SSL_CERT_FILE`). |
