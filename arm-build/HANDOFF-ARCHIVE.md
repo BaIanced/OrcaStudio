@@ -1063,3 +1063,19 @@ no-code = templates + Customizer sliders + native parts/boolean/assemble; new sh
   remove the temp plate and wait for the next auto-save.
 
 ### Other open items
+
+## Moved from HANDOFF.md on 2026-10-12 (r98 + r99 verified, main merge)
+- r98 = run 38210814654 verified on WSA 2026-10-12 (temp Plate 2, deleted; user's Plate 1 with 1
+  object untouched; app closed via window close): size handles X (20->26, pos.x +3, min side kept)
+  and Z (20->25, bottom kept); turn handle -> rot.z 90; builder Undo reverts the turn in one step,
+  Redo; a turned shape shows only the turn dot; Customizer "Add a slider" adds dim `lid`
+  (draft.json `dims`).
+- r99 = run 38211644743 (commit 3283f1c) verified on WSA 2026-10-12: Add -> Shape builder, Box,
+  Frame -> amber turn dot + arc fully inside the preview (r98 cut it off at the bottom edge);
+  Customizer with no sliders shows `shape_dims_hint`. Closed the editor without adding; a leftover
+  Plate 2 (empty, from the r98 session) was deleted via long-press tab -> Delete plate; Plate 1 with
+  1 object untouched; app closed via window close (process gone).
+- Main merges 2026-10-12 on the user's "merge": both repos merged `claude/handoff-continuation-rseql3`
+  into main (Android main was r37 / PR #3). OrcaStudio: main's privacy commit 082b5d4 (handoff
+  serial/IP removal) conflicted with the rewritten HANDOFF.md; kept the branch version (it holds
+  no serial/IP; IP-like strings in NOTES-*.md are firmware versions).

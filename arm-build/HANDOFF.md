@@ -13,24 +13,19 @@ front**; grep them when a question needs them (e.g. `grep -n "AMS mapping" HANDO
   time to `/clear` then `/next`** (and why: task done + handoff updated). Don't suggest it mid-task.
 
 ## Next task
-1. **Verify r99 = run 38211644743 (commit 3283f1c) on WSA**, then this item is done: install
-   (`install-build.ps1 -Run 38211644743`), temp Plate 2, Shape builder, add a box, press Frame
-   (top-right of the preview): the amber turn dot + arc must be fully inside the preview (on r98 it
-   was cut off at the bottom edge). Customizer tab with no sliders shows the builder hint
-   (`shape_dims_hint`), not the code-annotation text. Delete Plate 2, close via window close.
-2. **Shape builder phase 2: sketch + extrude** (next in the modeling roadmap below).
+1. **Shape builder phase 2: sketch + extrude** (modeling roadmap below). Start by reading
+   `scad/ShapeModel.kt` (`ShapeDesign`) and planning the sketch data model + touch UI.
+
+Done 2026-10-12: r99 verified (Frame keeps the turn dot inside; Customizer builder hint);
+main merged (see State).
 
 ## State
 - Both repos work on branch `claude/handoff-continuation-rseql3` (the "test branch"). Autonomy
   (user, 2026-10-11): decide branch handling and next steps yourself. **Main merges / releases need
-  the user.** Main is still at r37 (PR #3); user agreed (2026-10-12) to merge more often, at
-  verified milestones: offer a merge PR when a batch is verified, merge only on their "merge".
-- Latest installed on WSA: r98 (run 38210814654). r98 verified 2026-10-12 (temp Plate 2, deleted;
-  user's Plate 1 with 1 object untouched; app closed via window close): size handles X (20->26,
-  pos.x +3, min side kept) and Z (20->25, bottom kept); turn handle -> rot.z 90; builder Undo
-  reverts the turn in one step, Redo; a turned shape shows only the turn dot; Customizer "Add a
-  slider" adds dim `lid` (draft.json `dims`). Not tested: Y handle, Shift = 1° turn, handles on a
-  group / nested child, touch (WSA has none).
+  the user.** Main = r99 (merged 2026-10-12 on the user's "merge"); user agreed to merge more
+  often, at verified milestones: offer a merge PR when a batch is verified, merge only on their "merge".
+- Latest installed on WSA: r99 (run 38211644743), verified. Shape-builder handles not tested: Y
+  handle, Shift = 1° turn, handles on a group / nested child, touch (WSA has none).
 - Shape-builder handles: `MeshPreviewView` (`handles()`, `overlay()` -> `PreviewOverlay` points/
   guide/ghost, `HANDLE_VS`), `ShapeController.resize/turn/handles/addDim`, `ScadPreview.kt` listener.
 - Draft of the open design: `files/openscad/draft.scad|json` (read with `adb exec-out "su -c 'cat ...'"`,
