@@ -1233,3 +1233,17 @@ no-code = templates + Customizer sliders + native parts/boolean/assemble; new sh
 - Not built: Undo action in the toast, "AI connected" chip. Untested: confirm dialog timeout (60 s),
   `design_to_plate` replacing an existing object, `repeat` / `mirror` / `text` fields over MCP,
   revolve via sketch_set.
+
+
+## AI tools milestone 3 (verified 2026-10-12 on the user's phone, r114)
+
+- Commit 5b7ee35 (OrcaStudio-Android). `design_snapshot`: new engine call `snapshot` (`OrcaEngine::snapshot`,
+  `OrcaProject.cpp`; dispatch key `snapshot` in `EngineCalls.cpp`) loads the preview STL into a temporary
+  `Model`, renders with `render_thumbnail`, PNG via `GCodeThumbnails::compress_thumbnail` (flips the bottom-up
+  rows upright), base64 via beast. Tool refreshes the preview, reads `ScadController.previewStlPath`, returns
+  MCP `image` content + caption. Reuses the `OrcaNative.call` export (CI JNI-export count unchanged).
+- `plate_describe`: printer / process / filaments, per-plate objects with on-plate size, slice estimate; reads
+  `UiState`, no raw engine calls. `McpTools.Tool.run` may return a content `JSONArray` (image + text).
+- Test: `mcptest.sh @phone-token.txt list platedesc describe snapshot` -> 19 tools; plate_describe showed the
+  live printer / process / filament; snapshot of the box draft 384 px, 4 KB PNG, upright and shaded,
+  caption "60 x 40 x 30 mm". `mcptest_print.py` prints text items and saves image items ($SNAP).
