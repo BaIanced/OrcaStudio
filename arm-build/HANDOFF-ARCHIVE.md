@@ -1312,3 +1312,19 @@ shaded, `plate_describe` live; details in the archive "AI tools milestone 3").
   shown), delete refused while selected, select back, delete dialog text checked, Allow -> gone. WSA left as found.
 - Confirm dialog text isn't in the ui dump: screenshot with `adb exec-out screencap -p` (ui.ps1 -Shot from bash
   wrote UTF-16 text instead of a PNG).
+
+## Shape builder phase 2 gaps: ungroup, rename, re-frame (verified 2026-10-12, WSA r119 + r120)
+- Commits (Android): 8334d43 (r119, CI 38302752223), 80c8d0f (r120, CI 38303834136).
+- Ungroup (`ShapeController.ungroup`): OpenSCAD chain T(gp + h/2) Rg Mg T(-h/2) T(cp + ch/2) Rc Mc T(-ch/2)
+  = T(gp + h/2 + Rg Mg (cp + ch/2 - h/2)) (Rg Mg Rc Mg) (Mg Mc) T(-ch/2); `ShapeDesign.matrix/angles/flip`
+  (XYZ angles back out, gimbal lock -> all in Z), mirror flags XOR. Python check 6.5e-13; WSA: turned group
+  mirrored Y+Z with a turned child and a turned + mirrored wedge -> 372 preview vertices equal within 0.0008 mm.
+- `placed()`: group / ungroup drop a pos / rot dim binding whose value changes (verified: pos.x dropped, size.x
+  kept, round trip keeps world bounds). `ShapeDesign.height()` = turn/flip pivot; `bounds()` / `worldBounds()`
+  honour a group's mirror; `handles()` gives no handles under a mirrored group (untested in UI).
+- Rename: `ScadController.key()` ignores whole-line `//` comments -> no new preview STL on rename (verified).
+- Re-frame: `MeshPreviewView.outgrown()` (content past the last frame by 5 %); `content()` = builder boxes, else
+  mesh (r119 framed boxes + stale mesh -> too loose). Verified r120: move far -> tight frame; 3 shapes added
+  beside -> all in view.
+- Test method: MCP (`mcptest.sh @tok 'tool:{json}'`), preview STLs in `cache/openscad/preview` pulled with
+  `su -c cat` and compared vertex sets; rename check = no new STL file.

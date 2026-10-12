@@ -23,15 +23,15 @@ front**; grep them when a question needs them (e.g. `grep -n "AMS mapping" HANDO
 installed on WSA too. Back on the phone when the user says so / it shows in `adb devices`. Phone setup (wireless adb, root taps,
 `phone-ui.py`, token file): archive "Phone test setup" and memory `test-on-phone`.
 
-1. **Waiting on the user:** OK to **re-link the detached printer preset** "Bambu Lab A1 0.4 nozzle -No cut No vibe"?
-   Its JSON (`files/data/user/default/machine/base/...`) has `"inherits": ""`, so the app and the desktop treat it as
-   no A1: only generic presets are compatible (process "Default Setting", "Generic PLA @System"), and AMS sync can
-   only pick generic filaments. Plan: back up the file to the PC, set `inherits` to "Bambu Lab A1 0.4 nozzle", move
-   it from `machine/base/` to `machine/`, restart, check the custom G-code survived and the A1 processes / Bambu
-   filaments appear; restore the backup on any problem. Never without the user's OK (their preset).
+1. **Preset re-link (user OK'd 2026-10-12 late): done on WSA, still to do on the phone.** "Bambu Lab A1 0.4 nozzle
+   -No cut No vibe" was detached (`machine/base/`, `"inherits": ""`), so only generic process/filaments were compatible.
+   WSA: backup in `~\orca-android-tools\preset-backup-2026-10-12\machine`; `inherits` -> "Bambu Lab A1 0.4 nozzle",
+   `.info` `base_id` = the sibling linked preset's (system A1 id), both files moved to `machine/`, `base/` removed
+   (script: `cat >` over the old file keeps owner/SELinux, then `mv`). Verified WSA: listed, selectable, keeps Bambu
+   PLA filaments, process "0.20mm Standard @BBL A1", G-code keys identical after app close. **Phone: same steps when
+   it's back** (its own backup first). **Untested:** a Bambu/Orca cloud sync afterwards (cloud copy is still
+   detached; same updated_time, so the pull shouldn't replace it); the Chromebook desktop still has it detached.
 2. **User reports 2026-10-12** (commits after 5b7ee35, all in r114):
-   - Verified: AMS sync button on the detached preset (phone r114); plate type default + Plate types dialog
-     (phone + WSA r114). Details: archive "User reports 2026-10-12, verified".
    - Match the installed nozzle (More, default on): `BambuReport.nozzleDiameter` -> `installedNozzles[model]`,
      `UiState.visiblePrinters` hides other nozzles, Prepare hint + "Use <preset>". **Untested:** the printer was
      offline (no report); newer-firmware `device.nozzle.info` path; stale status after switching printer models.
@@ -42,19 +42,22 @@ installed on WSA too. Back on the phone when the user says so / it shows in `adb
      preset re-link, else sync only finds generic filaments).
 3. Merge: main = r112 (6f8560c, Android PR #6, 2026-10-12). Left on the branch: 46a694e (nozzle match) and
    121765c (my filaments), both untested; on top of them, verified: b7d6de2 (milestone 4, WSA r115) and the
-   settings tools (WSA r117/r118). Next merge
+   settings tools (WSA r117/r118); then 8334d43 + 80c8d0f (item 4, verified r120). Next merge
    once item 2's untested parts pass (or, if the user wants milestone 4 sooner, ask before splitting it off).
-4. **Next:** wait for the user on item 1; otherwise pick from the roadmap (shape builder phase 2 gaps, or a
-   print tool: printing always needs the user's OK + on-screen confirm) and ask the user which one when back.
+4. **Shape builder phase 2 gaps fixed + verified on WSA r120** (ungroup exact, rename no render, re-frame;
+   archive "Shape builder phase 2 gaps"). **Next:** UI tests on WSA of align, mirror, dims list edit/remove,
+   keyboard shortcuts; untested: no size/turn handles under a mirrored group. Editor draft holds test shapes
+   (ids 2-4 + 7-9, dim `px`): clear it before UI tests.
 
-Done 2026-10-12: merges (Android PR #5 at r104, #6 at r112; OrcaStudio PR #3, #4); AI tools milestones 1-4 verified (archive; 4 = plate tools, WSA r115); settings tools verified (WSA r117/r118, archive).
+Done 2026-10-12 (archive): merges to r112; AI tools milestones 1-4; settings tools; user reports (AMS sync
+button, plate types); shape builder phase 2 gaps (r120).
 
 ## State
 - Both repos work on branch `claude/handoff-continuation-rseql3` (the "test branch"). Autonomy
   (user, 2026-10-11): decide branch handling and next steps yourself. **Main merges / releases need
   the user.** Main = r112 (merged 2026-10-12, PR #6, on the user's `/next-merge`); user agreed to merge more
   often, at verified milestones: offer a merge PR when a batch is verified, merge only on their "merge".
-- Installed on WSA: r118 (2026-10-12 evening); AI tools on. Plate 2 (temp) is empty. Shape-builder handles not tested: Y
+- Installed on WSA: r120 (2026-10-12 evening); AI tools on. Plate 2 (temp) is empty. Shape-builder handles not tested: Y
   handle, Shift = 1° turn, handles on a group / nested child, touch (WSA has none).
 - Draft of the open design: `files/openscad/draft.scad|json` (read with `adb exec-out "su -c 'cat ...'"`,
   handy to check builder edits without screenshots; the Code tab text isn't in the ui dump).
@@ -63,9 +66,8 @@ Done 2026-10-12: merges (Android PR #5 at r104, #6 at r112; OrcaStudio PR #3, #4
 
 ## Modeling roadmap (user agreed 2026-10-11, in this order)
 User goal: model **without writing code**; OpenSCAD code is only a backstop.
-1. Shape builder: phases 1-2 done (r96-r104; archive). Known gaps: ungroup of a rotated group with rotated
-   children is approximate; renaming a shape re-renders; preview doesn't re-frame as the design grows (Frame
-   works). Untested: align, mirror, dims list edit/remove, keyboard shortcuts, phone layout. Design data = CSG
+1. Shape builder: phases 1-2 done (r96-r104, gaps fixed r120; archive). Untested: align, mirror, dims list
+   edit/remove, keyboard shortcuts, phone layout. Design data = CSG
    tree JSON in the object's `module` metadata (`ShapeDesign`, `scad/ShapeModel.kt`) -> OpenSCAD -> `ScadService`.
 2. AI tool layer (MCP server in the app): milestones 1-4 done (archive).
 3. Settings tools: done (archive). Printing from a tool would need the user's OK + on-screen confirm.
@@ -86,6 +88,8 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
 - OpenSCAD untested: Save/Open .scad via picker, phone layout, opening .scad from a download/zip,
   painting through a mesh boolean.
 - Models tab untested: MakerWorld sign-in ticket flow, Thingiverse downloads.
+- REA MCP (github.com/morluto/rea), looked at 2026-10-12, not installed (needs the user's OK; changes MCP config):
+  fits release APK / `liborca_jni.so` inspection and HAR traces of the MakerWorld / Thingiverse flows only.
 - Wishlist later: filament colour mixing (upstream `FilamentMixer.cpp`). Not wanted: iOS port.
 - Flatpak r9 MakerLab tab, weekly upstream bump, obn follow-ups: see the archive (2026-10-12 trim).
 
