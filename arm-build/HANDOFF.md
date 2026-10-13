@@ -31,20 +31,29 @@ target before cat fails (happened once to the re-linked preset; restored from th
    restart; X in the list and Undo all show it again live; Block ads off reloads with the banner back and greys out
    "Block an element"; long-press on a non-text element picks it, on text keeps normal selection (Copy / Select all).
    Test rules removed, blocking left on. Thingiverse keeps an empty strip where its banner was (site layout).
-   **Bug fixed in a7e63d2 (build r131, CI 38342763382), untested:** the bar's long hint pushed Cancel / Smaller off a
-   phone screen; now the label takes the leftover width (2 lines, ellipsized), hint shortened to "Tap what to hide".
+   Bar fix a7e63d2 (label takes the leftover width, hint "Tap what to hide"): **verified phone r131**, all buttons fit.
    **Untested:** right-click with a mouse (WSA), other WebViews applying rules (Device page etc.). Orca Cloud login
    WebView (08bdf0b): phone is signed in to Orca Cloud, so testing needs a sign-out: leave to the user.
 
 1. Preset re-link: **verified on WSA and the phone** (archive "Preset re-link + nozzle / my filaments verified").
    **Untested:** a Bambu/Orca cloud sync afterwards (cloud copy still detached; same updated_time, so the pull
    shouldn't replace it); the Chromebook desktop still has it detached.
-2. Nozzle match + my filament presets: **verified on the phone r114** (same archive entry). **Untested:** newer-firmware
-   `device.nozzle.info` path; stale status after switching printer models. **Tell the user:** the "exactly one user
-   preset from that system preset" fallback (`PresetController.myFilament`) put "MATTE BLK+ELEGOO WHITE MIXED" into
-   both PLA Matte slots without any pick; ask whether that fallback should stay or only explicit picks count.
+2. Nozzle match: **verified on the phone r114** (same archive entry). **Untested:** newer-firmware
+   `device.nozzle.info` path; stale status after switching printer models.
+   **Filament picks per AMS tray: 99264ee, build r132 (CI 38343618298), untested.** User (2026-10-12): the
+   "only user preset from that system preset" fallback was wrong (put "MATTE BLK+ELEGOO WHITE MIXED" in both Matte
+   slots); never-picked trays must get the printer's Bambu preset (RFID is authoritative), the user's own picks
+   stick, and the printer overrides them when the spool changes. Now: `FilamentSlot.source` = `TraySource(key =
+   serial/ams/slot, loaded = "filament_id #color", synced = sync's preset)`, persisted in `filaments:<printer>`;
+   `AppSettings.trayPicks` (pref `tray_picks`) key -> (loaded, preset), set by picking / saving in a synced slot,
+   dropped by picking the sync's own preset or when the tray reports something else. `my_filaments` map and
+   `myFilament` are gone (main r127 still has the old fallback). More switch renamed "Keep my filament picks per
+   AMS slot". **To test (phone, printer online, restore the plate after):** sync -> all slots Bambu presets (no Matte
+   mix); pick a user preset for A1, sync again -> kept, A2/A3 unaffected; restart app, sync -> still kept; pick the
+   sync's preset -> pick dropped. Spool change -> printer wins: only testable when the user swaps a spool.
 3. Merge: **main = r127 (5e2a483, PR #7 from `claude/merge-r127` at f138655, 2026-10-12)**, on the user's `/next-merge`.
-   On the branch, not on main: 08bdf0b (all WebViews, partly untested, item 6), e4d75ab + a7e63d2 (element blocker, item 0: verified r129 except the a7e63d2 bar fix).
+   On the branch, not on main: 08bdf0b (all WebViews, partly untested, item 6), e4d75ab + a7e63d2 (element blocker,
+   item 0, verified r129/r131), 99264ee (tray picks, untested).
 4. Shape builder untested still: pinch zoom (touch), pyramid/wedge chamfer renders, handles by touch.
 5. **.scad zips: daf9aba, verified WSA r126** via the import picker and a real Thingiverse download (archive
    ".scad projects from zips"). **Open question for the user:** should a zip's STLs stay off the plate when its .scad
