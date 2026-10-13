@@ -19,9 +19,9 @@ front**; grep them when a question needs them (e.g. `grep -n "AMS mapping" HANDO
   time to `/clear` then `/next`** (and why: task done + handoff updated). Don't suggest it mid-task.
 
 ## Next task
-**Test target: WSA while the user is away from home** (user, 2026-10-12 evening: phone off the network). r114 is
-installed on WSA too. Back on the phone when the user says so / it shows in `adb devices`. Phone setup (wireless adb, root taps,
-`phone-ui.py`, token file): archive "Phone test setup" and memory `test-on-phone`.
+**Test target: the phone** (user, 2026-10-12 late: "use my phone for adb", they are using the PC, so don't drive WSA). Phone IP: ask the user (not in the repo); wireless adb port found by a TCP scan of 30000-49999 (TcpClient.ConnectAsync batches) but it shows **offline** (PC key no longer trusted): asked the user to re-pair (Wireless debugging > Pair device with pairing code, then `adb pair ip:port code`). Phone setup (root taps, `phone-ui.py`, token file): archive "Phone test setup" and memory `test-on-phone`.
+
+0. **WebView element blocker + ad-block menu (wishlist side quest): e4d75ab, build r129 (CI 38341070641), untested.** Models tab three-dot menu: "Block ads" toggle (`AdBlock.setEnabled`, pref `adblock_enabled`, all WebViews; page reloads), "Block an element" (`AdBlock.PICKER_JS`: tap picks; right-click / long-press = `contextmenu` picks directly unless text is selected; bar with Smaller / Larger / Block / Cancel), "Blocked elements (n)" dialog (per-element X, Undo all). Rules: pref `adblock_rules` JSON site -> selectors, applied by `AdBlock.applyJs` in every `AdBlock.Client`. Hashed `Foo__bar--hash` classes match by prefix. **To test:** pick + block on Thingiverse, survives reload/restart, unblock one / all, toggle off shows ads again (and stops the picker), long-press on touch.
 
 1. **Preset re-link (user OK'd 2026-10-12 late): done on WSA, still to do on the phone.** "Bambu Lab A1 0.4 nozzle
    -No cut No vibe" was detached (`machine/base/`, `"inherits": ""`), so only generic process/filaments were compatible.
@@ -41,7 +41,7 @@ installed on WSA too. Back on the phone when the user says so / it shows in `adb
      applied after sync and for a new printer's default slot. **Untested** (needs the printer online and the
      preset re-link, else sync only finds generic filaments).
 3. Merge: main = r112 (6f8560c, PR #6). On the branch: 46a694e + 121765c (item 2, **untested**), then verified
-   b7d6de2, settings tools, 8334d43, 80c8d0f, 4f4697e, bc021f4, d87dcdb, cd4177c, daf9aba, f138655 (r115-r127); 08bdf0b (all WebViews, untested).
+   b7d6de2, settings tools, 8334d43, 80c8d0f, 4f4697e, bc021f4, d87dcdb, cd4177c, daf9aba, f138655 (r115-r127); 08bdf0b (all WebViews, untested), e4d75ab (element blocker, untested).
    Merge once item 2 passes; user chose **wait** on 2026-10-12 (no split, no merge-as-is).
 4. Shape builder untested still: pinch zoom (touch), pyramid/wedge chamfer renders, handles by touch.
 5. **.scad zips: daf9aba, verified WSA r126** via the import picker and a real Thingiverse download (archive
@@ -93,10 +93,7 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
 - REA MCP (github.com/morluto/rea), looked at 2026-10-12, not installed (needs the user's OK; changes MCP config):
   fits release APK / `liborca_jni.so` inspection and HAR traces of the MakerWorld / Thingiverse flows only.
 - Wishlist later: filament colour mixing (upstream `FilamentMixer.cpp`). Not wanted: iOS port.
-- Wishlist, low priority (user, 2026-10-12; do as a side quest next session): WebView right-click / long-press context
-  menu with "Block element" (element picker like Brave/uBlock; blocked selectors persist per site). A three-dot menu in
-  the WebView toolbar (Models tab bar has none yet) holding: ad-block on/off toggle (like Brave's lion icon; today
-  `AdBlock` is always on), a list of blocked elements to undo one by one, and "undo all".
+- Wishlist WebView element blocker + ad-block menu: built (Next task 0), untested.
 - Flatpak r9 MakerLab tab, weekly upstream bump, obn follow-ups: see the archive (2026-10-12 trim).
 
 ## Gotchas
