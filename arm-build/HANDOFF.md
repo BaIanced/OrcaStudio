@@ -42,12 +42,15 @@ installed on WSA too. Back on the phone when the user says so / it shows in `adb
      preset re-link, else sync only finds generic filaments).
 3. Merge: main = r112 (6f8560c, Android PR #6, 2026-10-12). Left on the branch: 46a694e (nozzle match) and
    121765c (my filaments), both untested, d87dcdb + cd4177c (.scad Save/Open, verified r124/r125); on top of the first two, verified: b7d6de2 (milestone 4, WSA r115) and the
-   settings tools (WSA r117/r118); then 8334d43 + 80c8d0f (verified r120), 4f4697e + bc021f4 (verified r123). Next merge
+   settings tools (WSA r117/r118); then 8334d43 + 80c8d0f (verified r120), 4f4697e + bc021f4 (verified r123), daf9aba (.scad zips, verified r126). Next merge
    once item 2's untested parts pass. User asked on `/next-merge` 2026-10-12 and chose **wait** (no split, no
    merge-as-is); OrcaStudio repo only has handoff commits ahead of main (no merge needed).
 4. Shape builder untested still: pinch zoom (touch), pyramid/wedge chamfer renders, handles by touch.
-5. **Next on WSA:** opening a .scad from a download / a model site zip (Open items). Save/Open via the picker is
-   done (d87dcdb + cd4177c, verified r124/r125; archive "OpenSCAD Save/Open via the picker").
+5. **.scad zips: daf9aba, verified WSA r126 via the import picker** (archive ".scad projects from zips").
+   **Untested:** a real Models-tab download (Thingiverse customizer thing = **next on WSA**, also covers the open
+   "Thingiverse downloads" item), the nameless-download sniff -> .scad, "Open with" a zip from a file manager
+   (root `am start` can't grant the storage provider URI: Permission Denial, shown as a clean error dialog), a .scad
+   zip with unreferenced STLs (they should go on the plate next to the editor), phone.
 
 Done 2026-10-12 (archive): merge to r112, AI tools 1-4, settings tools, user reports, shape builder gaps + UI tests.
 
@@ -56,21 +59,17 @@ Done 2026-10-12 (archive): merge to r112, AI tools 1-4, settings tools, user rep
   (user, 2026-10-11): decide branch handling and next steps yourself. **Main merges / releases need
   the user.** Main = r112 (merged 2026-10-12, PR #6, on the user's `/next-merge`); user agreed to merge more
   often, at verified milestones: offer a merge PR when a batch is verified, merge only on their "merge".
-- Installed on WSA: r125 (2026-10-12 late); AI tools on; auto-save 60 s. Plate 1 empty, no Plate 2. Shape-builder
+- Installed on WSA: r126 (2026-10-12 late); AI tools on; auto-save 60 s. Plate 1 empty, no Plate 2. Shape-builder
   handles by touch untested (WSA has none). Real mouse drags (+Shift): `mdrag.ps1 x1 y1 x2 y2 [-Shift]`
   (Android coords = Windows pixels on WSA); the builder's shape list scrolls only with a real mouse wheel.
 - Draft of the open design: `files/openscad/draft.scad|json` (read with `adb exec-out "su -c 'cat ...'"`,
   handy to check builder edits without screenshots; the Code tab text isn't in the ui dump).
-- WSA 1080p: the editor panel is short; collapse the preview ("Hide preview") to reach buttons
-  below the Customizer notice.
+- WSA 1080p: the editor panel is short; collapse the preview ("Hide preview") to reach buttons below the Customizer notice.
 
 ## Modeling roadmap (user agreed 2026-10-11, in this order)
 User goal: model **without writing code**; OpenSCAD code is only a backstop.
-1. Shape builder: phases 1-2 done (r96-r104, gaps fixed r120, UI + handle tests r120/r123; archive). Untested:
-   phone layout. Design data = CSG
-   tree JSON in the object's `module` metadata (`ShapeDesign`, `scad/ShapeModel.kt`) -> OpenSCAD -> `ScadService`.
-2. AI tool layer (MCP server in the app): milestones 1-4 done (archive).
-3. Settings tools: done (archive). Printing from a tool would need the user's OK + on-screen confirm.
+1-3 done (archive): shape builder (untested: phone layout; data = CSG JSON in the object's `module` metadata,
+`scad/ShapeModel.kt`), AI tool layer (MCP), settings tools (printing from a tool needs the user's OK + on-screen confirm).
 
 ## Open items (details: grep the archive)
 - User to retest: the 325 MB slice that crashed before the r59 OOM fix; pinch zoom on MakerWorld;
@@ -83,7 +82,7 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
 - AMS mapping verified (user printed from A1). User's AMS lite: A1 yellow, A2 matte black, A3
   white, A4 PETG. **Any test print needs the user's OK.**
 - Section view: travels/markers not clipped, picking ignores the cut.
-- OpenSCAD untested: phone layout, opening .scad from a download/zip,
+- OpenSCAD untested: phone layout, a real .scad download (Next task 5),
   painting through a mesh boolean.
 - Models tab untested: MakerWorld sign-in ticket flow, Thingiverse downloads.
 - REA MCP (github.com/morluto/rea), looked at 2026-10-12, not installed (needs the user's OK; changes MCP config):

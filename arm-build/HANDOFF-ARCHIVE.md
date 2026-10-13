@@ -1396,3 +1396,20 @@ shaded, `plate_describe` live; details in the archive "AI tools milestone 3").
   saves without the line.
 - Known: the picker names a 2nd copy `x.scad (1)` (DocumentsUI, unknown MIME).
 - Sketch editor + auto-save fixes (4f4697e, bc021f4) and shape-builder handles verified r123 (see "Shape-builder handles").
+
+## .scad projects from zips (moved from HANDOFF.md on 2026-10-12)
+- Found in source (r125): `ModelDownloads.modelFiles` flattened zips (`include <lib/x.scad>` broke, import()/surface()
+  data dropped); zips from the import picker / "Open with" weren't unzipped (only Models-tab downloads went through
+  `openDownloaded`); a nameless download with OpenSCAD text fell through `sniffExtension` to "stl".
+- daf9aba (r126): a zip with any .scad unpacks whole into `<zip>_files/` next to it (not `<zip>/`: the import folder
+  has its own `openscad/`, `presets/`), zip-slip guarded, `__MACOSX/` and `._*` skipped; sources sorted by folder
+  depth (main-design pick in `FileController.openModels` takes the first one nothing includes); model files a source
+  names (import data) stay off the plate. `openModels` unzips every zip and owns the "no model files" toast;
+  `openDownloaded` only routes presets and calls `openModels`. Sniff: OpenSCAD keywords and no NUL in the first 512
+  bytes -> "scad". Manifest VIEW/SEND filter: `application/x-openscad`, `text/x-openscad`, `application/zip`,
+  `application/x-zip-compressed`.
+- Verified WSA r126: test zip (`scadzip/design.scad` with `include <lib/shapes.scad>`, `use <lib/util.scad>`,
+  `import("parts/peg.stl")`, plus a `__MACOSX` entry) via Prepare > Add > Import: editor opened design.scad with the
+  folder tree under `cache/models/scadzip-test_files/`, Customizer found `width`, preview 30 x 40 x 10 mm, 116
+  triangles (box + hole + peg), temp Plate 2 stayed empty; plate, zip deleted after.
+- Note: ScadDeps packs only included .scad text into a plate object, not import() data files (pre-existing).
