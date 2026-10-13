@@ -34,7 +34,8 @@ Plate label default is off (`plateLabel = false`). Phone has plates 1-8 (user's)
 from the phone: don't take the phone over without asking. WSA phone view (`phone-view.sh`) was back-burnered by the user.
 Import/arrange fix eac2d13 **verified on WSA r154** (import onto a filled plate, Duplicate, Arrange; archive "Import/arrange
 fix verified on WSA r154"). WSA session backup stays in `/data/local/tmp/session-backup.{3mf,json}` (restored).
-**Next:** the rest of the batch list below (mostly phone checks: ask the user before taking the phone over). WSA r144/r146 checks passed (archive "UI batch WSA
+**Next:** WSA-testable work is done as of r159. Left: phone + Chromebook checks of the batch list below (ask the user
+before taking the phone over; phone wasn't on adb 2026-10-13) and the user's lab picks (then G2b). WSA r144/r146 checks passed (archive "UI batch WSA
 checks"). fd71b33's keep_layout path verified WSA r154 (2026-10-13); a2d3148 (user 2026-10-13): lab sliders for text size,
 interface size (root `LocalDensity` override in `AppScaffold`) and floating controls (overlay density, Prepare + Preview),
 applied on release; wide settings panel edge drags to resize (`lab.panelWidth`, min 300 dp; let go < 200 dp = tuck; tap
@@ -43,9 +44,9 @@ text and the floating icons look huge.
 Ghost on plate overlaps what is already there and is small at plate zoom: mention to the user. **Still untested:** everything on the phone (portrait,
 tool column/fullscreen in portrait, landscape immersive), Chromebook, chips switcher, opacity slider, 20 plates,
 tooltip look (vanished before the screenshot), default-plate-type pinning, native fixes. Lab now = filmstrip + label
-+ ghost on WSA. Editor width resets after leaving Prepare (minor). **6e45548 verified WSA r158**: + pinned after the
-plates (tabs + filmstrip); builder Customizer slider thumb, number and preview follow a slow drag (screencaps mid-drag
-66 -> 48 -> 16; uiautomator can't dump during a drag, use `adb exec-out screencap` + crop).
++ ghost on WSA. **6e45548 verified WSA r158**: + pinned after the
+plates (tabs + filmstrip); builder Customizer slider follows a slow drag (uiautomator can't dump during a drag:
+`adb exec-out screencap` + crop).
 Batch items:
 - User couldn't pick between mockups (https://claude.ai/artifact/E3MtY8rQ1dMGHhibY2oNCX), so variants are switchable in
   **More > Layout lab (temporary)** (`core/LayoutLab.kt`, prefs `layout_lab`): plate switcher tabs (default) /
@@ -73,12 +74,13 @@ r156/r157"). Undo of a group delete and tabs-layout group delete: verified WSA r
 **User picks 2026-10-13:** plate delete -> upstream (objects stay): **2db1d53, verified WSA r158** (`delete_plates` moves
 a deleted plate's objects to free grid spots after the last plate, one per plate, skipping spots with floaters; no
 confirm dialogs; delete plate 1 -> object floats off-grid, Objects (1); Add plate picked it up; group delete 1+2 + undo
-restored it). **Untested:** a group delete where 2+ plates hold objects (separate spots). Minor: undo of a delete
-makes plate 1 active (was 3). **b4a0789 (not built yet, untested):** tabs layout's "Delete n plates" sat over Undo
-(below the row); now right of the stop button, vertically centred. Build it with the next batch.
+restored it). **r159 verified WSA** (archive "r159 verified on WSA"): group delete of 2 object-holding plates (separate
+spots), b4a0789 tabs delete button beside the stop button, 0e8f7c2 undo restores the active plate + OpenSCAD editor
+width kept across Preview.
 Switcher (tabs/filmstrip/chips) and SCAD view (canvas/ghost): user **not decided yet**, keep the lab; ask again later.
-Chips layout has no picking. User wants phone checks later (phone not on adb now; WSA meanwhile). Minor, seen on WSA:
-the filmstrip's first plate is clipped a little at the left edge (pre-existing?).
+Chips layout has no picking. User wants phone checks later (phone not on adb now; WSA meanwhile). Minor, seen on WSA
+once: the filmstrip's first plate clipped a little at the left edge (not reproduced at rest on r159; maybe after the
+strip auto-scrolls to a far plate: check with many plates).
 **Next after the user's picks (G2b, user 2026-10-13):** plate number labels and per-plate icons drawn in the 3D view
 around each plate (like Orca/Bambu: they turn with the camera), useful with many plates; then remove the lab.
 **Older leftovers:** items 0 and 6 mostly need the user (sign-ins) or a web-UI printer.
@@ -96,7 +98,7 @@ Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
    switching printer models. Filament picks per AMS tray: verified phone r134. **Untested:** spool change -> printer's
    preset wins and the pick is dropped (only when the user swaps a spool); WSA. Phone plate: 1 slot "Bambu PLA Basic @BBL A1".
 3. Merge: main = r143 (cc7abe4, PR #11 from `claude/merge-r143` at 4d55156, 2026-10-13, user's `/next-merge`). No merge offer pending.
-   Unmerged, untested (all after 4d55156): f7f4d57 (UI batch), fd71b33 (plates; import part verified WSA r154, add_plate floater skip untested), 6e45548 (plate row, sliders; verified WSA r158), a2d3148 (sizes, panel drag), 6e645cb + 9f9978a (filmstrip row), 31f6b58 (chips, verified phone), 49e4cdf (tabs numbers + switch rows verified phone; cutout), 0afd458 (rail insets), 4dac2f4 (rail cutout, verified phone), eac2d13 (arrange fix, verified WSA r154), c315432 + 8d70911 (plate organisation, verified WSA r157), 2db1d53 (delete keeps objects, verified WSA r158), b4a0789 (tabs delete button, not built). 0d2bb7b (r149,
+   Unmerged, untested (all after 4d55156): f7f4d57 (UI batch), fd71b33 (plates; import part verified WSA r154, add_plate floater skip untested), 6e45548 (plate row, sliders; verified WSA r158), a2d3148 (sizes, panel drag), 6e645cb + 9f9978a (filmstrip row), 31f6b58 (chips, verified phone), 49e4cdf (tabs numbers + switch rows verified phone; cutout), 0afd458 (rail insets), 4dac2f4 (rail cutout, verified phone), eac2d13 (arrange fix, verified WSA r154), c315432 + 8d70911 (plate organisation, verified WSA r157), 2db1d53 (delete keeps objects, verified WSA r158), b4a0789 + 0e8f7c2 (verified WSA r159). 0d2bb7b (r149,
    infinite scroll) is verified on WSA but sits after the untested commits (cherry-pick it if merged early).
    Untested parts already in main stay listed in items 0, 2, 5, 6.
 4. Shape builder by touch: verified phone r134. Raw multi-touch: `~/orca-android-tools/pinch.sh` / `drag1.sh`
@@ -114,7 +116,7 @@ Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
   (user, 2026-10-11): decide branch handling and next steps yourself. **Main merges / releases need
   the user.** Main = r143 (merged 2026-10-13, PR #11, on the user's `/next-merge`); user agreed to merge more
   often, at verified milestones: offer a merge PR when a batch is verified, merge only on their "merge".
-- Installed on WSA: r158 (2026-10-13); AI tools on; auto-save 60 s. Session = the backup above (3 plates, plate 3 active). Shape-builder
+- Installed on WSA: r159 (2026-10-13); AI tools on; auto-save 60 s. Session = the backup above (3 plates, plate 3 active). Shape-builder
   handles by touch untested (WSA has none). Real mouse drags (+Shift): `mdrag.ps1 x1 y1 x2 y2 [-Shift]`
   (Android coords = Windows pixels on WSA); the builder's shape list scrolls only with a real mouse wheel.
 - Draft of the open design: `files/openscad/draft.scad|json` (read with `adb exec-out "su -c 'cat ...'"`,

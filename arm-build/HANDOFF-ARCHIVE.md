@@ -1608,3 +1608,14 @@ several, delete (dialog only if one holds objects); Arrange moves floaters onto 
   plate 4, [-80,128] on plate 1) made 2 floaters; `plate_arrange {plate:4}` put one beside copy 1 on plate 1 (copy 1 stayed
   at [128,128]) and one at plate 4's centre. MCP helper: PowerShell job POSTing to `http://127.0.0.1:8765/mcp` with the
   `ai_token` pref as Bearer (never printed). Session backup restored (cmp same), app force-stopped.
+
+## r159 verified on WSA (2026-10-13)
+Build r159 = b4a0789 + 0e8f7c2 (run 38481343757). Filmstrip layout: added a cube on plate 2 and a cylinder on plate 3
+(Add > Shape), plate 3 active; long press plate 1 + tap plate 2, "Delete 2 plates" (popup above the row's end) ->
+"Plate 1 of 1", Objects (3), plate 3's cylinder on the remaining plate. Undo -> "Plate 3 of 3" (0e8f7c2: active plate
+restored; was plate 1 before). Redo, Add plate x2 -> each new plate picked up one floater (cube on plate 3, the old
+plate-1 object on plate 2), so the two floaters had separate spots. Tabs layout: picking 1+3 put "Delete 2 plates"
+right of the stop button, vertically centred, Undo uncovered (b4a0789). OpenSCAD editor (shape builder draft): handle
+dragged 1008 -> 850, panel title x 1153 -> 1014; Preview (confirmed "This plate has not been sliced yet") and back to
+Prepare kept 1014 (0e8f7c2 `ScadEditorSize`). Filmstrip first plate not clipped at rest (clip seen earlier not
+reproduced). Lab back to filmstrip, session backup restored (cmp same), app force-stopped.
