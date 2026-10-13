@@ -21,22 +21,27 @@ front**; grep them when a question needs them (e.g. `grep -n "AMS mapping" HANDO
 ## Next task
 **Test target: the phone** (user, 2026-10-12 late: "use my phone for adb", they are using the PC, so don't drive WSA).
 Serial: the `adb-...._adb-tls-connect._tcp` entry in `adb devices` (mDNS; an old `ip:port` entry may linger offline:
-`adb disconnect` it). Phone has r114. Phone setup (root taps, `phone-ui.py`, token file): archive "Phone test setup"
+`adb disconnect` it). Phone has r134. Phone setup (root taps, `phone-ui.py`, token file): archive "Phone test setup"
 and memory `test-on-phone`. `phone-ui.py dump` needs `PYTHONIOENCODING=utf-8` on the Device tab. Pull binary files with
 `adb exec-out "su -c '...'"` (plain `adb shell` mangles tar). **Never `cat missing > target`**: the redirect empties the
 target before cat fails (happened once to the re-linked preset; restored from the backup the same minute).
 
-0. **WebView element blocker + ad-block menu (wishlist side quest): e4d75ab, build r129 (CI 38341070641), untested.** Models tab three-dot menu: "Block ads" toggle (`AdBlock.setEnabled`, pref `adblock_enabled`, all WebViews; page reloads), "Block an element" (`AdBlock.PICKER_JS`: tap picks; right-click / long-press = `contextmenu` picks directly unless text is selected; bar with Smaller / Larger / Block / Cancel), "Blocked elements (n)" dialog (per-element X, Undo all). Rules: pref `adblock_rules` JSON site -> selectors, applied by `AdBlock.applyJs` in every `AdBlock.Client`. Hashed `Foo__bar--hash` classes match by prefix. **To test:** pick + block on Thingiverse, survives reload/restart, unblock one / all, toggle off shows ads again (and stops the picker), long-press on touch.
+0. **Element blocker + ad-block menu (e4d75ab, a7e63d2): verified on the phone r129/r131** (archive "Filament picks per
+   AMS tray + element blocker verified"). **Untested:** right-click with a mouse (WSA), other WebViews applying rules
+   (Device page etc.). Orca Cloud login WebView (08bdf0b): phone is signed in to Orca Cloud, so testing needs a
+   sign-out: leave to the user.
 
 1. Preset re-link: **verified on WSA and the phone** (archive "Preset re-link + nozzle / my filaments verified").
    **Untested:** a Bambu/Orca cloud sync afterwards (cloud copy still detached; same updated_time, so the pull
    shouldn't replace it); the Chromebook desktop still has it detached.
-2. Nozzle match + my filament presets: **verified on the phone r114** (same archive entry). **Untested:** newer-firmware
-   `device.nozzle.info` path; stale status after switching printer models. **Tell the user:** the "exactly one user
-   preset from that system preset" fallback (`PresetController.myFilament`) put "MATTE BLK+ELEGOO WHITE MIXED" into
-   both PLA Matte slots without any pick; ask whether that fallback should stay or only explicit picks count.
-3. Merge: **main = r127 (5e2a483, PR #7 from `claude/merge-r127` at f138655, 2026-10-12)**, on the user's `/next-merge`.
-   On the branch, not on main: 08bdf0b (all WebViews, partly untested, item 6), e4d75ab (element blocker, untested, item 0).
+2. Nozzle match: **verified on the phone r114** (same archive entry). **Untested:** newer-firmware
+   `device.nozzle.info` path; stale status after switching printer models.
+   **Filament picks per AMS tray (99264ee, 976f605, 54f57c3): verified on the phone r132 + r134** (archive, same entry
+   as item 0; incl. a restart-bug fix). **Untested:** spool change -> printer's preset wins and the pick is dropped
+   (only when the user swaps a spool); WSA. Phone has r134; plate restored to 1 slot "Bambu PLA Basic @BBL A1".
+3. Merge: **main = r134 (db122a9, PR #8 from the work branch at 54f57c3, 2026-10-12)**, on the user's `/next-merge`.
+   No merge offer pending; nothing on the branch beyond main. Untested parts that went in with r134 stay listed in
+   items 0, 2 and 6.
 4. Shape builder untested still: pinch zoom (touch), pyramid/wedge chamfer renders, handles by touch.
 5. **.scad zips: daf9aba, verified WSA r126** via the import picker and a real Thingiverse download (archive
    ".scad projects from zips"). **Open question for the user:** should a zip's STLs stay off the plate when its .scad
@@ -57,7 +62,7 @@ UI tests, preset re-link, nozzle match, my filament presets.
 ## State
 - Both repos work on branch `claude/handoff-continuation-rseql3` (the "test branch"). Autonomy
   (user, 2026-10-11): decide branch handling and next steps yourself. **Main merges / releases need
-  the user.** Main = r127 (merged 2026-10-12, PR #7, on the user's `/next-merge`); user agreed to merge more
+  the user.** Main = r134 (merged 2026-10-12, PR #8, on the user's `/next-merge`); user agreed to merge more
   often, at verified milestones: offer a merge PR when a batch is verified, merge only on their "merge".
 - Installed on WSA: r128 (2026-10-12 late); AI tools on; auto-save 60 s. Plate 1 empty, no Plate 2. Shape-builder
   handles by touch untested (WSA has none). Real mouse drags (+Shift): `mdrag.ps1 x1 y1 x2 y2 [-Shift]`
@@ -88,7 +93,7 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
 - REA MCP (github.com/morluto/rea), looked at 2026-10-12, not installed (needs the user's OK; changes MCP config):
   fits release APK / `liborca_jni.so` inspection and HAR traces of the MakerWorld / Thingiverse flows only.
 - Wishlist later: filament colour mixing (upstream `FilamentMixer.cpp`). Not wanted: iOS port.
-- Wishlist WebView element blocker + ad-block menu: built (Next task 0), untested.
+- Wishlist WebView element blocker + ad-block menu: built and verified (Next task 0).
 - Flatpak r9 MakerLab tab, weekly upstream bump, obn follow-ups: see the archive (2026-10-12 trim).
 
 ## Gotchas
@@ -166,6 +171,6 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
 ## Repos
 | Repo | Notes |
 |---|---|
-| `BaIanced/OrcaStudio-Android` | cl1x/Orca-Android + signed Bambu printing via obn (static in `liborca_jni.so`, `android/obn`). main = r127 (PR #7). Bot branch `upstream/orca-main` (never commit). Builds run on dispatch only (`gh workflow run android-apk.yml --ref <branch>`). |
+| `BaIanced/OrcaStudio-Android` | cl1x/Orca-Android + signed Bambu printing via obn (static in `liborca_jni.so`, `android/obn`). main = r134 (PR #8). Bot branch `upstream/orca-main` (never commit). Builds run on dispatch only (`gh workflow run android-apk.yml --ref <branch>`). |
 | `BaIanced/OrcaStudio` | Flatpak fork; ours: `arm-build/`, `.github/workflows/arm-*.yml`. Latest release r9 (MakerLab tab). Details in the archive. |
 | `ClusterM/open-bamboo-networking` | obn pinned v2.2.0 + local patches 0001 (cloud callbacks), 0002 (start_print try LAN first), 0003 (MQTT CA from `SSL_CERT_FILE`). |
