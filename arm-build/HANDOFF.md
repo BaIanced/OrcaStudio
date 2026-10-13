@@ -35,7 +35,7 @@ from the phone: don't take the phone over without asking. WSA phone view (`phone
 Import/arrange fix eac2d13 **verified on WSA r154** (import onto a filled plate, Duplicate, Arrange; archive "Import/arrange
 fix verified on WSA r154"). WSA session backup stays in `/data/local/tmp/session-backup.{3mf,json}` (restored).
 **Next:** the rest of the batch list below (mostly phone checks: ask the user before taking the phone over). WSA r144/r146 checks passed (archive "UI batch WSA
-checks"). fd71b33's keep_layout path (single placed file onto an *empty* plate wider than a bed) still untested; a2d3148 (user 2026-10-13): lab sliders for text size,
+checks"). fd71b33's keep_layout path verified WSA r154 (2026-10-13); a2d3148 (user 2026-10-13): lab sliders for text size,
 interface size (root `LocalDensity` override in `AppScaffold`) and floating controls (overlay density, Prepare + Preview),
 applied on release; wide settings panel edge drags to resize (`lab.panelWidth`, min 300 dp; let go < 200 dp = tuck; tap
 toggles; keep this when removing the lab); tool column up/down arrows (`ScrollCue`, 28x18 dp, tap scrolls). User said some
@@ -64,10 +64,8 @@ Batch items:
   plate's centre; editor resizable (`DragHandle`, portrait = split with the canvas above); slider drag = previews after
   40 ms with `$fn = 16` appended (draft, "Draft while dragging" chip), full render on release (`ScadController.endDrag`).
 - Native: `add_plate` moves the object nearest to the new plate from outside every plate onto it (user's bug: 9-object
-  import, floaters stayed beside the grid). **fd71b33** (in r153; import part replaced by eac2d13 above, keep_layout path untested):
-  add_plate skips that when a floater already lies in the new spot; likely import cause fixed: `load_models` keeps
-  a single placed file's layout (`keep_layout`) centred on one plate, so a layout wider than a bed (e.g. multi-plate
-  3MF imported as models) floated; now it arranges instead when any object lands off every plate (spills to new plates).
+  import, floaters stayed beside the grid). **fd71b33** (in r153): add_plate skips that when a floater
+  already lies in the new spot (**untested**); its `keep_layout` import part verified WSA r154 (archive "keep_layout import verified").
 **Test on the phone first** (portrait + landscape), then Chromebook. Things to check: tooltips don't block taps; tool
 column scrolls in portrait; filmstrip vs Slice button with many plates; 20 plates in tabs/filmstrip; slider follows the finger.
 **Plate organisation (user 2026-10-13, after the pending items are done):**
@@ -93,7 +91,7 @@ Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
    switching printer models. Filament picks per AMS tray: verified phone r134. **Untested:** spool change -> printer's
    preset wins and the pick is dropped (only when the user swaps a spool); WSA. Phone plate: 1 slot "Bambu PLA Basic @BBL A1".
 3. Merge: main = r143 (cc7abe4, PR #11 from `claude/merge-r143` at 4d55156, 2026-10-13, user's `/next-merge`). No merge offer pending.
-   Unmerged, untested (all after 4d55156): f7f4d57 (UI batch), fd71b33 (plates), 6e45548 (plate row, sliders), a2d3148 (sizes, panel drag), 6e645cb + 9f9978a (filmstrip row), 31f6b58 (chips, verified phone), 49e4cdf (tabs numbers + switch rows verified phone; cutout), 0afd458 (rail insets), 4dac2f4 (rail cutout, verified phone), eac2d13 (arrange fix, verified WSA r154). 0d2bb7b (r149,
+   Unmerged, untested (all after 4d55156): f7f4d57 (UI batch), fd71b33 (plates; import part verified WSA r154, add_plate floater skip untested), 6e45548 (plate row, sliders), a2d3148 (sizes, panel drag), 6e645cb + 9f9978a (filmstrip row), 31f6b58 (chips, verified phone), 49e4cdf (tabs numbers + switch rows verified phone; cutout), 0afd458 (rail insets), 4dac2f4 (rail cutout, verified phone), eac2d13 (arrange fix, verified WSA r154). 0d2bb7b (r149,
    infinite scroll) is verified on WSA but sits after the untested commits (cherry-pick it if merged early).
    Untested parts already in main stay listed in items 0, 2, 5, 6.
 4. Shape builder by touch: verified phone r134. Raw multi-touch: `~/orca-android-tools/pinch.sh` / `drag1.sh`

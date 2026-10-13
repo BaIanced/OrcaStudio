@@ -1581,3 +1581,10 @@ Retest WSA r154: both beepers landed on plate 3 beside the poses, Assembly on ne
 Duplicate of a beeper on filled plate 3 put the copy left of the poses, on the bed, no overlap; Arrange still packs and
 centres the plate. WSA session backup (`/data/local/tmp/session-backup.{3mf,json}`) restored afterwards (cmp same).
 Gotcha: tapping the tool column's "Scroll up" cue after it reached the top hits Undo (cue sits at the Undo button's edge).
+
+## keep_layout import verified on WSA r154 (moved 2026-10-13)
+fd71b33 `load_models` (OrcaScene.cpp:540-586): a single placed file onto an *empty* plate keeps its layout unless an
+object lands off every plate, then it arranges. Test: session backup (3 plates), Add plate -> empty plate 4 active, VIEW
+intent on `/sdcard/Download/swatch2.3mf` (2-plate 3MF, MediaStore id 1000460178). Result: Assembly + both beeper3.stl
+packed on plate 4, nothing beside the plates, no extra plate needed. Session backup restored afterwards (cmp same),
+app force-stopped.
