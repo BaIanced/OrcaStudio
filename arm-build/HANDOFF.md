@@ -21,11 +21,14 @@ front**; grep them when a question needs them (e.g. `grep -n "AMS mapping" HANDO
 ## Next task
 **Test devices (user, 2026-10-13):** **phone** = main (root); **Chromebook's Android (ARC)** = big-screen layout
 checks (user wants the app there). Chromebook: `<chromebook-ip>:5555` (memory `test-on-phone`), Android 13, arm64,
-1920x1080, **no root**; ARC draws only while awake + unlocked (2026-10-13: awake, but the app never came to the front,
-focus stayed on ARC's PlaceholderActivity, likely locked). Has **r138**, never seen on screen.
-**Next: big-screen pass on the Chromebook** once unlocked (or the user reports what they see): Prepare, OpenSCAD editor
-beside the 3D view (zip-variant Add there: `scadHidden` is unused when wide), shape builder, Models tab, Device page,
-dialogs. Then the phone leftovers in items 0, 5, 6.
+1920x1080 (app area ~1813x948, shelf below), **no root**. Launch: `am start -n io.github.baianced.orcastudio_android/app.orcaandroid.ui.MainActivity`
+(ARC draws only while unlocked: focus = MainActivity, not ARC's PlaceholderActivity). `ui.ps1 -Device <ip>:5555` works.
+The system file picker is a ChromeOS dialog (adb can't drive it); open files with a VIEW intent on the MediaStore URI
+(`content query --uri content://media/external/file --where "_display_name='x'"` -> `-d content://media/external/file/<id>
+-t application/zip --grant-read-uri-permission`), which works without root.
+**Big-screen pass done** (r138 + r140 "Wide screens" 5410405, verified Chromebook 2026-10-13; archive "Big-screen
+pass"). Chromebook has r140. **r140 (5410405) is verified but not in main** (merge candidate).
+**Next: the phone leftovers in items 0, 5, 6** (install r140 on the phone first).
 **Phone:** serial = the `adb-...._adb-tls-connect._tcp` entry in `adb devices` (`adb disconnect` a stale `ip:port`).
 Has r138. Setup: archive "Phone test setup", memory `test-on-phone`; `phone-ui.py` needs `PYTHONIOENCODING=utf-8`;
 pull binaries with `adb exec-out "su -c '...'"`; Delete key = `su -c 'input keyevent 112'`. **Never
@@ -39,14 +42,14 @@ Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
 2. Nozzle match: verified phone r114. **Untested:** newer-firmware `device.nozzle.info` path; stale status after
    switching printer models. Filament picks per AMS tray: verified phone r134. **Untested:** spool change -> printer's
    preset wins and the pick is dropped (only when the user swaps a spool); WSA. Phone plate: 1 slot "Bambu PLA Basic @BBL A1".
-3. Merge: main = r138 (97e8763, PR #9, 2026-10-13, user's `/next-merge`). Nothing unmerged on the branch. Untested
-   parts already in main stay listed in items 0, 2, 5, 6.
+3. Merge: main = r138 (97e8763, PR #9, 2026-10-13, user's `/next-merge`). Unmerged on the branch: r140 5410405
+   (verified Chromebook). Untested parts already in main stay listed in items 0, 2, 5, 6.
 4. Shape builder by touch: verified phone r134. Raw multi-touch: `~/orca-android-tools/pinch.sh` / `drag1.sh`
    (push with `MSYS_NO_PATHCONV=1` and a `C:/` source path).
 5. .scad zips (daf9aba): verified WSA r126. Zip variants off the plate behind Add (a423ee3 + bb127de, user left the
-   decision to me): verified phone r138 (archive "Zip variants off the plate"). **Untested:** the nameless-download
-   sniff -> .scad; "Open with" a zip from a file manager (root `am start` can't grant the provider URI: Permission
-   Denial, clean error dialog); a real Thingiverse download on the phone.
+   decision to me): verified phone r138 (archive "Zip variants off the plate"); "Open with" a zip
+   (VIEW intent, MediaStore URI + read grant) verified on the Chromebook r138. **Untested:** the nameless-download
+   sniff -> .scad; a real Thingiverse download on the phone.
 6. Ad blocking (f138655, Models tab): verified WSA r127 + phone r134. **Untested:** MakerWorld sign-in / downloads with
    it on. 08bdf0b, all app WebViews use `AdBlock.Client`: verified WSA r128 (Device page, Models tab). **Untested:**
    Bambu sign-in WebView (needs Sign out + the user's password: leave to the user), Orca Cloud login, plugin pages,
