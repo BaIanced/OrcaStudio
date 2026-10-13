@@ -93,6 +93,10 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
 - REA MCP (github.com/morluto/rea), looked at 2026-10-12, not installed (needs the user's OK; changes MCP config):
   fits release APK / `liborca_jni.so` inspection and HAR traces of the MakerWorld / Thingiverse flows only.
 - Wishlist later: filament colour mixing (upstream `FilamentMixer.cpp`). Not wanted: iOS port.
+- Wishlist, low priority (user, 2026-10-12; do as a side quest next session): WebView right-click / long-press context
+  menu with "Block element" (element picker like Brave/uBlock; blocked selectors persist per site). A three-dot menu in
+  the WebView toolbar (Models tab bar has none yet) holding: ad-block on/off toggle (like Brave's lion icon; today
+  `AdBlock` is always on), a list of blocked elements to undo one by one, and "undo all".
 - Flatpak r9 MakerLab tab, weekly upstream bump, obn follow-ups: see the archive (2026-10-12 trim).
 
 ## Gotchas
