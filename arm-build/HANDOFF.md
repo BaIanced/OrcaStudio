@@ -28,9 +28,9 @@ The system file picker is a ChromeOS dialog (adb can't drive it); open files wit
 -t application/zip --grant-read-uri-permission`), which works without root.
 **Big-screen pass done** (r138 + r140 "Wide screens" 5410405, verified Chromebook 2026-10-13; archive "Big-screen
 pass"). Chromebook has r140. r140 merged to main (PR #10, 2026-10-13).
-**Next: the phone leftovers in items 0, 5, 6** (install r140 on the phone first).
+**Next:** the leftovers in items 0 and 6 mostly need the user (sign-ins) or a web-UI printer; pick the next open item.
 **Phone:** serial = the `adb-...._adb-tls-connect._tcp` entry in `adb devices` (`adb disconnect` a stale `ip:port`).
-Has r138. Setup: archive "Phone test setup", memory `test-on-phone`; `phone-ui.py` needs `PYTHONIOENCODING=utf-8`;
+Has r143. Setup: archive "Phone test setup", memory `test-on-phone`; `phone-ui.py` needs `PYTHONIOENCODING=utf-8`;
 pull binaries with `adb exec-out "su -c '...'"`; Delete key = `su -c 'input keyevent 112'`. **Never
 `cat missing > target`** (the redirect empties the target first). Don't drive WSA while the user uses the PC.
 Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
@@ -42,18 +42,17 @@ Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
 2. Nozzle match: verified phone r114. **Untested:** newer-firmware `device.nozzle.info` path; stale status after
    switching printer models. Filament picks per AMS tray: verified phone r134. **Untested:** spool change -> printer's
    preset wins and the pick is dropped (only when the user swaps a spool); WSA. Phone plate: 1 slot "Bambu PLA Basic @BBL A1".
-3. Merge: main = r140 (8fe2c9b, PR #10, 2026-10-13, user's `/next-merge`). Nothing unmerged on the branch.
+3. Merge: main = r140 (8fe2c9b, PR #10, 2026-10-13, user's `/next-merge`). Unmerged, verified: ec86442 (r142), 4d55156 (r143) -> merge candidate.
    Untested parts already in main stay listed in items 0, 2, 5, 6.
 4. Shape builder by touch: verified phone r134. Raw multi-touch: `~/orca-android-tools/pinch.sh` / `drag1.sh`
    (push with `MSYS_NO_PATHCONV=1` and a `C:/` source path).
-5. .scad zips (daf9aba): verified WSA r126. Zip variants off the plate behind Add (a423ee3 + bb127de, user left the
-   decision to me): verified phone r138 (archive "Zip variants off the plate"); "Open with" a zip
-   (VIEW intent, MediaStore URI + read grant) verified on the Chromebook r138. **Untested:** the nameless-download
-   sniff -> .scad; a real Thingiverse download on the phone.
-6. Ad blocking (f138655, Models tab): verified WSA r127 + phone r134. **Untested:** MakerWorld sign-in / downloads with
-   it on. 08bdf0b, all app WebViews use `AdBlock.Client`: verified WSA r128 (Device page, Models tab). **Untested:**
-   Bambu sign-in WebView (needs Sign out + the user's password: leave to the user), Orca Cloud login, plugin pages,
-   Device page on the phone.
+5. .scad zips + Thingiverse downloads: verified (WSA r126, phone r138/r142/r143, Chromebook r138; archive "Thingiverse
+   downloads on the phone"). **Untested:** the 16 KB content sniff itself (r143 now gets the real name first).
+6. Ad blocking (f138655, Models tab): verified WSA r127 + phone r134; Thingiverse download fix ec86442 verified phone
+   r142 (archive "Thingiverse downloads on the phone"). 08bdf0b, all app WebViews use `AdBlock.Client`: verified WSA
+   r128 (Device page, Models tab). **Untested:** MakerWorld sign-in / downloads with it on; Bambu sign-in WebView
+   (needs Sign out + the user's password: leave to the user), Orca Cloud login, plugin pages, Device page on the phone
+   (needs a printer with a web UI; the phone only has the A1).
 
 ## State
 - Both repos work on branch `claude/handoff-continuation-rseql3` (the "test branch"). Autonomy

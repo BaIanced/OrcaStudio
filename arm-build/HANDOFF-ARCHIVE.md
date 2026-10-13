@@ -1508,3 +1508,26 @@ shaded, `plate_describe` live; details in the archive "AI tools milestone 3").
 - r140 (5410405 "Wide screens", `ui/device/DeviceScreen.kt`, `ui/scad/ScadEditor.kt`: tick colours transparent when
   count > 20): verified on the Chromebook 2026-10-13 (run 38358229970, `install-build.ps1 -Device <ip>:5555`):
   Device page Job/Temperatures left, Loaded filaments right; scadzip-test width slider shows no dot row.
+
+## Thingiverse downloads on the phone (verified 2026-10-13, phone r142 + r143)
+- Moved from HANDOFF.md item 5 on 2026-10-13: .scad zips (daf9aba) verified WSA r126; zip variants off the plate
+  behind Add (a423ee3 + bb127de) verified phone r138 (section "Zip variants off the plate"); "Open with" a zip (VIEW
+  intent, MediaStore URI + read grant) verified on the Chromebook r138.
+- Found on r140 (phone): with Block ads on, every Thingiverse download failed ("Error downloading file"). CDP showed
+  Thingiverse's Sentry adding `sentry-trace` / `baggage` to the `/download:<id>` XHR; its redirect to
+  cdn.thingiverse.com then fails the CORS preflight. With Block ads off no such header is sent (the ad stack's XHR
+  wrapping apparently hides Sentry's patch) and the download works. Fix ec86442 (r142): `AdBlock.applyJs` patches
+  `XMLHttpRequest.prototype.setRequestHeader` to drop both headers (also skips the style insert when the document has no
+  root yet). Verified r142: single STL, single .scad, and "Download all files" all download with Block ads on.
+- "Download all files" on Customizable Card Box (thing:2404395), real tap, r142: the page builds the zip itself
+  (~20 s), nameless `<uuid>.zip` -> editor `Customizable_Card_Box.scad`, Customizer 31, preview 68.6 x 68.1 x 96.8 mm,
+  18,974 tris; the Add offer showed; the 4 STLs stayed off the plate.
+- Found on r142: the single .scad (Files page, blob link `<a download="Customizable_Card_Box.scad">`, clicked with
+  `a.click()` while connected) was saved as `<uuid>.stl` ("Loading of a model file failed"): the DownloadListener
+  gets no download attribute for blobs, and the file's >512-byte comment header defeated the sniff. Fix 4d55156 (r143):
+  `BRIDGE_JS` records `a.download` for blob links (`HTMLAnchorElement.prototype.click` hook + capture click
+  listener) in `window.__orcaNames`; `orcaNative.blob(url, data, name)`; `sniffExtension` reads 16 KB (NUL check on
+  the first 512 bytes). Verified r143: saved as `Customizable_Card_Box.scad`, editor opens, Customizer 31.
+- Test tools: `cdpnet.mjs <secs> [url part]` (network / console / failures) and `cdpeval.mjs "<js>"` in the session
+  scratchpad (recreate if gone); WebView debugging via `setprop log.tag.OrcaWeb DEBUG` + app restart, then
+  `adb forward tcp:9222 localabstract:webview_devtools_remote_<pid>`. Temp Plate 2 deleted after each run.
