@@ -1473,3 +1473,15 @@ shaded, `plate_describe` live; details in the archive "AI tools milestone 3").
   by prefix. Verified on a Thingiverse banner: pick + Larger + Block hides it live, survives restart; X / Undo all
   bring it back; Block ads off reloads and greys out "Block an element"; long-press on text keeps normal selection.
   Bar fix a7e63d2 (hint "Tap what to hide"): all buttons fit (r131). Thingiverse keeps an empty strip (site layout).
+
+## Shape builder by touch on the phone (verified 2026-10-12 late, phone r134)
+- Temp Plate 2, Add -> Shape builder (the phone's old draft was backed up to
+  `~/orca-android-tools/phone-draft-backup-2026-10-12` and restored after; Plate 2 deleted via long-press tab).
+- Phone layout: preview, Shapes / Code / Customizer tabs, palette row (scrolls by swipe), toolbar and Add to plate all fit.
+- Handles by touch (root `input swipe`, checked in `draft.json`): red 20 -> 30 W with pos.x +5 (min side fixed), green
+  20 -> 48 D, blue 20 -> 31 H, amber rot.z 45 (15° steps); body drag moved pos 5,0 -> 22,4; Undo x4 back to 20^3 at 0.
+  A turned shape shows only the turn dot (by design, `ShapeController.handles`).
+- Chamfer 2 mm: pyramid 18 -> 50 tris (with the box), wedge -> 82 tris; both render chamfered inside their 20 mm box.
+- One-finger orbit and two-finger pinch zoom via raw events (`sendevent` on the touchpanel, 16 units per px):
+  `pinch.sh 640 1000 200 560` zoomed in. A pinch starting at a 160 px span did nothing: Android's minimum scaling span
+  (`ScaleGestureDetector`), not an app bug.

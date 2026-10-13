@@ -42,19 +42,22 @@ target before cat fails (happened once to the re-linked preset; restored from th
 3. Merge: **main = r134 (db122a9, PR #8 from the work branch at 54f57c3, 2026-10-12)**, on the user's `/next-merge`.
    No merge offer pending; nothing on the branch beyond main. Untested parts that went in with r134 stay listed in
    items 0, 2 and 6.
-4. Shape builder untested still: pinch zoom (touch), pyramid/wedge chamfer renders, handles by touch.
+4. Shape builder by touch: **verified on the phone r134** (archive "Shape builder by touch on the phone"). Raw
+   multi-touch: `~/orca-android-tools/pinch.sh` / `drag1.sh` (push with `MSYS_NO_PATHCONV=1` and a `C:/` source path).
 5. **.scad zips: daf9aba, verified WSA r126** via the import picker and a real Thingiverse download (archive
    ".scad projects from zips"). **Open question for the user:** should a zip's STLs stay off the plate when its .scad
    is a Customizer design (Thingiverse ships pre-rendered variants; now they land on the plate next to the editor)?
    **Untested:** the nameless-download sniff -> .scad, "Open with" a zip from a file manager
    (root `am start` can't grant the storage provider URI: Permission Denial, shown as a clean error dialog), phone.
 6. **Ad blocking in the Models tab: f138655, verified WSA r127** (archive "Models tab ad blocking"). Always on, no
-   switch. **Untested:** phone, MakerWorld sign-in / downloads with it on (page loads fine).
+   switch. **Phone r134 verified** (Thingiverse home / search / thing page: only `ads.adthrive.com` +
+   `www3.doubleclick.net` requested, both answered empty; 0 visible ad elements). **Untested:** MakerWorld sign-in /
+   downloads with it on (page loads fine).
    **08bdf0b (user asked 2026-10-12): all app WebViews** now use `AdBlock.Client` (Models, Bambu sign-in, Device page,
    Orca Cloud login, plugin pages/config; overrides call super). **Verified WSA r128:** Device page loads, Models tab
    unchanged (sub-nav bridge + site header hidden), Plate 2 stayed deleted after restart. **Untested:** Bambu sign-in
    WebView (account is signed in; testing needs Sign out + the user's password, so leave it to the user), Orca Cloud
-   login, plugin pages, phone.
+   login, plugin pages, Device page on the phone.
 
 Done 2026-10-12 (archive): merges to r112 and r127, AI tools 1-4, settings tools, user reports, shape builder gaps +
 UI tests, preset re-link, nozzle match, my filament presets.
