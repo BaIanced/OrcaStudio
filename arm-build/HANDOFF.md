@@ -51,9 +51,18 @@ target before cat fails (happened once to the re-linked preset; restored from th
    AMS slot". **To test (phone, printer online, restore the plate after):** sync -> all slots Bambu presets (no Matte
    mix); pick a user preset for A1, sync again -> kept, A2/A3 unaffected; restart app, sync -> still kept; pick the
    sync's preset -> pick dropped. Spool change -> printer wins: only testable when the user swaps a spool.
+   **Phone r132 (2026-10-12 night): steps 1-4 pass** (sync: Basic/Matte/Matte/PETG, no mix; A1 pick kept by sync and
+   after restart + sync; picking the sync's preset -> `tray_picks` = {}). **Bug found:** restored session slots had no
+   `source` (3MF doesn't carry it), so a pick right after a restart wasn't remembered and the saved sources got wiped.
+   **Fix 976f605, build r133 (CI 38347596977), installed on the phone, untested:**
+   `selectPrinterNow` gives a project slot the saved `source` when it still holds the same preset at that index.
+   **To test r133:** after app start, pick a user preset for slot 2 -> `tray_picks` gets `<serial>/0/1`; sync -> kept.
+   Then pick the sync's presets back and **restore the plate to 1 slot "Bambu PLA Basic @BBL A1"** (user's state
+   before the test). Phone locked itself mid-test (keyguard; needs the user to unlock).
+   Picker tip: search field + `input text` brings up the keyboard; tap items by `phone-ui.py find` bounds (labels move).
 3. Merge: **main = r127 (5e2a483, PR #7 from `claude/merge-r127` at f138655, 2026-10-12)**, on the user's `/next-merge`.
    On the branch, not on main: 08bdf0b (all WebViews, partly untested, item 6), e4d75ab + a7e63d2 (element blocker,
-   item 0, verified r129/r131), 99264ee (tray picks, untested).
+   item 0, verified r129/r131), 99264ee + 976f605 (tray picks, r132 verified on the phone, r133 fix untested).
 4. Shape builder untested still: pinch zoom (touch), pyramid/wedge chamfer renders, handles by touch.
 5. **.scad zips: daf9aba, verified WSA r126** via the import picker and a real Thingiverse download (archive
    ".scad projects from zips"). **Open question for the user:** should a zip's STLs stay off the plate when its .scad
