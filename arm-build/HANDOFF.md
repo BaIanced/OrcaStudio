@@ -26,7 +26,15 @@ and memory `test-on-phone`. `phone-ui.py dump` needs `PYTHONIOENCODING=utf-8` on
 `adb exec-out "su -c '...'"` (plain `adb shell` mangles tar). **Never `cat missing > target`**: the redirect empties the
 target before cat fails (happened once to the re-linked preset; restored from the backup the same minute).
 
-0. **WebView element blocker + ad-block menu (wishlist side quest): e4d75ab, build r129 (CI 38341070641), untested.** Models tab three-dot menu: "Block ads" toggle (`AdBlock.setEnabled`, pref `adblock_enabled`, all WebViews; page reloads), "Block an element" (`AdBlock.PICKER_JS`: tap picks; right-click / long-press = `contextmenu` picks directly unless text is selected; bar with Smaller / Larger / Block / Cancel), "Blocked elements (n)" dialog (per-element X, Undo all). Rules: pref `adblock_rules` JSON site -> selectors, applied by `AdBlock.applyJs` in every `AdBlock.Client`. Hashed `Foo__bar--hash` classes match by prefix. **To test:** pick + block on Thingiverse, survives reload/restart, unblock one / all, toggle off shows ads again (and stops the picker), long-press on touch.
+0. **WebView element blocker + ad-block menu (wishlist side quest): e4d75ab, build r129 (CI 38341070641), untested.** Models tab three-dot menu: "Block ads" toggle (`AdBlock.setEnabled`, pref `adblock_enabled`, all WebViews; page reloads), "Block an element" (`AdBlock.PICKER_JS`: tap picks; right-click / long-press = `contextmenu` picks directly unless text is selected; bar with Smaller / Larger / Block / Cancel), "Blocked elements (n)" dialog (per-element X, Undo all). Rules: pref `adblock_rules` JSON site -> selectors, applied by `AdBlock.applyJs` in every `AdBlock.Client`. Hashed `Foo__bar--hash` classes match by prefix.
+   **Verified phone r129** (Thingiverse site banner): tap pick + Larger + Block hides it live, rule saved, survives an app
+   restart; X in the list and Undo all show it again live; Block ads off reloads with the banner back and greys out
+   "Block an element"; long-press on a non-text element picks it, on text keeps normal selection (Copy / Select all).
+   Test rules removed, blocking left on. Thingiverse keeps an empty strip where its banner was (site layout).
+   **Bug fixed in a7e63d2 (build r131, CI 38342763382), untested:** the bar's long hint pushed Cancel / Smaller off a
+   phone screen; now the label takes the leftover width (2 lines, ellipsized), hint shortened to "Tap what to hide".
+   **Untested:** right-click with a mouse (WSA), other WebViews applying rules (Device page etc.). Orca Cloud login
+   WebView (08bdf0b): phone is signed in to Orca Cloud, so testing needs a sign-out: leave to the user.
 
 1. Preset re-link: **verified on WSA and the phone** (archive "Preset re-link + nozzle / my filaments verified").
    **Untested:** a Bambu/Orca cloud sync afterwards (cloud copy still detached; same updated_time, so the pull
@@ -36,7 +44,7 @@ target before cat fails (happened once to the re-linked preset; restored from th
    preset from that system preset" fallback (`PresetController.myFilament`) put "MATTE BLK+ELEGOO WHITE MIXED" into
    both PLA Matte slots without any pick; ask whether that fallback should stay or only explicit picks count.
 3. Merge: **main = r127 (5e2a483, PR #7 from `claude/merge-r127` at f138655, 2026-10-12)**, on the user's `/next-merge`.
-   On the branch, not on main: 08bdf0b (all WebViews, partly untested, item 6), e4d75ab (element blocker, untested, item 0).
+   On the branch, not on main: 08bdf0b (all WebViews, partly untested, item 6), e4d75ab + a7e63d2 (element blocker, item 0: verified r129 except the a7e63d2 bar fix).
 4. Shape builder untested still: pinch zoom (touch), pyramid/wedge chamfer renders, handles by touch.
 5. **.scad zips: daf9aba, verified WSA r126** via the import picker and a real Thingiverse download (archive
    ".scad projects from zips"). **Open question for the user:** should a zip's STLs stay off the plate when its .scad
