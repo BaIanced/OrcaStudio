@@ -68,12 +68,11 @@ Batch items:
   already lies in the new spot (**untested**); its `keep_layout` import part verified WSA r154 (archive "keep_layout import verified").
 **Test on the phone first** (portrait + landscape), then Chromebook. Things to check: tooltips don't block taps; tool
 column scrolls in portrait; filmstrip vs Slice button with many plates; 20 plates in tabs/filmstrip; slider follows the finger.
-**Plate organisation (user 2026-10-13, after the pending items are done):**
-- Deleting an **empty** plate asks no confirmation.
-- Tabs / filmstrip: **long press an inactive plate** -> multi-select mode (ignores the active plate), pick e.g. 10 plates, delete.
-  If any picked plate has objects, a dialog says so. Upstream (checked `src-orca` PartPlate.cpp:4852 `PartPlateList::delete_plate`): the
-  plate goes, later plates shift back carrying their objects (`set_pos_and_size(..., true)`), the deleted plate's objects stay put (floating).
-- **Arrange** with objects floating off every plate: move the floaters onto the nearest plate.
+**Plate organisation (c315432 + 8d70911, r157): verified on WSA filmstrip** (archive "Plate organisation verified on WSA
+r156/r157"). **Untested:** tabs layout (delete Popup below the row), phone/Chromebook, undo of a group delete.
+**Ask the user:** our plate delete removes the plates' objects (upstream PartPlate.cpp:4852 leaves them floating; Arrange
+now picks floaters up): keep ours or switch? Chips layout has no picking (lab loser candidate). Minor, seen on WSA: the
+filmstrip's first plate is clipped a little at the left edge (pre-existing?).
 **Next after the user's picks (G2b, user 2026-10-13):** plate number labels and per-plate icons drawn in the 3D view
 around each plate (like Orca/Bambu: they turn with the camera), useful with many plates; then remove the lab.
 **Older leftovers:** items 0 and 6 mostly need the user (sign-ins) or a web-UI printer.
@@ -91,7 +90,7 @@ Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
    switching printer models. Filament picks per AMS tray: verified phone r134. **Untested:** spool change -> printer's
    preset wins and the pick is dropped (only when the user swaps a spool); WSA. Phone plate: 1 slot "Bambu PLA Basic @BBL A1".
 3. Merge: main = r143 (cc7abe4, PR #11 from `claude/merge-r143` at 4d55156, 2026-10-13, user's `/next-merge`). No merge offer pending.
-   Unmerged, untested (all after 4d55156): f7f4d57 (UI batch), fd71b33 (plates; import part verified WSA r154, add_plate floater skip untested), 6e45548 (plate row, sliders), a2d3148 (sizes, panel drag), 6e645cb + 9f9978a (filmstrip row), 31f6b58 (chips, verified phone), 49e4cdf (tabs numbers + switch rows verified phone; cutout), 0afd458 (rail insets), 4dac2f4 (rail cutout, verified phone), eac2d13 (arrange fix, verified WSA r154). 0d2bb7b (r149,
+   Unmerged, untested (all after 4d55156): f7f4d57 (UI batch), fd71b33 (plates; import part verified WSA r154, add_plate floater skip untested), 6e45548 (plate row, sliders), a2d3148 (sizes, panel drag), 6e645cb + 9f9978a (filmstrip row), 31f6b58 (chips, verified phone), 49e4cdf (tabs numbers + switch rows verified phone; cutout), 0afd458 (rail insets), 4dac2f4 (rail cutout, verified phone), eac2d13 (arrange fix, verified WSA r154), c315432 + 8d70911 (plate organisation, verified WSA r157). 0d2bb7b (r149,
    infinite scroll) is verified on WSA but sits after the untested commits (cherry-pick it if merged early).
    Untested parts already in main stay listed in items 0, 2, 5, 6.
 4. Shape builder by touch: verified phone r134. Raw multi-touch: `~/orca-android-tools/pinch.sh` / `drag1.sh`
@@ -109,7 +108,7 @@ Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
   (user, 2026-10-11): decide branch handling and next steps yourself. **Main merges / releases need
   the user.** Main = r143 (merged 2026-10-13, PR #11, on the user's `/next-merge`); user agreed to merge more
   often, at verified milestones: offer a merge PR when a batch is verified, merge only on their "merge".
-- Installed on WSA: r154 (2026-10-13); AI tools on; auto-save 60 s. Session = the backup above (3 plates, plate 3 active). Shape-builder
+- Installed on WSA: r157 (2026-10-13); AI tools on; auto-save 60 s. Session = the backup above (3 plates, plate 3 active). Shape-builder
   handles by touch untested (WSA has none). Real mouse drags (+Shift): `mdrag.ps1 x1 y1 x2 y2 [-Shift]`
   (Android coords = Windows pixels on WSA); the builder's shape list scrolls only with a real mouse wheel.
 - Draft of the open design: `files/openscad/draft.scad|json` (read with `adb exec-out "su -c 'cat ...'"`,

@@ -1588,3 +1588,23 @@ object lands off every plate, then it arranges. Test: session backup (3 plates),
 intent on `/sdcard/Download/swatch2.3mf` (2-plate 3MF, MediaStore id 1000460178). Result: Assembly + both beeper3.stl
 packed on plate 4, nothing beside the plates, no extra plate needed. Session backup restored afterwards (cmp same),
 app force-stopped.
+
+## Plate organisation verified on WSA r156/r157 (moved 2026-10-13)
+User's ask (2026-10-13): empty plate deletes without asking; long press an inactive plate in tabs / filmstrip -> pick
+several, delete (dialog only if one holds objects); Arrange moves floaters onto the nearest plate.
+- c315432: native `delete_plates(vector)` (OrcaScene.cpp, one undo step; `deletePlate` call takes `plates` or `plate`),
+  `Engine.deletePlates`, `SceneController.deletePlates` keeps the active plate (index minus deleted ones before it).
+  `PlateMenu`: empty plate (`scene.objectsOn`) deletes at once. `PlatePicks` + `plateClicks` (combinedClickable, haptic)
+  in `OverlayParts.kt`; `PlateRow` holds the picks (cleared when the plate count changes; active plate dropped; Back
+  clears). `OrcaEngine::arrange(plate)`: floaters (off every plate) go to the nearest plate by distance to its rectangle;
+  other plates get them via `arrange_plate(p, &floaters)` (their objects fixed), the arranged plate takes its own along.
+- 8d70911 (r157): r156 put "Delete n plates" + close in the add slot; the wider end shifted the plates under the finger
+  and a next tap hit Delete. Now the add slot (kept invisible, `clearAndSetSemantics`) is covered by a same-size close
+  button and the delete button floats in a `Popup` (custom `PopupPositionProvider`: above when the row aligns Bottom =
+  filmstrip, below otherwise), non-focusable so plate taps pass.
+- WSA tests (session backup, temp plates): empty plates deleted without a dialog; picked plates 1+2 -> "Some of the picked
+  plates hold objects" dialog, Cancel kept them; Back left picking; active plate kept after deletes; r157 popup tap deleted
+  plates 2+3, plates didn't shift on long press. Arrange: MCP `object_duplicate` x2 + `object_transform` (pos [330,128] on
+  plate 4, [-80,128] on plate 1) made 2 floaters; `plate_arrange {plate:4}` put one beside copy 1 on plate 1 (copy 1 stayed
+  at [128,128]) and one at plate 4's centre. MCP helper: PowerShell job POSTing to `http://127.0.0.1:8765/mcp` with the
+  `ai_token` pref as Bearer (never printed). Session backup restored (cmp same), app force-stopped.
