@@ -39,10 +39,9 @@ target before cat fails (happened once to the re-linked preset; restored from th
    **Filament picks per AMS tray (99264ee, 976f605, 54f57c3): verified on the phone r132 + r134** (archive, same entry
    as item 0; incl. a restart-bug fix). **Untested:** spool change -> printer's preset wins and the pick is dropped
    (only when the user swaps a spool); WSA. Phone has r134; plate restored to 1 slot "Bambu PLA Basic @BBL A1".
-3. Merge: **main = r127 (5e2a483, PR #7 from `claude/merge-r127` at f138655, 2026-10-12)**, on the user's `/next-merge`.
-   On the branch, not on main (all verified except where noted): 08bdf0b (all WebViews: Device page + Models verified
-   WSA r128; sign-in / plugin pages untested, item 6), e4d75ab + a7e63d2 (element blocker, r129/r131), 99264ee +
-   976f605 + 54f57c3 (tray picks, r134). Next merge = r134 (Android 54f57c3).
+3. Merge: **main = r134 (db122a9, PR #8 from the work branch at 54f57c3, 2026-10-12)**, on the user's `/next-merge`.
+   No merge offer pending; nothing on the branch beyond main. Untested parts that went in with r134 stay listed in
+   items 0, 2 and 6.
 4. Shape builder untested still: pinch zoom (touch), pyramid/wedge chamfer renders, handles by touch.
 5. **.scad zips: daf9aba, verified WSA r126** via the import picker and a real Thingiverse download (archive
    ".scad projects from zips"). **Open question for the user:** should a zip's STLs stay off the plate when its .scad
@@ -63,7 +62,7 @@ UI tests, preset re-link, nozzle match, my filament presets.
 ## State
 - Both repos work on branch `claude/handoff-continuation-rseql3` (the "test branch"). Autonomy
   (user, 2026-10-11): decide branch handling and next steps yourself. **Main merges / releases need
-  the user.** Main = r127 (merged 2026-10-12, PR #7, on the user's `/next-merge`); user agreed to merge more
+  the user.** Main = r134 (merged 2026-10-12, PR #8, on the user's `/next-merge`); user agreed to merge more
   often, at verified milestones: offer a merge PR when a batch is verified, merge only on their "merge".
 - Installed on WSA: r128 (2026-10-12 late); AI tools on; auto-save 60 s. Plate 1 empty, no Plate 2. Shape-builder
   handles by touch untested (WSA has none). Real mouse drags (+Shift): `mdrag.ps1 x1 y1 x2 y2 [-Shift]`
@@ -172,6 +171,6 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
 ## Repos
 | Repo | Notes |
 |---|---|
-| `BaIanced/OrcaStudio-Android` | cl1x/Orca-Android + signed Bambu printing via obn (static in `liborca_jni.so`, `android/obn`). main = r127 (PR #7). Bot branch `upstream/orca-main` (never commit). Builds run on dispatch only (`gh workflow run android-apk.yml --ref <branch>`). |
+| `BaIanced/OrcaStudio-Android` | cl1x/Orca-Android + signed Bambu printing via obn (static in `liborca_jni.so`, `android/obn`). main = r134 (PR #8). Bot branch `upstream/orca-main` (never commit). Builds run on dispatch only (`gh workflow run android-apk.yml --ref <branch>`). |
 | `BaIanced/OrcaStudio` | Flatpak fork; ours: `arm-build/`, `.github/workflows/arm-*.yml`. Latest release r9 (MakerLab tab). Details in the archive. |
 | `ClusterM/open-bamboo-networking` | obn pinned v2.2.0 + local patches 0001 (cloud callbacks), 0002 (start_print try LAN first), 0003 (MQTT CA from `SSL_CERT_FILE`). |
