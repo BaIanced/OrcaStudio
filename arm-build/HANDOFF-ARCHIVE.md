@@ -1413,3 +1413,20 @@ shaded, `plate_describe` live; details in the archive "AI tools milestone 3").
   folder tree under `cache/models/scadzip-test_files/`, Customizer found `width`, preview 30 x 40 x 10 mm, 116
   triangles (box + hole + peg), temp Plate 2 stayed empty; plate, zip deleted after.
 - Note: ScadDeps packs only included .scad text into a plate object, not import() data files (pre-existing).
+
+## Thingiverse .scad download (verified 2026-10-12, WSA r126)
+- "Customizable Card Box" (thing with the Customizer badge), Download all files: the zip arrives nameless
+  (`cache/downloads/<uuid>.zip`, copied to `cache/models/`), unpacked to `<uuid>_files/` (files/, images/, README,
+  LICENSE); the editor opened `Customizable_Card_Box.scad` (Customizer 31 params, preview 68.6 x 68.1 x 96.8 mm,
+  18,974 triangles in 1.1 s); its 4 pre-rendered STLs (not referenced by the .scad) went on the plate next to the editor.
+  Same flow re-checked on r127 with ad blocking on. Test plates and files deleted.
+
+## Models tab ad blocking (f138655, verified 2026-10-12, WSA r127)
+- User asked to block Thingiverse ads. Thingiverse runs Raptive (AdThrive) plus ~40 header-bidding hosts (found
+  via CDP `performance.getEntriesByType('resource')`). `net/AdBlock.kt`: `shouldInterceptRequest` in
+  `ModelsScreen.kt` returns an empty response for those hosts (parent-domain match); `HIDE_JS` (onPageStarted +
+  onPageFinished) adds a `#orca-adblock` style hiding `[class*="AdCard__adCard--"]`, `AdBanner__adBanner--`,
+  `Ad__ad--`, `.adthrive-ad`, `.adthrive-comscore`, kargo, `.tv-ad-free-cta`, adsbygoogle / GPT slots.
+- Verified r127: only `ads.adthrive.com` is requested (answered empty), no bidders load; home, search and thing
+  pages show no ad elements (the one visible iframe on the thing page is its own YouTube embed); Download all
+  files still opens the .scad; MakerWorld home and Printables home load normally.

@@ -40,17 +40,18 @@ installed on WSA too. Back on the phone when the user says so / it shows in `adb
      `AppSettings.myFilaments` (system -> user preset; set by picking / saving, cleared by picking the system one),
      applied after sync and for a new printer's default slot. **Untested** (needs the printer online and the
      preset re-link, else sync only finds generic filaments).
-3. Merge: main = r112 (6f8560c, Android PR #6, 2026-10-12). Left on the branch: 46a694e (nozzle match) and
-   121765c (my filaments), both untested, d87dcdb + cd4177c (.scad Save/Open, verified r124/r125); on top of the first two, verified: b7d6de2 (milestone 4, WSA r115) and the
-   settings tools (WSA r117/r118); then 8334d43 + 80c8d0f (verified r120), 4f4697e + bc021f4 (verified r123), daf9aba (.scad zips, verified r126). Next merge
-   once item 2's untested parts pass. User asked on `/next-merge` 2026-10-12 and chose **wait** (no split, no
-   merge-as-is); OrcaStudio repo only has handoff commits ahead of main (no merge needed).
+3. Merge: main = r112 (6f8560c, PR #6). On the branch: 46a694e + 121765c (item 2, **untested**), then verified
+   b7d6de2, settings tools, 8334d43, 80c8d0f, 4f4697e, bc021f4, d87dcdb, cd4177c, daf9aba, f138655 (r115-r127).
+   Merge once item 2 passes; user chose **wait** on 2026-10-12 (no split, no merge-as-is).
 4. Shape builder untested still: pinch zoom (touch), pyramid/wedge chamfer renders, handles by touch.
-5. **.scad zips: daf9aba, verified WSA r126 via the import picker** (archive ".scad projects from zips").
-   **Untested:** a real Models-tab download (Thingiverse customizer thing = **next on WSA**, also covers the open
-   "Thingiverse downloads" item), the nameless-download sniff -> .scad, "Open with" a zip from a file manager
-   (root `am start` can't grant the storage provider URI: Permission Denial, shown as a clean error dialog), a .scad
-   zip with unreferenced STLs (they should go on the plate next to the editor), phone.
+5. **.scad zips: daf9aba, verified WSA r126** via the import picker and a real Thingiverse download (archive
+   ".scad projects from zips"). **Open question for the user:** should a zip's STLs stay off the plate when its .scad
+   is a Customizer design (Thingiverse ships pre-rendered variants; now they land on the plate next to the editor)?
+   **Untested:** the nameless-download sniff -> .scad, "Open with" a zip from a file manager
+   (root `am start` can't grant the storage provider URI: Permission Denial, shown as a clean error dialog), phone.
+6. **Ad blocking in the Models tab: f138655, verified WSA r127** (archive "Models tab ad blocking"). Always on, no
+   switch. **Untested:** phone, MakerWorld sign-in / downloads with it on (page loads fine). Session: Plate 2 test
+   plate deleted, app closed via window close; check Plate 2 doesn't come back on the next start.
 
 Done 2026-10-12 (archive): merge to r112, AI tools 1-4, settings tools, user reports, shape builder gaps + UI tests.
 
@@ -59,7 +60,7 @@ Done 2026-10-12 (archive): merge to r112, AI tools 1-4, settings tools, user rep
   (user, 2026-10-11): decide branch handling and next steps yourself. **Main merges / releases need
   the user.** Main = r112 (merged 2026-10-12, PR #6, on the user's `/next-merge`); user agreed to merge more
   often, at verified milestones: offer a merge PR when a batch is verified, merge only on their "merge".
-- Installed on WSA: r126 (2026-10-12 late); AI tools on; auto-save 60 s. Plate 1 empty, no Plate 2. Shape-builder
+- Installed on WSA: r127 (2026-10-12 late); AI tools on; auto-save 60 s. Plate 1 empty, no Plate 2. Shape-builder
   handles by touch untested (WSA has none). Real mouse drags (+Shift): `mdrag.ps1 x1 y1 x2 y2 [-Shift]`
   (Android coords = Windows pixels on WSA); the builder's shape list scrolls only with a real mouse wheel.
 - Draft of the open design: `files/openscad/draft.scad|json` (read with `adb exec-out "su -c 'cat ...'"`,
@@ -84,7 +85,7 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
 - Section view: travels/markers not clipped, picking ignores the cut.
 - OpenSCAD untested: phone layout, a real .scad download (Next task 5),
   painting through a mesh boolean.
-- Models tab untested: MakerWorld sign-in ticket flow, Thingiverse downloads.
+- Models tab untested: MakerWorld sign-in ticket flow. (Thingiverse download verified r126.)
 - REA MCP (github.com/morluto/rea), looked at 2026-10-12, not installed (needs the user's OK; changes MCP config):
   fits release APK / `liborca_jni.so` inspection and HAR traces of the MakerWorld / Thingiverse flows only.
 - Wishlist later: filament colour mixing (upstream `FilamentMixer.cpp`). Not wanted: iOS port.
