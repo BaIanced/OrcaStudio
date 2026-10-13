@@ -103,7 +103,8 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
 - The app restores `files/session/session.3mf` on start and saves it in `onStop` (and by auto-save
   every 60 s when changed). `am force-stop` skips the onStop save. Closing the WSA window
   (`CloseMainWindow()` on the "OrcaStudio-Android" window) ran onStop on 2026-10-11/12.
-- Test on a temp Plate 2 and delete it after; don't change the user's Plate 1. When deleting
+- Test on a temp Plate 2 and delete it after; don't change the user's Plate 1. Exception (user, 2026-10-12): the
+  phone's Plate 1 objects and its shape-builder draft were only test objects, so they can be changed. When deleting
   objects by list position, verify the selection first.
 - WSA stops drawing when its window isn't in front (taps lost, empty ui dump): focus it first
   (`wheel.ps1:17` trick / `tapf.sh`). WSA wedged (no window): stop WsaClient,
