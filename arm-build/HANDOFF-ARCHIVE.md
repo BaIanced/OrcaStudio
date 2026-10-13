@@ -1430,3 +1430,20 @@ shaded, `plate_describe` live; details in the archive "AI tools milestone 3").
 - Verified r127: only `ads.adthrive.com` is requested (answered empty), no bidders load; home, search and thing
   pages show no ad elements (the one visible iframe on the thing page is its own YouTube embed); Download all
   files still opens the .scad; MakerWorld home and Printables home load normally.
+
+## Preset re-link + nozzle / my filaments verified (moved from HANDOFF.md on 2026-10-12)
+- Preset re-link: "Bambu Lab A1 0.4 nozzle -No cut No vibe" was detached (`machine/base/`, `"inherits": ""`), so only
+  generic process / filaments were compatible. Fix (user OK'd): `inherits` -> "Bambu Lab A1 0.4 nozzle", `.info`
+  `base_id` = the sibling linked preset's (system A1 id GM030), both files moved to `machine/`, `base/` removed
+  (`cat >` over the old file keeps owner/SELinux, then `mv`). Backups: `~\orca-android-tools\preset-backup-2026-10-12`
+  (WSA) and `...-phone` (phone, `machine.tar` + extracted). Verified WSA (listed, selectable, Bambu PLA, "0.20mm Standard
+  @BBL A1", G-code keys identical) and phone r114 (listed with "0.20mm Standard @BBL A1" + Bambu PLA Basic).
+- Match the installed nozzle, phone r114, printer online: More shows "Bambu Lab A1: 0.4 mm"; printer picker vendor
+  presets 1 (A1 0.4) with the switch on, 4 (0.2/0.4/0.6/0.8) off; selecting A1 0.2 with the switch on shows "The printer
+  reports a 0.4 mm nozzle; this preset is for another size." + "Use Bambu Lab A1 0.4 nozzle" (works).
+- Use my filament presets, phone r114: picking "_BambuCalibrated PLA Basic @BBL A1 (Sunflower Yellow)" in slot 1 saved
+  `my_filaments` {"Bambu PLA Basic @BBL A1": that}; "Sync filaments from printer" kept it in slot 1; picking the system
+  preset cleared the map to {}. The one-user-preset fallback filled both PLA Matte slots with the user's only Matte-based
+  preset. Switching printer presets runs an AMS sync (plate went 1 -> 4 slots); the plate was restored to 1 slot
+  (Bambu PLA Basic, printer "-No cut No vibe", 0.20mm Standard) after the test.
+- Merge: Android main = r127 (PR #7, merge commit 5e2a483, branch `claude/merge-r127` at f138655).
