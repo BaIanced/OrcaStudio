@@ -41,7 +41,7 @@ installed on WSA too. Back on the phone when the user says so / it shows in `adb
      applied after sync and for a new printer's default slot. **Untested** (needs the printer online and the
      preset re-link, else sync only finds generic filaments).
 3. Merge: main = r112 (6f8560c, PR #6). On the branch: 46a694e + 121765c (item 2, **untested**), then verified
-   b7d6de2, settings tools, 8334d43, 80c8d0f, 4f4697e, bc021f4, d87dcdb, cd4177c, daf9aba, f138655 (r115-r127).
+   b7d6de2, settings tools, 8334d43, 80c8d0f, 4f4697e, bc021f4, d87dcdb, cd4177c, daf9aba, f138655 (r115-r127); 08bdf0b (all WebViews, untested).
    Merge once item 2 passes; user chose **wait** on 2026-10-12 (no split, no merge-as-is).
 4. Shape builder untested still: pinch zoom (touch), pyramid/wedge chamfer renders, handles by touch.
 5. **.scad zips: daf9aba, verified WSA r126** via the import picker and a real Thingiverse download (archive
@@ -50,8 +50,12 @@ installed on WSA too. Back on the phone when the user says so / it shows in `adb
    **Untested:** the nameless-download sniff -> .scad, "Open with" a zip from a file manager
    (root `am start` can't grant the storage provider URI: Permission Denial, shown as a clean error dialog), phone.
 6. **Ad blocking in the Models tab: f138655, verified WSA r127** (archive "Models tab ad blocking"). Always on, no
-   switch. **Untested:** phone, MakerWorld sign-in / downloads with it on (page loads fine). Session: Plate 2 test
-   plate deleted, app closed via window close; check Plate 2 doesn't come back on the next start.
+   switch. **Untested:** phone, MakerWorld sign-in / downloads with it on (page loads fine).
+   **08bdf0b (user asked 2026-10-12): all app WebViews** now use `AdBlock.Client` (Models, Bambu sign-in, Device page,
+   Orca Cloud login, plugin pages/config; overrides call super). **Verified WSA r128:** Device page loads, Models tab
+   unchanged (sub-nav bridge + site header hidden), Plate 2 stayed deleted after restart. **Untested:** Bambu sign-in
+   WebView (account is signed in; testing needs Sign out + the user's password, so leave it to the user), Orca Cloud
+   login, plugin pages, phone.
 
 Done 2026-10-12 (archive): merge to r112, AI tools 1-4, settings tools, user reports, shape builder gaps + UI tests.
 
@@ -60,7 +64,7 @@ Done 2026-10-12 (archive): merge to r112, AI tools 1-4, settings tools, user rep
   (user, 2026-10-11): decide branch handling and next steps yourself. **Main merges / releases need
   the user.** Main = r112 (merged 2026-10-12, PR #6, on the user's `/next-merge`); user agreed to merge more
   often, at verified milestones: offer a merge PR when a batch is verified, merge only on their "merge".
-- Installed on WSA: r127 (2026-10-12 late); AI tools on; auto-save 60 s. Plate 1 empty, no Plate 2. Shape-builder
+- Installed on WSA: r128 (2026-10-12 late); AI tools on; auto-save 60 s. Plate 1 empty, no Plate 2. Shape-builder
   handles by touch untested (WSA has none). Real mouse drags (+Shift): `mdrag.ps1 x1 y1 x2 y2 [-Shift]`
   (Android coords = Windows pixels on WSA); the builder's shape list scrolls only with a real mouse wheel.
 - Draft of the open design: `files/openscad/draft.scad|json` (read with `adb exec-out "su -c 'cat ...'"`,
