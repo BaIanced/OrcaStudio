@@ -26,18 +26,16 @@ checks (user wants the app there). Chromebook: `<chromebook-ip>:5555` (memory `t
 The system file picker is a ChromeOS dialog (adb can't drive it); open files with a VIEW intent on the MediaStore URI
 (`content query --uri content://media/external/file --where "_display_name='x'"` -> `-d content://media/external/file/<id>
 -t application/zip --grant-read-uri-permission`), which works without root.
-**Big-screen pass done** (r138 + r140 "Wide screens" 5410405, verified Chromebook 2026-10-13; archive "Big-screen
-pass"). Chromebook has r140. r140 merged to main (PR #10, 2026-10-13).
-**UI refinement batch (user feedback 2026-10-13).** r144 = f7f4d57 (run 38382691511). r145 (6e45548) cancelled. r146 = a2d3148 (run 38385668787) installed on WSA. r147 = 6e645cb (run 38387270397, on WSA):
-filmstrip + Slice button in one bottom row (column layout) instead of a fixed 190 dp gap; still a sliver of one thumbnail
-at a ~330 dp canvas. **r148** = 9f9978a (run 38388490237, installed on WSA): under 360 dp beside the column the strip
-gets its own row above Slice: verified WSA (panel widened, 5 plates, scrolls to active, + pinned). WSA now has 3 plates
-(plates 2-3 not mine: the user's?). **r149** = 0d2bb7b (run 38407026995, installed on WSA): Models tab infinite scroll (`MORE_JS` in ModelsScreen.kt,
-menu switch "Infinite scroll", pref `models_infinite_scroll`, default on): verified WSA (archive "UI batch WSA checks");
-untested on the phone. WSA's Recent files has AllPoses.3mf (could test fd71b33 there, but opening it replaces the WSA
-project: ask first). **Next: the phone** (r148; portrait + landscape, everything in the batch list below). WSA r144/r146
-checks passed (archive "UI batch WSA checks"). Native fd71b33 still
-untested (needs a multi-plate 3MF, e.g. the user's AllPoses.3mf on the phone). a2d3148 (user 2026-10-13): lab sliders for text size,
+Big-screen pass verified + merged (r140, PR #10). UI batch builds r144-r152 details: archive "UI batch builds r144-r152".
+Verified: r148 filmstrip row (WSA), r149 Models infinite scroll (WSA; **untested on the phone**), phone pass r150 (portrait
+tooltips / tool column / tabs / filmstrip / chips / fullscreen; landscape immersive), r151 number tabs + whole-row switches,
+r152 rail 80 dp, **r153 rail skips the camera cutout (4dac2f4, verified by the user on the phone 2026-10-13)**.
+Plate label default is off (`plateLabel = false`). Phone has plates 1-8 (user's), lab Tabs. The user drives sessions
+from the phone: don't take the phone over without asking. WSA phone view (`phone-view.sh`) was back-burnered by the user.
+Import/arrange fix eac2d13 **verified on WSA r154** (import onto a filled plate, Duplicate, Arrange; archive "Import/arrange
+fix verified on WSA r154"). WSA session backup stays in `/data/local/tmp/session-backup.{3mf,json}` (restored).
+**Next:** the rest of the batch list below (mostly phone checks: ask the user before taking the phone over). WSA r144/r146 checks passed (archive "UI batch WSA
+checks"). fd71b33's keep_layout path (single placed file onto an *empty* plate wider than a bed) still untested; a2d3148 (user 2026-10-13): lab sliders for text size,
 interface size (root `LocalDensity` override in `AppScaffold`) and floating controls (overlay density, Prepare + Preview),
 applied on release; wide settings panel edge drags to resize (`lab.panelWidth`, min 300 dp; let go < 200 dp = tuck; tap
 toggles; keep this when removing the lab); tool column up/down arrows (`ScrollCue`, 28x18 dp, tap scrolls). User said some
@@ -66,12 +64,18 @@ Batch items:
   plate's centre; editor resizable (`DragHandle`, portrait = split with the canvas above); slider drag = previews after
   40 ms with `$fn = 16` appended (draft, "Draft while dragging" chip), full render on release (`ScadController.endDrag`).
 - Native: `add_plate` moves the object nearest to the new plate from outside every plate onto it (user's bug: 9-object
-  import, floaters stayed beside the grid). **fd71b33** (pushed, compiled locally, not in a CI build yet, untested):
+  import, floaters stayed beside the grid). **fd71b33** (in r153; import part replaced by eac2d13 above, keep_layout path untested):
   add_plate skips that when a floater already lies in the new spot; likely import cause fixed: `load_models` keeps
   a single placed file's layout (`keep_layout`) centred on one plate, so a layout wider than a bed (e.g. multi-plate
   3MF imported as models) floated; now it arranges instead when any object lands off every plate (spills to new plates).
 **Test on the phone first** (portrait + landscape), then Chromebook. Things to check: tooltips don't block taps; tool
 column scrolls in portrait; filmstrip vs Slice button with many plates; 20 plates in tabs/filmstrip; slider follows the finger.
+**Plate organisation (user 2026-10-13, after the pending items are done):**
+- Deleting an **empty** plate asks no confirmation.
+- Tabs / filmstrip: **long press an inactive plate** -> multi-select mode (ignores the active plate), pick e.g. 10 plates, delete.
+  If any picked plate has objects, a dialog says so. Upstream (checked `src-orca` PartPlate.cpp:4852 `PartPlateList::delete_plate`): the
+  plate goes, later plates shift back carrying their objects (`set_pos_and_size(..., true)`), the deleted plate's objects stay put (floating).
+- **Arrange** with objects floating off every plate: move the floaters onto the nearest plate.
 **Next after the user's picks (G2b, user 2026-10-13):** plate number labels and per-plate icons drawn in the 3D view
 around each plate (like Orca/Bambu: they turn with the camera), useful with many plates; then remove the lab.
 **Older leftovers:** items 0 and 6 mostly need the user (sign-ins) or a web-UI printer.
@@ -89,7 +93,7 @@ Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
    switching printer models. Filament picks per AMS tray: verified phone r134. **Untested:** spool change -> printer's
    preset wins and the pick is dropped (only when the user swaps a spool); WSA. Phone plate: 1 slot "Bambu PLA Basic @BBL A1".
 3. Merge: main = r140 (8fe2c9b, PR #10, 2026-10-13, user's `/next-merge`). Unmerged, verified: ec86442 (r142), 4d55156 (r143) -> merge candidate.
-   Unmerged, untested: f7f4d57 (UI batch), fd71b33 (plates), 6e45548 (plate row, sliders), a2d3148 (sizes, panel drag), 6e645cb + 9f9978a (filmstrip row); a merge before they are verified must stop at 4d55156. 0d2bb7b (r149,
+   Unmerged, untested: f7f4d57 (UI batch), fd71b33 (plates), 6e45548 (plate row, sliders), a2d3148 (sizes, panel drag), 6e645cb + 9f9978a (filmstrip row), 31f6b58 (chips, verified phone), 49e4cdf (tabs numbers + switch rows verified phone; cutout), 0afd458 (rail insets), 4dac2f4 (rail cutout, verified phone), eac2d13 (arrange fix, verified WSA r154); a merge before they are verified must stop at 4d55156. 0d2bb7b (r149,
    infinite scroll) is verified on WSA but sits after the untested commits (cherry-pick it if merged early).
    Untested parts already in main stay listed in items 0, 2, 5, 6.
 4. Shape builder by touch: verified phone r134. Raw multi-touch: `~/orca-android-tools/pinch.sh` / `drag1.sh`
@@ -107,7 +111,7 @@ Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
   (user, 2026-10-11): decide branch handling and next steps yourself. **Main merges / releases need
   the user.** Main = r140 (merged 2026-10-13, PR #10, on the user's `/next-merge`); user agreed to merge more
   often, at verified milestones: offer a merge PR when a batch is verified, merge only on their "merge".
-- Installed on WSA: r149 (2026-10-13); AI tools on; auto-save 60 s. Plate 1 empty, no Plate 2. Shape-builder
+- Installed on WSA: r154 (2026-10-13); AI tools on; auto-save 60 s. Session = the backup above (3 plates, plate 3 active). Shape-builder
   handles by touch untested (WSA has none). Real mouse drags (+Shift): `mdrag.ps1 x1 y1 x2 y2 [-Shift]`
   (Android coords = Windows pixels on WSA); the builder's shape list scrolls only with a real mouse wheel.
 - Draft of the open design: `files/openscad/draft.scad|json` (read with `adb exec-out "su -c 'cat ...'"`,
@@ -203,6 +207,10 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
 - WSA adb `127.0.0.1:58526` (root via `su -c '...'`, Android 13 / API 33; `run-as` fails, release build); an Android TV box is also attached, so always
   pass `-s`. WSA stops drawing the app when its window isn't in front (taps are lost, ui dump empty): focus it with
   the Alt + SetForegroundWindow trick from `wheel.ps1:17`.
+- **Phone view on WSA: back-burnered** (user, 2026-10-13: "didn't look right on my end"; test phone layouts on the
+  phone, WSA in its normal window as before). Kept for reference: `sh ~/orca-android-tools/phone-view.sh`
+  (launches + `am task resize` to 412x720 dp portrait, sw412 "nrml port"); `... land` = 720x412. WSA display is
+  1280x720 px at 160 dpi, so 720 dp is the max height (a real phone is ~900 dp). Task ID changes per launch (script finds it).
 - `~\orca-android-tools`: `install-build.ps1 -Run <id>` (WSA default), `ui.ps1 [-Shot png]`,
   `step.ps1`, `wheel.ps1` (real mouse wheel / drags), `drag.ps1`, `reinstall-with-data.ps1`.
 - Debug logs / Models WebView CDP: archive "Logs and CDP (moved 2026-10-12)".

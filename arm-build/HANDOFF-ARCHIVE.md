@@ -1546,3 +1546,38 @@ shaded, `plate_describe` live; details in the archive "AI tools milestone 3").
   with no pager, so the script stays out. CDP: `setprop log.tag.OrcaWeb DEBUG` + restart, forward
   `localabstract:webview_devtools_remote_<pid>` (from `/proc/net/unix`), Node 24 has a built-in WebSocket
   (`cdp.mjs` = Runtime.evaluate on the first page target).
+
+## UI batch builds r144-r152 (moved from HANDOFF.md on 2026-10-13)
+**Big-screen pass done** (r138 + r140 "Wide screens" 5410405, verified Chromebook 2026-10-13; archive "Big-screen
+pass"). Chromebook has r140. r140 merged to main (PR #10, 2026-10-13).
+**UI refinement batch (user feedback 2026-10-13).** r144 = f7f4d57 (run 38382691511). r145 (6e45548) cancelled. r146 = a2d3148 (run 38385668787) installed on WSA. r147 = 6e645cb (run 38387270397, on WSA):
+filmstrip + Slice button in one bottom row (column layout) instead of a fixed 190 dp gap; still a sliver of one thumbnail
+at a ~330 dp canvas. **r148** = 9f9978a (run 38388490237, installed on WSA): under 360 dp beside the column the strip
+gets its own row above Slice: verified WSA (panel widened, 5 plates, scrolls to active, + pinned). WSA now has 3 plates
+(plates 2-3 not mine: the user's?). **r149** = 0d2bb7b (run 38407026995, installed on WSA): Models tab infinite scroll (`MORE_JS` in ModelsScreen.kt,
+menu switch "Infinite scroll", pref `models_infinite_scroll`, default on): verified WSA (archive "UI batch WSA checks");
+untested on the phone. WSA's Recent files has AllPoses.3mf (could test fd71b33 there, but opening it replaces the WSA
+project: ask first). **Phone pass 2026-10-13 (r150 = 31f6b58, run 38459048183, on the phone):** verified portrait: tooltip
+shows on long press and the next tap still works; tool column fits; tabs / filmstrip (own row above Slice, scrolls to
+active, + pinned) / chips (31f6b58 fix: scrolls to the new plate, + pinned, bar colour); fullscreen in portrait hides the
+bars (leaves the cutout strip: `safeDrawingPadding`); landscape immersive with rail + canvas + panel. Phone restored: lab
+Tabs, fullscreen off, my plate 9 deleted (plates 1-8 were there). Phone auto-rotate restored. Plate label default is off (`plateLabel = false`).
+**r151 = 49e4cdf (run 38461067340, untested; user asks 2026-10-13):** plate tabs show only numbers; landscape drops the
+cutout padding (rail moves into the camera strip, content pads its End side; check the camera hole vs the rail's
+Models icon, hole at y 597-675 px on the left in rotation 1); whole SwitchRow toggles. On the phone: number tabs and
+row toggle verified; the rail still kept the strip (its own default insets) -> **0afd458** (r152, run 38462258290,
+on the phone: rail is 80 dp now, canvas gained the 47 dp strip). User 2026-10-13: the Models **icon runs into the camera hole**
+(label visible) -> **r153 = 4dac2f4** (run 38465859177, untested): `CutoutAwareColumn` (AppScaffold.kt) stacks rail items and
+moves any item overlapping a cutout rect below it (hole y 597-675 px, x 0-141 px in rotation 1; phone 1272x2772, density 476).
+Check on the phone in landscape both rotations.
+
+## Import/arrange fix verified on WSA r154 (moved 2026-10-13)
+Bug (WSA r153): Recent files > AllPoses.3mf (8 poses on plate 3), then VIEW intent on `/sdcard/Download/swatch2.3mf`
+(2 plates, 3 beeper-sized objects; MediaStore id 1000460178) into the filled plate 3 -> both beeper3.stl floated right of
+plate 3; Duplicate on a filled plate put the copy half off the bottom edge. Cause: libnest2d `finalAlign`
+(src-orca nfpplacer.hpp:1069) shifts new items by the centre of the whole pile *including fixed objects*.
+Fix **eac2d13**: `params.do_final_align = fixed.empty()` in `arrange_plate` (like upstream FillBedJob). r154 = run 38470262650.
+Retest WSA r154: both beepers landed on plate 3 beside the poses, Assembly on new plate 4 (nothing off the plates);
+Duplicate of a beeper on filled plate 3 put the copy left of the poses, on the bed, no overlap; Arrange still packs and
+centres the plate. WSA session backup (`/data/local/tmp/session-backup.{3mf,json}`) restored afterwards (cmp same).
+Gotcha: tapping the tool column's "Scroll up" cue after it reached the top hits Undo (cue sits at the Undo button's edge).
