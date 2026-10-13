@@ -26,11 +26,61 @@ checks (user wants the app there). Chromebook: `<chromebook-ip>:5555` (memory `t
 The system file picker is a ChromeOS dialog (adb can't drive it); open files with a VIEW intent on the MediaStore URI
 (`content query --uri content://media/external/file --where "_display_name='x'"` -> `-d content://media/external/file/<id>
 -t application/zip --grant-read-uri-permission`), which works without root.
-**Big-screen pass done** (r138 + r140 "Wide screens" 5410405, verified Chromebook 2026-10-13; archive "Big-screen
-pass"). Chromebook has r140. r140 merged to main (PR #10, 2026-10-13).
-**Next: the phone leftovers in items 0, 5, 6** (install r140 on the phone first).
+Big-screen pass verified + merged (r140, PR #10). UI batch builds r144-r152 details: archive "UI batch builds r144-r152".
+Verified: r148 filmstrip row (WSA), r149 Models infinite scroll (WSA; **untested on the phone**), phone pass r150 (portrait
+tooltips / tool column / tabs / filmstrip / chips / fullscreen; landscape immersive), r151 number tabs + whole-row switches,
+r152 rail 80 dp, **r153 rail skips the camera cutout (4dac2f4, verified by the user on the phone 2026-10-13)**.
+Plate label default is off (`plateLabel = false`). Phone has plates 1-8 (user's), lab Tabs. The user drives sessions
+from the phone: don't take the phone over without asking. WSA phone view (`phone-view.sh`) was back-burnered by the user.
+Import/arrange fix eac2d13 **verified on WSA r154** (import onto a filled plate, Duplicate, Arrange; archive "Import/arrange
+fix verified on WSA r154"). WSA session backup stays in `/data/local/tmp/session-backup.{3mf,json}` (restored).
+**Next:** the rest of the batch list below (mostly phone checks: ask the user before taking the phone over). WSA r144/r146 checks passed (archive "UI batch WSA
+checks"). fd71b33's keep_layout path (single placed file onto an *empty* plate wider than a bed) still untested; a2d3148 (user 2026-10-13): lab sliders for text size,
+interface size (root `LocalDensity` override in `AppScaffold`) and floating controls (overlay density, Prepare + Preview),
+applied on release; wide settings panel edge drags to resize (`lab.panelWidth`, min 300 dp; let go < 200 dp = tuck; tap
+toggles; keep this when removing the lab); tool column up/down arrows (`ScrollCue`, 28x18 dp, tap scrolls). User said some
+text and the floating icons look huge.
+Ghost on plate overlaps what is already there and is small at plate zoom: mention to the user. **Still untested:** everything on the phone (portrait,
+tool column/fullscreen in portrait, landscape immersive), Chromebook, chips switcher, opacity slider, 20 plates,
+tooltip look (vanished before the screenshot), default-plate-type pinning, native fixes. Lab now = filmstrip + label
++ ghost on WSA. Editor width resets after leaving Prepare (minor). Fixes from WSA in **6e45548** (untested):
+tabs/filmstrip + was scrolling out of view (now pinned, row scrolls to the active plate); builder slider thumb/number
+froze during a drag (`ScadState.value` now reads the design dims; `refreshParams(300)` debounce lagged).
+Batch items:
+- User couldn't pick between mockups (https://claude.ai/artifact/E3MtY8rQ1dMGHhibY2oNCX), so variants are switchable in
+  **More > Layout lab (temporary)** (`core/LayoutLab.kt`, prefs `layout_lab`): plate switcher tabs (default) /
+  filmstrip / chips, "Plate n of m" label, control opacity slider (`LocalOverlayAlpha`), portrait tool column (default
+  on: undo/redo/view at its top), fullscreen in portrait, OpenSCAD view canvas (default) / ghost. Once the user picks,
+  delete the losers and the lab. Wide panel tuck state is in the lab struct too (keep it when removing the lab).
+- More order: Layout lab, Recent files (desktop rows, open), Calibration, Printers & presets (open), then collapsed AI
+  tools, Orca Cloud, Backup, Appearance, Misc, About. Profile updates: auto check once a day (`lastProfileCheck`) ->
+  `UpdatesChip` in the Prepare top bar (tap installs).
+- "High Temp Plate" -> "Smooth PEI Plate" (`Translator.plate`, English only); picking a plate type makes it the default
+  (`PresetController.rememberBedType`; other plates that followed the old default get it pinned).
+- Tooltips (`Tip`, M3 TooltipBox: long press / hover) on tool + top-bar icons; auto-orient icon = arrow + tilted square;
+  filaments collapsible (`CollapsibleTitle`); File button top right; landscape always immersive (`Immersive` in MainActivity).
+- Double tap on an inactive plate (empty spot) focuses it (`PlateRenderer.plateAt`, `PlateListener.onPlateDoubleTap`).
+- OpenSCAD: preview on the main canvas (shape designs always) or ghost (type 98 mesh, translucent pass) on the active
+  plate's centre; editor resizable (`DragHandle`, portrait = split with the canvas above); slider drag = previews after
+  40 ms with `$fn = 16` appended (draft, "Draft while dragging" chip), full render on release (`ScadController.endDrag`).
+- Native: `add_plate` moves the object nearest to the new plate from outside every plate onto it (user's bug: 9-object
+  import, floaters stayed beside the grid). **fd71b33** (in r153; import part replaced by eac2d13 above, keep_layout path untested):
+  add_plate skips that when a floater already lies in the new spot; likely import cause fixed: `load_models` keeps
+  a single placed file's layout (`keep_layout`) centred on one plate, so a layout wider than a bed (e.g. multi-plate
+  3MF imported as models) floated; now it arranges instead when any object lands off every plate (spills to new plates).
+**Test on the phone first** (portrait + landscape), then Chromebook. Things to check: tooltips don't block taps; tool
+column scrolls in portrait; filmstrip vs Slice button with many plates; 20 plates in tabs/filmstrip; slider follows the finger.
+**Plate organisation (user 2026-10-13, after the pending items are done):**
+- Deleting an **empty** plate asks no confirmation.
+- Tabs / filmstrip: **long press an inactive plate** -> multi-select mode (ignores the active plate), pick e.g. 10 plates, delete.
+  If any picked plate has objects, a dialog says so. Upstream (checked `src-orca` PartPlate.cpp:4852 `PartPlateList::delete_plate`): the
+  plate goes, later plates shift back carrying their objects (`set_pos_and_size(..., true)`), the deleted plate's objects stay put (floating).
+- **Arrange** with objects floating off every plate: move the floaters onto the nearest plate.
+**Next after the user's picks (G2b, user 2026-10-13):** plate number labels and per-plate icons drawn in the 3D view
+around each plate (like Orca/Bambu: they turn with the camera), useful with many plates; then remove the lab.
+**Older leftovers:** items 0 and 6 mostly need the user (sign-ins) or a web-UI printer.
 **Phone:** serial = the `adb-...._adb-tls-connect._tcp` entry in `adb devices` (`adb disconnect` a stale `ip:port`).
-Has r138. Setup: archive "Phone test setup", memory `test-on-phone`; `phone-ui.py` needs `PYTHONIOENCODING=utf-8`;
+Has r143. Setup: archive "Phone test setup", memory `test-on-phone`; `phone-ui.py` needs `PYTHONIOENCODING=utf-8`;
 pull binaries with `adb exec-out "su -c '...'"`; Delete key = `su -c 'input keyevent 112'`. **Never
 `cat missing > target`** (the redirect empties the target first). Don't drive WSA while the user uses the PC.
 Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
@@ -42,25 +92,26 @@ Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
 2. Nozzle match: verified phone r114. **Untested:** newer-firmware `device.nozzle.info` path; stale status after
    switching printer models. Filament picks per AMS tray: verified phone r134. **Untested:** spool change -> printer's
    preset wins and the pick is dropped (only when the user swaps a spool); WSA. Phone plate: 1 slot "Bambu PLA Basic @BBL A1".
-3. Merge: main = r140 (8fe2c9b, PR #10, 2026-10-13, user's `/next-merge`). Nothing unmerged on the branch.
+3. Merge: main = r143 (cc7abe4, PR #11 from `claude/merge-r143` at 4d55156, 2026-10-13, user's `/next-merge`). No merge offer pending.
+   Unmerged, untested (all after 4d55156): f7f4d57 (UI batch), fd71b33 (plates), 6e45548 (plate row, sliders), a2d3148 (sizes, panel drag), 6e645cb + 9f9978a (filmstrip row), 31f6b58 (chips, verified phone), 49e4cdf (tabs numbers + switch rows verified phone; cutout), 0afd458 (rail insets), 4dac2f4 (rail cutout, verified phone), eac2d13 (arrange fix, verified WSA r154). 0d2bb7b (r149,
+   infinite scroll) is verified on WSA but sits after the untested commits (cherry-pick it if merged early).
    Untested parts already in main stay listed in items 0, 2, 5, 6.
 4. Shape builder by touch: verified phone r134. Raw multi-touch: `~/orca-android-tools/pinch.sh` / `drag1.sh`
    (push with `MSYS_NO_PATHCONV=1` and a `C:/` source path).
-5. .scad zips (daf9aba): verified WSA r126. Zip variants off the plate behind Add (a423ee3 + bb127de, user left the
-   decision to me): verified phone r138 (archive "Zip variants off the plate"); "Open with" a zip
-   (VIEW intent, MediaStore URI + read grant) verified on the Chromebook r138. **Untested:** the nameless-download
-   sniff -> .scad; a real Thingiverse download on the phone.
-6. Ad blocking (f138655, Models tab): verified WSA r127 + phone r134. **Untested:** MakerWorld sign-in / downloads with
-   it on. 08bdf0b, all app WebViews use `AdBlock.Client`: verified WSA r128 (Device page, Models tab). **Untested:**
-   Bambu sign-in WebView (needs Sign out + the user's password: leave to the user), Orca Cloud login, plugin pages,
-   Device page on the phone.
+5. .scad zips + Thingiverse downloads: verified (WSA r126, phone r138/r142/r143, Chromebook r138; archive "Thingiverse
+   downloads on the phone"). **Untested:** the 16 KB content sniff itself (r143 now gets the real name first).
+6. Ad blocking (f138655, Models tab): verified WSA r127 + phone r134; Thingiverse download fix ec86442 verified phone
+   r142 (archive "Thingiverse downloads on the phone"). 08bdf0b, all app WebViews use `AdBlock.Client`: verified WSA
+   r128 (Device page, Models tab). **Untested:** MakerWorld sign-in / downloads with it on; Bambu sign-in WebView
+   (needs Sign out + the user's password: leave to the user), Orca Cloud login, plugin pages, Device page on the phone
+   (needs a printer with a web UI; the phone only has the A1).
 
 ## State
 - Both repos work on branch `claude/handoff-continuation-rseql3` (the "test branch"). Autonomy
   (user, 2026-10-11): decide branch handling and next steps yourself. **Main merges / releases need
-  the user.** Main = r140 (merged 2026-10-13, PR #10, on the user's `/next-merge`); user agreed to merge more
+  the user.** Main = r143 (merged 2026-10-13, PR #11, on the user's `/next-merge`); user agreed to merge more
   often, at verified milestones: offer a merge PR when a batch is verified, merge only on their "merge".
-- Installed on WSA: r128 (2026-10-12 late); AI tools on; auto-save 60 s. Plate 1 empty, no Plate 2. Shape-builder
+- Installed on WSA: r154 (2026-10-13); AI tools on; auto-save 60 s. Session = the backup above (3 plates, plate 3 active). Shape-builder
   handles by touch untested (WSA has none). Real mouse drags (+Shift): `mdrag.ps1 x1 y1 x2 y2 [-Shift]`
   (Android coords = Windows pixels on WSA); the builder's shape list scrolls only with a real mouse wheel.
 - Draft of the open design: `files/openscad/draft.scad|json` (read with `adb exec-out "su -c 'cat ...'"`,
@@ -156,6 +207,10 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
 - WSA adb `127.0.0.1:58526` (root via `su -c '...'`, Android 13 / API 33; `run-as` fails, release build); an Android TV box is also attached, so always
   pass `-s`. WSA stops drawing the app when its window isn't in front (taps are lost, ui dump empty): focus it with
   the Alt + SetForegroundWindow trick from `wheel.ps1:17`.
+- **Phone view on WSA: back-burnered** (user, 2026-10-13: "didn't look right on my end"; test phone layouts on the
+  phone, WSA in its normal window as before). Kept for reference: `sh ~/orca-android-tools/phone-view.sh`
+  (launches + `am task resize` to 412x720 dp portrait, sw412 "nrml port"); `... land` = 720x412. WSA display is
+  1280x720 px at 160 dpi, so 720 dp is the max height (a real phone is ~900 dp). Task ID changes per launch (script finds it).
 - `~\orca-android-tools`: `install-build.ps1 -Run <id>` (WSA default), `ui.ps1 [-Shot png]`,
   `step.ps1`, `wheel.ps1` (real mouse wheel / drags), `drag.ps1`, `reinstall-with-data.ps1`.
 - Debug logs / Models WebView CDP: archive "Logs and CDP (moved 2026-10-12)".
@@ -168,6 +223,6 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
 ## Repos
 | Repo | Notes |
 |---|---|
-| `BaIanced/OrcaStudio-Android` | cl1x/Orca-Android + signed Bambu printing via obn (static in `liborca_jni.so`, `android/obn`). main = r140 (PR #10). Bot branch `upstream/orca-main` (never commit). Builds run on dispatch only (`gh workflow run android-apk.yml --ref <branch>`). |
+| `BaIanced/OrcaStudio-Android` | cl1x/Orca-Android + signed Bambu printing via obn (static in `liborca_jni.so`, `android/obn`). main = r143 (PR #11). Bot branch `upstream/orca-main` (never commit). Builds run on dispatch only (`gh workflow run android-apk.yml --ref <branch>`). |
 | `BaIanced/OrcaStudio` | Flatpak fork; ours: `arm-build/`, `.github/workflows/arm-*.yml`. Latest release r9 (MakerLab tab). Details in the archive. |
 | `ClusterM/open-bamboo-networking` | obn pinned v2.2.0 + local patches 0001 (cloud callbacks), 0002 (start_print try LAN first), 0003 (MQTT CA from `SSL_CERT_FILE`). |

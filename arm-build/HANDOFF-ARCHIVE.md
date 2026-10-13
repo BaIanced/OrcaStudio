@@ -1508,3 +1508,76 @@ shaded, `plate_describe` live; details in the archive "AI tools milestone 3").
 - r140 (5410405 "Wide screens", `ui/device/DeviceScreen.kt`, `ui/scad/ScadEditor.kt`: tick colours transparent when
   count > 20): verified on the Chromebook 2026-10-13 (run 38358229970, `install-build.ps1 -Device <ip>:5555`):
   Device page Job/Temperatures left, Loaded filaments right; scadzip-test width slider shows no dot row.
+
+## Thingiverse downloads on the phone (verified 2026-10-13, phone r142 + r143)
+- Moved from HANDOFF.md item 5 on 2026-10-13: .scad zips (daf9aba) verified WSA r126; zip variants off the plate
+  behind Add (a423ee3 + bb127de) verified phone r138 (section "Zip variants off the plate"); "Open with" a zip (VIEW
+  intent, MediaStore URI + read grant) verified on the Chromebook r138.
+- Found on r140 (phone): with Block ads on, every Thingiverse download failed ("Error downloading file"). CDP showed
+  Thingiverse's Sentry adding `sentry-trace` / `baggage` to the `/download:<id>` XHR; its redirect to
+  cdn.thingiverse.com then fails the CORS preflight. With Block ads off no such header is sent (the ad stack's XHR
+  wrapping apparently hides Sentry's patch) and the download works. Fix ec86442 (r142): `AdBlock.applyJs` patches
+  `XMLHttpRequest.prototype.setRequestHeader` to drop both headers (also skips the style insert when the document has no
+  root yet). Verified r142: single STL, single .scad, and "Download all files" all download with Block ads on.
+- "Download all files" on Customizable Card Box (thing:2404395), real tap, r142: the page builds the zip itself
+  (~20 s), nameless `<uuid>.zip` -> editor `Customizable_Card_Box.scad`, Customizer 31, preview 68.6 x 68.1 x 96.8 mm,
+  18,974 tris; the Add offer showed; the 4 STLs stayed off the plate.
+- Found on r142: the single .scad (Files page, blob link `<a download="Customizable_Card_Box.scad">`, clicked with
+  `a.click()` while connected) was saved as `<uuid>.stl` ("Loading of a model file failed"): the DownloadListener
+  gets no download attribute for blobs, and the file's >512-byte comment header defeated the sniff. Fix 4d55156 (r143):
+  `BRIDGE_JS` records `a.download` for blob links (`HTMLAnchorElement.prototype.click` hook + capture click
+  listener) in `window.__orcaNames`; `orcaNative.blob(url, data, name)`; `sniffExtension` reads 16 KB (NUL check on
+  the first 512 bytes). Verified r143: saved as `Customizable_Card_Box.scad`, editor opens, Customizer 31.
+- Test tools: `cdpnet.mjs <secs> [url part]` (network / console / failures) and `cdpeval.mjs "<js>"` in the session
+  scratchpad (recreate if gone); WebView debugging via `setprop log.tag.OrcaWeb DEBUG` + app restart, then
+  `adb forward tcp:9222 localabstract:webview_devtools_remote_<pid>`. Temp Plate 2 deleted after each run.
+
+## UI batch WSA checks (moved from HANDOFF.md on 2026-10-13)
+- **WSA r144 checks passed (2026-10-13, landscape 907x481 window only):** Layout lab options, More order, Smooth PEI
+  label, profile update chip installs (user tapped it), filmstrip + label + plate menu, add/delete plate, double-tap
+  focus, taps after a tooltip long-press, tool column scroll with an object selected, builder main canvas, editor
+  resize, slider draft chip (66 mm mid-drag, 91 mm on release), ghost on plate (translucent at the plate centre).
+- **Verified WSA r146:** lab size sliders (text, interface, floating controls; they multiply; reset to 100 %), panel
+  drag resize + snap-to-tuck + drag back out, tool column arrows (tap scrolls, up/down show only when needed), pinned +
+  after the strip, builder slider follows the finger (6e45548).
+- **Verified WSA r149 (0d2bb7b, Models infinite scroll, via CDP):** Thingiverse home (Page 2: 23 cards, images load)
+  + search (Pages 2-3); Back from a page-2 model restores both pages + the exact scroll spot; menu switch off = script
+  not injected (pref `models_infinite_scroll` false), back on. Printables (search + /model listing) scrolls natively
+  with no pager, so the script stays out. CDP: `setprop log.tag.OrcaWeb DEBUG` + restart, forward
+  `localabstract:webview_devtools_remote_<pid>` (from `/proc/net/unix`), Node 24 has a built-in WebSocket
+  (`cdp.mjs` = Runtime.evaluate on the first page target).
+
+## UI batch builds r144-r152 (moved from HANDOFF.md on 2026-10-13)
+**Big-screen pass done** (r138 + r140 "Wide screens" 5410405, verified Chromebook 2026-10-13; archive "Big-screen
+pass"). Chromebook has r140. r140 merged to main (PR #10, 2026-10-13).
+**UI refinement batch (user feedback 2026-10-13).** r144 = f7f4d57 (run 38382691511). r145 (6e45548) cancelled. r146 = a2d3148 (run 38385668787) installed on WSA. r147 = 6e645cb (run 38387270397, on WSA):
+filmstrip + Slice button in one bottom row (column layout) instead of a fixed 190 dp gap; still a sliver of one thumbnail
+at a ~330 dp canvas. **r148** = 9f9978a (run 38388490237, installed on WSA): under 360 dp beside the column the strip
+gets its own row above Slice: verified WSA (panel widened, 5 plates, scrolls to active, + pinned). WSA now has 3 plates
+(plates 2-3 not mine: the user's?). **r149** = 0d2bb7b (run 38407026995, installed on WSA): Models tab infinite scroll (`MORE_JS` in ModelsScreen.kt,
+menu switch "Infinite scroll", pref `models_infinite_scroll`, default on): verified WSA (archive "UI batch WSA checks");
+untested on the phone. WSA's Recent files has AllPoses.3mf (could test fd71b33 there, but opening it replaces the WSA
+project: ask first). **Phone pass 2026-10-13 (r150 = 31f6b58, run 38459048183, on the phone):** verified portrait: tooltip
+shows on long press and the next tap still works; tool column fits; tabs / filmstrip (own row above Slice, scrolls to
+active, + pinned) / chips (31f6b58 fix: scrolls to the new plate, + pinned, bar colour); fullscreen in portrait hides the
+bars (leaves the cutout strip: `safeDrawingPadding`); landscape immersive with rail + canvas + panel. Phone restored: lab
+Tabs, fullscreen off, my plate 9 deleted (plates 1-8 were there). Phone auto-rotate restored. Plate label default is off (`plateLabel = false`).
+**r151 = 49e4cdf (run 38461067340, untested; user asks 2026-10-13):** plate tabs show only numbers; landscape drops the
+cutout padding (rail moves into the camera strip, content pads its End side; check the camera hole vs the rail's
+Models icon, hole at y 597-675 px on the left in rotation 1); whole SwitchRow toggles. On the phone: number tabs and
+row toggle verified; the rail still kept the strip (its own default insets) -> **0afd458** (r152, run 38462258290,
+on the phone: rail is 80 dp now, canvas gained the 47 dp strip). User 2026-10-13: the Models **icon runs into the camera hole**
+(label visible) -> **r153 = 4dac2f4** (run 38465859177, untested): `CutoutAwareColumn` (AppScaffold.kt) stacks rail items and
+moves any item overlapping a cutout rect below it (hole y 597-675 px, x 0-141 px in rotation 1; phone 1272x2772, density 476).
+Check on the phone in landscape both rotations.
+
+## Import/arrange fix verified on WSA r154 (moved 2026-10-13)
+Bug (WSA r153): Recent files > AllPoses.3mf (8 poses on plate 3), then VIEW intent on `/sdcard/Download/swatch2.3mf`
+(2 plates, 3 beeper-sized objects; MediaStore id 1000460178) into the filled plate 3 -> both beeper3.stl floated right of
+plate 3; Duplicate on a filled plate put the copy half off the bottom edge. Cause: libnest2d `finalAlign`
+(src-orca nfpplacer.hpp:1069) shifts new items by the centre of the whole pile *including fixed objects*.
+Fix **eac2d13**: `params.do_final_align = fixed.empty()` in `arrange_plate` (like upstream FillBedJob). r154 = run 38470262650.
+Retest WSA r154: both beepers landed on plate 3 beside the poses, Assembly on new plate 4 (nothing off the plates);
+Duplicate of a beeper on filled plate 3 put the copy left of the poses, on the bed, no overlap; Arrange still packs and
+centres the plate. WSA session backup (`/data/local/tmp/session-backup.{3mf,json}`) restored afterwards (cmp same).
+Gotcha: tapping the tool column's "Scroll up" cue after it reached the top hits Undo (cue sits at the Undo button's edge).
