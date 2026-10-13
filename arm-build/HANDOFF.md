@@ -19,48 +19,38 @@ front**; grep them when a question needs them (e.g. `grep -n "AMS mapping" HANDO
   time to `/clear` then `/next`** (and why: task done + handoff updated). Don't suggest it mid-task.
 
 ## Next task
-**Test target: the phone** (user, 2026-10-12 late: "use my phone for adb", they are using the PC, so don't drive WSA).
-Serial: the `adb-...._adb-tls-connect._tcp` entry in `adb devices` (mDNS; an old `ip:port` entry may linger offline:
-`adb disconnect` it). Phone has r134. Phone setup (root taps, `phone-ui.py`, token file): archive "Phone test setup"
-and memory `test-on-phone`. `phone-ui.py dump` needs `PYTHONIOENCODING=utf-8` on the Device tab. Pull binary files with
-`adb exec-out "su -c '...'"` (plain `adb shell` mangles tar). **Never `cat missing > target`**: the redirect empties the
-target before cat fails (happened once to the re-linked preset; restored from the backup the same minute).
+**Test devices (user, 2026-10-13):** **phone** = main (root); **Chromebook's Android (ARC)** = big-screen layout
+checks (user wants the app there). Chromebook: `<chromebook-ip>:5555` (memory `test-on-phone`), Android 13, arm64,
+1920x1080, **no root**; ARC draws only while awake + unlocked (2026-10-13: awake, but the app never came to the front,
+focus stayed on ARC's PlaceholderActivity, likely locked). Has **r138**, never seen on screen.
+**Next: big-screen pass on the Chromebook** once unlocked (or the user reports what they see): Prepare, OpenSCAD editor
+beside the 3D view (zip-variant Add there: `scadHidden` is unused when wide), shape builder, Models tab, Device page,
+dialogs. Then the phone leftovers in items 0, 5, 6.
+**Phone:** serial = the `adb-...._adb-tls-connect._tcp` entry in `adb devices` (`adb disconnect` a stale `ip:port`).
+Has r138. Setup: archive "Phone test setup", memory `test-on-phone`; `phone-ui.py` needs `PYTHONIOENCODING=utf-8`;
+pull binaries with `adb exec-out "su -c '...'"`; Delete key = `su -c 'input keyevent 112'`. **Never
+`cat missing > target`** (the redirect empties the target first). Don't drive WSA while the user uses the PC.
+Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
 
-0. **Element blocker + ad-block menu (e4d75ab, a7e63d2): verified on the phone r129/r131** (archive "Filament picks per
-   AMS tray + element blocker verified"). **Untested:** right-click with a mouse (WSA), other WebViews applying rules
-   (Device page etc.). Orca Cloud login WebView (08bdf0b): phone is signed in to Orca Cloud, so testing needs a
-   sign-out: leave to the user.
-
-1. Preset re-link: **verified on WSA and the phone** (archive "Preset re-link + nozzle / my filaments verified").
-   **Untested:** a Bambu/Orca cloud sync afterwards (cloud copy still detached; same updated_time, so the pull
-   shouldn't replace it); the Chromebook desktop still has it detached.
-2. Nozzle match: **verified on the phone r114** (same archive entry). **Untested:** newer-firmware
-   `device.nozzle.info` path; stale status after switching printer models.
-   **Filament picks per AMS tray (99264ee, 976f605, 54f57c3): verified on the phone r132 + r134** (archive, same entry
-   as item 0; incl. a restart-bug fix). **Untested:** spool change -> printer's preset wins and the pick is dropped
-   (only when the user swaps a spool); WSA. Phone has r134; plate restored to 1 slot "Bambu PLA Basic @BBL A1".
-3. Merge: **main = r134 (db122a9, PR #8 from the work branch at 54f57c3, 2026-10-12)**, on the user's `/next-merge`.
-   No merge offer pending; nothing on the branch beyond main. Untested parts that went in with r134 stay listed in
-   items 0, 2 and 6.
-4. Shape builder by touch: **verified on the phone r134** (archive "Shape builder by touch on the phone"). Raw
-   multi-touch: `~/orca-android-tools/pinch.sh` / `drag1.sh` (push with `MSYS_NO_PATHCONV=1` and a `C:/` source path).
-5. **.scad zips: daf9aba, verified WSA r126** via the import picker and a real Thingiverse download (archive
-   ".scad projects from zips"). **Open question for the user:** should a zip's STLs stay off the plate when its .scad
-   is a Customizer design (Thingiverse ships pre-rendered variants; now they land on the plate next to the editor)?
-   **Untested:** the nameless-download sniff -> .scad, "Open with" a zip from a file manager
-   (root `am start` can't grant the storage provider URI: Permission Denial, shown as a clean error dialog), phone.
-6. **Ad blocking in the Models tab: f138655, verified WSA r127** (archive "Models tab ad blocking"). Always on, no
-   switch. **Phone r134 verified** (Thingiverse home / search / thing page: only `ads.adthrive.com` +
-   `www3.doubleclick.net` requested, both answered empty; 0 visible ad elements). **Untested:** MakerWorld sign-in /
-   downloads with it on (page loads fine).
-   **08bdf0b (user asked 2026-10-12): all app WebViews** now use `AdBlock.Client` (Models, Bambu sign-in, Device page,
-   Orca Cloud login, plugin pages/config; overrides call super). **Verified WSA r128:** Device page loads, Models tab
-   unchanged (sub-nav bridge + site header hidden), Plate 2 stayed deleted after restart. **Untested:** Bambu sign-in
-   WebView (account is signed in; testing needs Sign out + the user's password, so leave it to the user), Orca Cloud
-   login, plugin pages, Device page on the phone.
-
-Done 2026-10-12 (archive): merges to r112 and r127, AI tools 1-4, settings tools, user reports, shape builder gaps +
-UI tests, preset re-link, nozzle match, my filament presets.
+0. Element blocker + ad-block menu (e4d75ab, a7e63d2): verified phone. **Untested:** mouse right-click (WSA), rules in
+   other WebViews (Device page etc.); Orca Cloud login WebView (08bdf0b) needs a sign-out: leave to the user.
+1. Preset re-link: verified. **Untested:** a Bambu/Orca cloud sync afterwards (cloud copy still detached; same
+   updated_time, so the pull shouldn't replace it); the Chromebook desktop still has it detached.
+2. Nozzle match: verified phone r114. **Untested:** newer-firmware `device.nozzle.info` path; stale status after
+   switching printer models. Filament picks per AMS tray: verified phone r134. **Untested:** spool change -> printer's
+   preset wins and the pick is dropped (only when the user swaps a spool); WSA. Phone plate: 1 slot "Bambu PLA Basic @BBL A1".
+3. Merge: main = r134 (db122a9, PR #8). **Merge offered 2026-10-13:** branch has a423ee3 + bb127de (zip variants,
+   verified phone r138) beyond main. Untested parts already in main stay listed in items 0, 2, 6.
+4. Shape builder by touch: verified phone r134. Raw multi-touch: `~/orca-android-tools/pinch.sh` / `drag1.sh`
+   (push with `MSYS_NO_PATHCONV=1` and a `C:/` source path).
+5. .scad zips (daf9aba): verified WSA r126. Zip variants off the plate behind Add (a423ee3 + bb127de, user left the
+   decision to me): verified phone r138 (archive "Zip variants off the plate"). **Untested:** the nameless-download
+   sniff -> .scad; "Open with" a zip from a file manager (root `am start` can't grant the provider URI: Permission
+   Denial, clean error dialog); a real Thingiverse download on the phone.
+6. Ad blocking (f138655, Models tab): verified WSA r127 + phone r134. **Untested:** MakerWorld sign-in / downloads with
+   it on. 08bdf0b, all app WebViews use `AdBlock.Client`: verified WSA r128 (Device page, Models tab). **Untested:**
+   Bambu sign-in WebView (needs Sign out + the user's password: leave to the user), Orca Cloud login, plugin pages,
+   Device page on the phone.
 
 ## State
 - Both repos work on branch `claude/handoff-continuation-rseql3` (the "test branch"). Autonomy

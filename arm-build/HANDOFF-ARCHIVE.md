@@ -1485,3 +1485,17 @@ shaded, `plate_describe` live; details in the archive "AI tools milestone 3").
 - One-finger orbit and two-finger pinch zoom via raw events (`sendevent` on the touchpanel, 16 units per px):
   `pinch.sh 640 1000 200 560` zoomed in. A pinch starting at a 160 px span did nothing: Android's minimum scaling span
   (`ScaleGestureDetector`), not an app bug.
+
+## Zip variants off the plate (verified 2026-10-13, phone r136 + r138)
+- Item 5's open question (should a Customizer zip's STLs land on the plate?) was left to Claude ("skip the zip").
+  Decision: a zip with a .scad design keeps its other mesh files (stl/obj/3mf/step/stp/amf, `VARIANT_EXTENSIONS` in
+  `FileController.kt`) off the plate; a message bar (`UiState.messageAction` / `MessageAction`, snackbar Long with an
+  action) offers **Add** (`FileController.addVariants`). Loose files imported next to a .scad still go on the plate.
+- a423ee3 (r136), phone: `scadzip-test.zip` (`scadzip/design.scad` with a `/* [Size] */` group + unreferenced
+  `variant_40mm.stl`) via Add > Import: editor opened, Customizer 2 params, plate stayed 2 objects; Add -> 3. Found:
+  editor stayed over the plate on narrow screens; "1 ... models".
+- bb127de (r138): `scadHidden` moved from `rememberSaveable` in `AppScaffold` to `UiState` (Add folds the editor,
+  `ScadController.openFile` unfolds it, `AppViewModel.setScadHidden`); `plurals/scad_zip_variants` (en, de).
+  Phone: message "The zip's ready-made model is not on the plate.", Add -> plate shown with the variant selected,
+  OpenSCAD chip reopens the editor; test variants deleted (Delete key = `input keyevent 112` as root), plate back to 2.
+- `phone-ui.py tap` falls back to a plain `input tap` where `su` is missing (Chromebook ARC).
