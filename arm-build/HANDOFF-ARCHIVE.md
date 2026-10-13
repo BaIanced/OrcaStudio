@@ -1447,3 +1447,29 @@ shaded, `plate_describe` live; details in the archive "AI tools milestone 3").
   preset. Switching printer presets runs an AMS sync (plate went 1 -> 4 slots); the plate was restored to 1 slot
   (Bambu PLA Basic, printer "-No cut No vibe", 0.20mm Standard) after the test.
 - Merge: Android main = r127 (PR #7, merge commit 5e2a483, branch `claude/merge-r127` at f138655).
+
+## Filament picks per AMS tray + element blocker verified (moved from HANDOFF.md on 2026-10-12)
+- **Tray picks (99264ee, 976f605, 54f57c3), verified on the phone r132 + r134.** User (2026-10-12): the "only user
+  preset from that system preset" fallback was wrong (put "MATTE BLK+ELEGOO WHITE MIXED" in both Matte slots);
+  never-picked trays must get the printer's Bambu preset (RFID is authoritative), the user's own picks stick, and the
+  printer overrides them when the spool changes. `FilamentSlot.source` = `TraySource(key = serial/ams/slot,
+  loaded = "filament_id #color", synced = sync's preset)`, persisted in `filaments:<printer>`;
+  `AppSettings.trayPicks` (pref `tray_picks`) key -> (loaded, preset), set by picking / saving in a synced slot,
+  dropped by picking the sync's own preset or when the tray reports something else. `my_filaments` / `myFilament`
+  removed. More switch "Keep my filament picks per AMS slot" (pref `prefer_my_filaments`, default on).
+  Phone r132: sync -> Basic/Matte/Matte/PETG (no mix); A1 pick kept by sync and after restart + sync; picking the
+  sync's preset -> `tray_picks` = {}. Bug: the session 3MF has no tray sources, so a pick right after a restart wasn't
+  remembered and saved sources got wiped. 976f605 (`selectPrinterNow` restores the saved source when the slot still
+  holds the same preset) had no effect alone: `FileController.openProjectFile` set the slots again afterwards;
+  54f57c3 keeps the sources there. **Verified r134:** after restart, slot 2 pick -> `tray_picks` has `/0/1`; sync keeps
+  it. Plate restored to 1 slot "Bambu PLA Basic @BBL A1", picks cleared.
+  Test notes: a quick HOME + force-stop can kill the onStop session save (leftover `session.tmp.3mf.tmp`) and restore
+  an older session. Filament picker: search + `input text` raises the keyboard; tap items by `phone-ui.py find` bounds.
+- **Element blocker + ad-block menu (e4d75ab, a7e63d2), verified on the phone r129/r131.** Models tab three-dot menu:
+  "Block ads" (`AdBlock.setEnabled`, pref `adblock_enabled`, all WebViews; reloads), "Block an element"
+  (`AdBlock.PICKER_JS`: tap picks; long-press / right-click = `contextmenu` picks unless text is selected; bar
+  Smaller / Larger / Block / Cancel), "Blocked elements (n)" (per-element X, Undo all). Rules: pref `adblock_rules`
+  JSON site -> selectors, applied by `AdBlock.applyJs` in every `AdBlock.Client`; hashed `Foo__bar--hash` classes match
+  by prefix. Verified on a Thingiverse banner: pick + Larger + Block hides it live, survives restart; X / Undo all
+  bring it back; Block ads off reloads and greys out "Block an element"; long-press on text keeps normal selection.
+  Bar fix a7e63d2 (hint "Tap what to hide"): all buttons fit (r131). Thingiverse keeps an empty strip (site layout).
