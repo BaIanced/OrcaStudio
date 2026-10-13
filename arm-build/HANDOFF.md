@@ -19,71 +19,61 @@ front**; grep them when a question needs them (e.g. `grep -n "AMS mapping" HANDO
   time to `/clear` then `/next`** (and why: task done + handoff updated). Don't suggest it mid-task.
 
 ## Next task
-**Test target: WSA while the user is away from home** (user, 2026-10-12 evening: phone off the network). r114 is
-installed on WSA too. Back on the phone when the user says so / it shows in `adb devices`. Phone setup (wireless adb, root taps,
-`phone-ui.py`, token file): archive "Phone test setup" and memory `test-on-phone`.
+**Test target: the phone** (user, 2026-10-12 late: "use my phone for adb", they are using the PC, so don't drive WSA).
+Serial: the `adb-...._adb-tls-connect._tcp` entry in `adb devices` (mDNS; an old `ip:port` entry may linger offline:
+`adb disconnect` it). Phone has r114. Phone setup (root taps, `phone-ui.py`, token file): archive "Phone test setup"
+and memory `test-on-phone`. `phone-ui.py dump` needs `PYTHONIOENCODING=utf-8` on the Device tab. Pull binary files with
+`adb exec-out "su -c '...'"` (plain `adb shell` mangles tar). **Never `cat missing > target`**: the redirect empties the
+target before cat fails (happened once to the re-linked preset; restored from the backup the same minute).
 
-1. **Waiting on the user:** OK to **re-link the detached printer preset** "Bambu Lab A1 0.4 nozzle -No cut No vibe"?
-   Its JSON (`files/data/user/default/machine/base/...`) has `"inherits": ""`, so the app and the desktop treat it as
-   no A1: only generic presets are compatible (process "Default Setting", "Generic PLA @System"), and AMS sync can
-   only pick generic filaments. Plan: back up the file to the PC, set `inherits` to "Bambu Lab A1 0.4 nozzle", move
-   it from `machine/base/` to `machine/`, restart, check the custom G-code survived and the A1 processes / Bambu
-   filaments appear; restore the backup on any problem. Never without the user's OK (their preset).
-2. **User reports 2026-10-12** (commits after 5b7ee35, all in r114):
-   - Verified: AMS sync button on the detached preset (phone r114); plate type default + Plate types dialog
-     (phone + WSA r114). Details: archive "User reports 2026-10-12, verified".
-   - Match the installed nozzle (More, default on): `BambuReport.nozzleDiameter` -> `installedNozzles[model]`,
-     `UiState.visiblePrinters` hides other nozzles, Prepare hint + "Use <preset>". **Untested:** the printer was
-     offline (no report); newer-firmware `device.nozzle.info` path; stale status after switching printer models.
-   - Use my filament presets (More, default on): AMS sync (`PresetBundle::sync_ams_list`) only picks base presets,
-     so the user's saved filament presets were replaced on every sync. `PresetRef.base` from the engine,
-     `AppSettings.myFilaments` (system -> user preset; set by picking / saving, cleared by picking the system one),
-     applied after sync and for a new printer's default slot. **Untested** (needs the printer online and the
-     preset re-link, else sync only finds generic filaments).
-3. Merge: main = r112 (6f8560c, Android PR #6, 2026-10-12). Left on the branch: 46a694e (nozzle match) and
-   121765c (my filaments), both untested, and b7d6de2 (milestone 4, verified on WSA r115) on top of them. Next merge
-   once item 2's untested parts pass (or, if the user wants milestone 4 sooner, ask before splitting it off).
-4. **Next: settings tools** (roadmap 3): read presets (printer / process / filament values, compare to the system
-   parent) and propose overrides; saving / deleting presets and printing always need the user's on-screen confirm
-   (`confirm()` in `McpTools.kt`). Test on WSA (AI tools on there; token via su into `~/orca-android-tools/wsa-token.txt`).
+0. **WebView element blocker + ad-block menu (wishlist side quest): e4d75ab, build r129 (CI 38341070641), untested.** Models tab three-dot menu: "Block ads" toggle (`AdBlock.setEnabled`, pref `adblock_enabled`, all WebViews; page reloads), "Block an element" (`AdBlock.PICKER_JS`: tap picks; right-click / long-press = `contextmenu` picks directly unless text is selected; bar with Smaller / Larger / Block / Cancel), "Blocked elements (n)" dialog (per-element X, Undo all). Rules: pref `adblock_rules` JSON site -> selectors, applied by `AdBlock.applyJs` in every `AdBlock.Client`. Hashed `Foo__bar--hash` classes match by prefix. **To test:** pick + block on Thingiverse, survives reload/restart, unblock one / all, toggle off shows ads again (and stops the picker), long-press on touch.
 
-Done 2026-10-12: merges (Android PR #5 at r104, #6 at r112; OrcaStudio PR #3, #4); AI tools milestones 1-4 verified (archive; 4 = plate tools, WSA r115).
+1. Preset re-link: **verified on WSA and the phone** (archive "Preset re-link + nozzle / my filaments verified").
+   **Untested:** a Bambu/Orca cloud sync afterwards (cloud copy still detached; same updated_time, so the pull
+   shouldn't replace it); the Chromebook desktop still has it detached.
+2. Nozzle match + my filament presets: **verified on the phone r114** (same archive entry). **Untested:** newer-firmware
+   `device.nozzle.info` path; stale status after switching printer models. **Tell the user:** the "exactly one user
+   preset from that system preset" fallback (`PresetController.myFilament`) put "MATTE BLK+ELEGOO WHITE MIXED" into
+   both PLA Matte slots without any pick; ask whether that fallback should stay or only explicit picks count.
+3. Merge: **main = r127 (5e2a483, PR #7 from `claude/merge-r127` at f138655, 2026-10-12)**, on the user's `/next-merge`.
+   On the branch, not on main: 08bdf0b (all WebViews, partly untested, item 6), e4d75ab (element blocker, untested, item 0).
+4. Shape builder untested still: pinch zoom (touch), pyramid/wedge chamfer renders, handles by touch.
+5. **.scad zips: daf9aba, verified WSA r126** via the import picker and a real Thingiverse download (archive
+   ".scad projects from zips"). **Open question for the user:** should a zip's STLs stay off the plate when its .scad
+   is a Customizer design (Thingiverse ships pre-rendered variants; now they land on the plate next to the editor)?
+   **Untested:** the nameless-download sniff -> .scad, "Open with" a zip from a file manager
+   (root `am start` can't grant the storage provider URI: Permission Denial, shown as a clean error dialog), phone.
+6. **Ad blocking in the Models tab: f138655, verified WSA r127** (archive "Models tab ad blocking"). Always on, no
+   switch. **Untested:** phone, MakerWorld sign-in / downloads with it on (page loads fine).
+   **08bdf0b (user asked 2026-10-12): all app WebViews** now use `AdBlock.Client` (Models, Bambu sign-in, Device page,
+   Orca Cloud login, plugin pages/config; overrides call super). **Verified WSA r128:** Device page loads, Models tab
+   unchanged (sub-nav bridge + site header hidden), Plate 2 stayed deleted after restart. **Untested:** Bambu sign-in
+   WebView (account is signed in; testing needs Sign out + the user's password, so leave it to the user), Orca Cloud
+   login, plugin pages, phone.
+
+Done 2026-10-12 (archive): merges to r112 and r127, AI tools 1-4, settings tools, user reports, shape builder gaps +
+UI tests, preset re-link, nozzle match, my filament presets.
 
 ## State
 - Both repos work on branch `claude/handoff-continuation-rseql3` (the "test branch"). Autonomy
   (user, 2026-10-11): decide branch handling and next steps yourself. **Main merges / releases need
-  the user.** Main = r112 (merged 2026-10-12, PR #6, on the user's `/next-merge`); user agreed to merge more
+  the user.** Main = r127 (merged 2026-10-12, PR #7, on the user's `/next-merge`); user agreed to merge more
   often, at verified milestones: offer a merge PR when a batch is verified, merge only on their "merge".
-- Installed on WSA: r115 (2026-10-12 evening); AI tools on. Plate 2 (temp) is empty. Shape-builder handles not tested: Y
-  handle, Shift = 1° turn, handles on a group / nested child, touch (WSA has none).
+- Installed on WSA: r128 (2026-10-12 late); AI tools on; auto-save 60 s. Plate 1 empty, no Plate 2. Shape-builder
+  handles by touch untested (WSA has none). Real mouse drags (+Shift): `mdrag.ps1 x1 y1 x2 y2 [-Shift]`
+  (Android coords = Windows pixels on WSA); the builder's shape list scrolls only with a real mouse wheel.
 - Draft of the open design: `files/openscad/draft.scad|json` (read with `adb exec-out "su -c 'cat ...'"`,
   handy to check builder edits without screenshots; the Code tab text isn't in the ui dump).
-- WSA 1080p: the editor panel is short; collapse the preview ("Hide preview") to reach buttons
-  below the Customizer notice.
+- WSA 1080p: the editor panel is short; collapse the preview ("Hide preview") to reach buttons below the Customizer notice.
 
 ## Modeling roadmap (user agreed 2026-10-11, in this order)
 User goal: model **without writing code**; OpenSCAD code is only a backstop.
-1. Shape builder: phase 1 done (r96-r99; details in the archive). Known gaps: ungroup of a rotated
-   group with rotated children is approximate; renaming a shape re-renders; preview doesn't
-   re-frame as the design grows (Frame works). Untested: align, mirror, dims list edit/remove,
-   keyboard shortcuts, phone layout. **Phase 2:** 2D sketch (lines/arcs/rects/circles, light
-   constraints) + extrude/revolve, fillet/chamfer (minkowski/offset), shell/hollow, import STL as a
-   shape (import()). Look at Materializr (F-Droid, GPL-3, OpenCASCADE) and FreeCAD's planegcs
-   solver for sketch ideas; no reusable touch UI exists (searched 2026-10-11).
-   Design data = CSG tree JSON in the object's `module` metadata (`ShapeDesign` in
-   `scad/ShapeModel.kt`) -> generated OpenSCAD -> native OpenSCAD render (`ScadService`).
-2. **AI tool layer (MCP server in the app)** on the shape-builder JSON: wrap the ~65 engine JSON
-   calls (`android/core/jni/EngineCalls.cpp`) as MCP tools; "vision" cheapest first: CSG tree text,
-   scene summary JSON, small offscreen PNG. Streamable HTTP MCP on the device via LAN or
-   `adb forward ... localabstract:orcastudio_mcp` (milestone 1 done, r108).
-3. **Settings tools**: read presets + propose overrides; saving/deleting presets and printing always
-   need the user's on-screen confirm.
+1-3 done (archive): shape builder (untested: phone layout; data = CSG JSON in the object's `module` metadata,
+`scad/ShapeModel.kt`), AI tool layer (MCP), settings tools (printing from a tool needs the user's OK + on-screen confirm).
 
 ## Open items (details: grep the archive)
-- Sketch editor: many controls untested (list in the archive, 2026-10-12 trim).
 - User to retest: the 325 MB slice that crashed before the r59 OOM fix; pinch zoom on MakerWorld;
   whether a real keyboard's Ctrl+1 works (WSA drops synthetic Ctrl+1..9).
-- Auto-save (r94): untested switching it off / changing the interval.
 - Orca plugin runtime: kept as a general capability (no plugin in use). **FilamentHub is dropped
   for good; never suggest, test with, or mention it.** Not done: audit prompts, create_window,
   per-preset config overrides, printerAgent capability.
@@ -92,10 +82,13 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
 - AMS mapping verified (user printed from A1). User's AMS lite: A1 yellow, A2 matte black, A3
   white, A4 PETG. **Any test print needs the user's OK.**
 - Section view: travels/markers not clipped, picking ignores the cut.
-- OpenSCAD untested: Save/Open .scad via picker, phone layout, opening .scad from a download/zip,
+- OpenSCAD untested: phone layout, a real .scad download (Next task 5),
   painting through a mesh boolean.
-- Models tab untested: MakerWorld sign-in ticket flow, Thingiverse downloads.
+- Models tab untested: MakerWorld sign-in ticket flow. (Thingiverse download verified r126.)
+- REA MCP (github.com/morluto/rea), looked at 2026-10-12, not installed (needs the user's OK; changes MCP config):
+  fits release APK / `liborca_jni.so` inspection and HAR traces of the MakerWorld / Thingiverse flows only.
 - Wishlist later: filament colour mixing (upstream `FilamentMixer.cpp`). Not wanted: iOS port.
+- Wishlist WebView element blocker + ad-block menu: built (Next task 0), untested.
 - Flatpak r9 MakerLab tab, weekly upstream bump, obn follow-ups: see the archive (2026-10-12 trim).
 
 ## Gotchas
@@ -152,10 +145,8 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
 - Test with `ui.ps1` text dumps; screenshots only when the look matters. After launching the app,
   wait until `ui.ps1` lists the tabs before tapping (the first tap after start is often lost).
 - Batch 2-4 changes per build; don't dispatch builds that will be superseded.
-- CI (`android-apk.yml`): Kotlin check, deps cache, then `liborca_jni.so` reused from cache when
-  `android/core`, `android/obn`, `android/scripts`, the toolchain, src-orca and deps are unchanged
-  (key `android-core-*`), else rebuilt with ccache (`android-ccache-*`); old caches pruned. Checks
-  **19** `ObnNative` JNI exports (update when adding one). Release-signed since build 32.
+- CI (`android-apk.yml`, cache details in the archive): checks **19** `ObnNative` JNI exports (update
+  when adding one). Release-signed since build 32.
 
 ## Environment and tools (Windows PC, local session)
 - Working dir `C:\Users\Vince\OrcaProjectsGithub` with `OrcaStudio` (Flatpak; holds this file) and
@@ -165,18 +156,16 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
   the Alt + SetForegroundWindow trick from `wheel.ps1:17`.
 - `~\orca-android-tools`: `install-build.ps1 -Run <id>` (WSA default), `ui.ps1 [-Shot png]`,
   `step.ps1`, `wheel.ps1` (real mouse wheel / drags), `drag.ps1`, `reinstall-with-data.ps1`.
-- Logs: `adb shell setprop log.tag.OrcaInput DEBUG` (mouse events), `log.tag.OrcaWeb DEBUG` then
-  restart = Models WebView debuggable: `adb forward tcp:9222 localabstract:webview_devtools_remote_<pid>`;
-  helpers `cdp.mjs` / `cdplog.mjs` / `ua.mjs` in the session scratchpad (recreate if gone).
-  A CDP UA override only lasts while that CDP connection is open.
-- System file picker: close with `adb shell am force-stop com.android.documentsui`.
-- WSA lost DNS once: `wsaclient /shutdown` and relaunch fixed it. adb `input` has no Shift/Alt state.
+- Debug logs / Models WebView CDP: archive "Logs and CDP (moved 2026-10-12)".
+- System file picker: plain `adb input tap` (focus.ps1 finds no app window while it is up), scroll with
+  `input swipe`, avoid its Search (list broke); delete test files from `/sdcard/Download` after. Close with `adb shell am force-stop com.android.documentsui`. adb `input` has no
+  Shift/Alt state: use `keys.ps1 -Keys <vk codes>` (real key presses; tap a row first for focus).
 - The user's Chromebook (Crostini, aarch64) runs the Flatpak; A1 printer is cloud-bound
   (Developer Mode off); the app is signed in to their Bambu account with PEMs imported.
 
 ## Repos
 | Repo | Notes |
 |---|---|
-| `BaIanced/OrcaStudio-Android` | cl1x/Orca-Android + signed Bambu printing via obn (static in `liborca_jni.so`, `android/obn`). main = PR #3 merge (pre-release `android-v0.1.2-r37`). Bot branch `upstream/orca-main` (never commit). Builds run on dispatch only (`gh workflow run android-apk.yml --ref <branch>`). |
+| `BaIanced/OrcaStudio-Android` | cl1x/Orca-Android + signed Bambu printing via obn (static in `liborca_jni.so`, `android/obn`). main = r127 (PR #7). Bot branch `upstream/orca-main` (never commit). Builds run on dispatch only (`gh workflow run android-apk.yml --ref <branch>`). |
 | `BaIanced/OrcaStudio` | Flatpak fork; ours: `arm-build/`, `.github/workflows/arm-*.yml`. Latest release r9 (MakerLab tab). Details in the archive. |
 | `ClusterM/open-bamboo-networking` | obn pinned v2.2.0 + local patches 0001 (cloud callbacks), 0002 (start_print try LAN first), 0003 (MQTT CA from `SSL_CERT_FILE`). |

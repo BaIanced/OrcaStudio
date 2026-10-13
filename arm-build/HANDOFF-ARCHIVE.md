@@ -1298,3 +1298,152 @@ shaded, `plate_describe` live; details in the archive "AI tools milestone 3").
   transform to [60,60] rot 45 scale 150 % (footprint 35.355 both ways, right), lay on face [1,0,0], 2 copies,
   arrange (row at y 128), auto orient, move copy 3 to [30,200]; all 8 error cases rejected before any change; app
   Undo reverted the AI move and 7 more undos returned Plate 2 to empty. Plate 1 unchanged throughout.
+
+## Settings tools (AI tools roadmap 3), verified 2026-10-12 (WSA r117 + r118)
+- Android commits after b7d6de2: settings tools (r117) + output fixes (r118). `ai/PresetTools.kt`: preset_list,
+  preset_get (diff to the system parent + unsaved edits; keys / all; a printer preset without parent is compared
+  with the system preset of its model + nozzle), setting_find, settings_edit (unsaved overrides via
+  `PresetController.editOverridesNow`, validated against `OptionDef`: range, enum, bool, int, percent), preset_select
+  (process / filament only), preset_save + preset_delete (on-screen Allow via `McpTools.confirm`; delete refuses
+  selected presets). `PresetController` gained suspend variants (`savePresetNow`, `selectPrintNow`,
+  `setFilamentNow`, `setActiveFilamentNow`, `deleteUnusedPresetNow`).
+- Test: `mcptest.sh @wsa-token.txt list presetread presetedit preseterrors` (31 tools), any tool as
+  `name:'{json}'`. Save flow on filament slot 1 (edit 215 C, Deny -> declined, Allow -> saved + selected, diff
+  shown), delete refused while selected, select back, delete dialog text checked, Allow -> gone. WSA left as found.
+- Confirm dialog text isn't in the ui dump: screenshot with `adb exec-out screencap -p` (ui.ps1 -Shot from bash
+  wrote UTF-16 text instead of a PNG).
+
+## Shape builder phase 2 gaps: ungroup, rename, re-frame (verified 2026-10-12, WSA r119 + r120)
+- Commits (Android): 8334d43 (r119, CI 38302752223), 80c8d0f (r120, CI 38303834136).
+- Ungroup (`ShapeController.ungroup`): OpenSCAD chain T(gp + h/2) Rg Mg T(-h/2) T(cp + ch/2) Rc Mc T(-ch/2)
+  = T(gp + h/2 + Rg Mg (cp + ch/2 - h/2)) (Rg Mg Rc Mg) (Mg Mc) T(-ch/2); `ShapeDesign.matrix/angles/flip`
+  (XYZ angles back out, gimbal lock -> all in Z), mirror flags XOR. Python check 6.5e-13; WSA: turned group
+  mirrored Y+Z with a turned child and a turned + mirrored wedge -> 372 preview vertices equal within 0.0008 mm.
+- `placed()`: group / ungroup drop a pos / rot dim binding whose value changes (verified: pos.x dropped, size.x
+  kept, round trip keeps world bounds). `ShapeDesign.height()` = turn/flip pivot; `bounds()` / `worldBounds()`
+  honour a group's mirror; `handles()` gives no handles under a mirrored group (untested in UI).
+- Rename: `ScadController.key()` ignores whole-line `//` comments -> no new preview STL on rename (verified).
+- Re-frame: `MeshPreviewView.outgrown()` (content past the last frame by 5 %); `content()` = builder boxes, else
+  mesh (r119 framed boxes + stale mesh -> too loose). Verified r120: move far -> tight frame; 3 shapes added
+  beside -> all in view.
+- Test method: MCP (`mcptest.sh @tok 'tool:{json}'`), preview STLs in `cache/openscad/preview` pulled with
+  `su -c cat` and compared vertex sets; rename check = no new STL file.
+
+## Shape builder UI tests: keys, align, mirror, sliders (verified 2026-10-12 evening, WSA r120)
+- Fresh design (Add -> Shape builder replaced the old test draft): Box 1, Box 2, Sphere 1. Checked through
+  `files/openscad/draft.json` / `draft.scad` (the draft is saved ~1-2 s after a change; read after 3 s).
+- Keys (real Windows key presses via `keys.ps1`, focus = tap a shape row first): Left/Right/Up/Down = 1 mm,
+  Shift+arrow = 10 mm, PageUp/PageDown = Z, H = hole, S = solid, Ctrl+D duplicate (+10/+10), Del, Ctrl+Z,
+  Ctrl+Y, Ctrl+Shift+Z, Ctrl+A, Ctrl+G, Ctrl+Shift+G, Esc clears the selection (arrows then do nothing).
+- Align menu (9 items, X/Y/Z low/centre/high) with all selected: Y low, X high correct (equal sizes only).
+- Mirror menu (along X/Y/Z): toggles the flag per selected shape; codegen `mirror([..])` per axis.
+- Sliders: size ⋮ -> "Make a slider" (`box_1_width`, 0..100 step 1), second box "Follow" it ("used 2×");
+  Value / Min / Max / Step edits saved; value above max raises max; codegen uses the variable; Remove
+  unbinds and keeps the value in the shapes; Ctrl+Z brings the slider and both binds back.
+- Child of a mirrored group: outline only, no size/turn handles (un-mirrored: turn handle shows).
+- Panel on WSA 1080p: the scroll area is only ~160 px tall (y 600-760); swipe inside it.
+- Draft left as a test design (group of two boxes + sphere, slider `box_1_width` = 250).
+
+## Logs and CDP (moved 2026-10-12)
+- Logs: `adb shell setprop log.tag.OrcaInput DEBUG` (mouse events), `log.tag.OrcaWeb DEBUG` then
+  restart = Models WebView debuggable: `adb forward tcp:9222 localabstract:webview_devtools_remote_<pid>`;
+  helpers `cdp.mjs` / `cdplog.mjs` / `ua.mjs` in the session scratchpad (recreate if gone).
+  A CDP UA override only lasts while that CDP connection is open.
+- CI (`android-apk.yml`): Kotlin check, deps cache, then `liborca_jni.so` reused from cache when
+  `android/core`, `android/obn`, `android/scripts`, the toolchain, src-orca and deps are unchanged
+  (key `android-core-*`), else rebuilt with ccache (`android-ccache-*`); old caches pruned.
+
+## Sketch editor + auto-save tests (2026-10-12 late, WSA r120, fixes verified r123)
+4. **Sketch editor + auto-save tests (2026-10-12 late, WSA r120): passed** point X/Y fields, Undo button, Bend
+   field, Straighten, Add a corner, Delete corner (trash), Rectangle tool, wheel zoom, Fit, Enter closes a Lines
+   outline, Esc clears the pick, Del + Ctrl+Z (with the editor focused), Top scale (`linear_extrude scale`), Revolve
+   + Turn angle 180, Revolve-mode editor (title + dashed axis), revolve Corners (edge 2 renders), cone chamfer
+   (renders), edge and wall as sliders (Customizer 4 -> code), auto-save 10 s cadence, off = no save, on again saves.
+   **Found + fixed, build run 38314883049 (bc021f4, r121?) to verify on WSA:**
+   - 4f4697e: after typing in a number field and changing the pick, the editor had no focus: Del did nothing and
+     **Esc closed the editor as Cancel (drawing lost)**. Now a canvas press and each pick change re-focus the
+     editor root. Verify: pick a corner, type X, tap another corner, press Esc (pick clears, editor stays), Del.
+     Same commit: Bend field 190 dp (label was clipped), pick-bar row scrolls; new edge/wall sliders
+     `[0:0.1:10+]` (were `[0:1:100]`), Turn angle slider max 360.
+   - bc021f4: auto-save switched off then on after leaving More came back at 60 s, not the set interval. Off is
+     now stored as -interval. Verify: set 10, leave More, switch off, leave, switch on -> 10.
+   Not testable on WSA: pinch zoom (no touch). Pyramid/wedge chamfer: same minkowski code as the cone
+   (`ShapeModel.kt:367-373`), render not tried. Editor draft holds Sketch 1 (revolve) + Cone 1 (chamfer, wall
+   slider): fine to replace.
+- **r123 (run 38314883049, bc021f4) verified on WSA:** typed X then tapped another corner -> value committed, Esc
+  cleared the pick and the editor stayed; Del removed a corner after a Y field edit, Ctrl+Z restored it; Bend label
+  fits; new edge slider `[0:0.1:10]`; auto-save off -> pref -10, on again after leaving More -> 10 (reset to 60 after).
+
+## Shape-builder handles: Y, Shift turn, groups, nested child (verified 2026-10-12 late, WSA r123)
+- Fresh design via Add -> Shape builder (old test draft replaced); checked through `files/openscad/draft.json`.
+- Y handle (adb swipe on the green dot): Box 1 size.y 20 -> 42, pos.y +11 (low side kept).
+- Shift = 1° turn: real mouse drag with Shift held (`~\orca-android-tools\mdrag.ps1 x1 y1 x2 y2 -Shift`) -> rot.z 17;
+  the same drag without Shift -> +15 (32). WSA mirrors the Windows desktop: Android screen coords = Windows pixels.
+- Group (Box 1 turned + Box 2, Ctrl+A, Ctrl+G): group shows only the turn dot; turn -> group rot.z 15. Child of the
+  unturned group: all handles, X 20 -> 29. Child of the turned group: outline only. Builder Ctrl+Z undid the turn.
+- Nested (Group 5 > Group 3 > Box 2): handles shown; Z 20 -> 31 (bottom kept); turn -> rot.z 45.
+- Shape list scrolls with a real mouse wheel (adb swipe didn't scroll it). Plate 1 untouched; app closed via window close.
+- Draft left as this test design (Group 5 with Group 3 + Box 3).
+
+## OpenSCAD Save/Open via the picker (moved from HANDOFF.md on 2026-10-12)
+- r123 (WSA): Save wrote correct code but named the file "Shape design" (no extension; Android adds none for
+  `application/x-openscad`); Open worked (code view, same size) but a builder design came back as plain code.
+- d87dcdb, verified WSA r124: save name gets `.scad` (`ScadEditor.kt` `saveName`); a shape design saves its JSON as a
+  last line `// OrcaStudio shapes: {...}` (`SHAPES_MARK`, `ScadController.save`) and `openFile` reopens it in the
+  builder (Shapes tab, same 45 x 20 x 20 mm) only if the code above still equals `toScad()`; an externally edited
+  copy opens as code with the edit applied.
+- cd4177c, verified WSA r125: an edited file opens without the stale shapes line (draft.scad had 0); a code design
+  saves without the line.
+- Known: the picker names a 2nd copy `x.scad (1)` (DocumentsUI, unknown MIME).
+- Sketch editor + auto-save fixes (4f4697e, bc021f4) and shape-builder handles verified r123 (see "Shape-builder handles").
+
+## .scad projects from zips (moved from HANDOFF.md on 2026-10-12)
+- Found in source (r125): `ModelDownloads.modelFiles` flattened zips (`include <lib/x.scad>` broke, import()/surface()
+  data dropped); zips from the import picker / "Open with" weren't unzipped (only Models-tab downloads went through
+  `openDownloaded`); a nameless download with OpenSCAD text fell through `sniffExtension` to "stl".
+- daf9aba (r126): a zip with any .scad unpacks whole into `<zip>_files/` next to it (not `<zip>/`: the import folder
+  has its own `openscad/`, `presets/`), zip-slip guarded, `__MACOSX/` and `._*` skipped; sources sorted by folder
+  depth (main-design pick in `FileController.openModels` takes the first one nothing includes); model files a source
+  names (import data) stay off the plate. `openModels` unzips every zip and owns the "no model files" toast;
+  `openDownloaded` only routes presets and calls `openModels`. Sniff: OpenSCAD keywords and no NUL in the first 512
+  bytes -> "scad". Manifest VIEW/SEND filter: `application/x-openscad`, `text/x-openscad`, `application/zip`,
+  `application/x-zip-compressed`.
+- Verified WSA r126: test zip (`scadzip/design.scad` with `include <lib/shapes.scad>`, `use <lib/util.scad>`,
+  `import("parts/peg.stl")`, plus a `__MACOSX` entry) via Prepare > Add > Import: editor opened design.scad with the
+  folder tree under `cache/models/scadzip-test_files/`, Customizer found `width`, preview 30 x 40 x 10 mm, 116
+  triangles (box + hole + peg), temp Plate 2 stayed empty; plate, zip deleted after.
+- Note: ScadDeps packs only included .scad text into a plate object, not import() data files (pre-existing).
+
+## Thingiverse .scad download (verified 2026-10-12, WSA r126)
+- "Customizable Card Box" (thing with the Customizer badge), Download all files: the zip arrives nameless
+  (`cache/downloads/<uuid>.zip`, copied to `cache/models/`), unpacked to `<uuid>_files/` (files/, images/, README,
+  LICENSE); the editor opened `Customizable_Card_Box.scad` (Customizer 31 params, preview 68.6 x 68.1 x 96.8 mm,
+  18,974 triangles in 1.1 s); its 4 pre-rendered STLs (not referenced by the .scad) went on the plate next to the editor.
+  Same flow re-checked on r127 with ad blocking on. Test plates and files deleted.
+
+## Models tab ad blocking (f138655, verified 2026-10-12, WSA r127)
+- User asked to block Thingiverse ads. Thingiverse runs Raptive (AdThrive) plus ~40 header-bidding hosts (found
+  via CDP `performance.getEntriesByType('resource')`). `net/AdBlock.kt`: `shouldInterceptRequest` in
+  `ModelsScreen.kt` returns an empty response for those hosts (parent-domain match); `HIDE_JS` (onPageStarted +
+  onPageFinished) adds a `#orca-adblock` style hiding `[class*="AdCard__adCard--"]`, `AdBanner__adBanner--`,
+  `Ad__ad--`, `.adthrive-ad`, `.adthrive-comscore`, kargo, `.tv-ad-free-cta`, adsbygoogle / GPT slots.
+- Verified r127: only `ads.adthrive.com` is requested (answered empty), no bidders load; home, search and thing
+  pages show no ad elements (the one visible iframe on the thing page is its own YouTube embed); Download all
+  files still opens the .scad; MakerWorld home and Printables home load normally.
+
+## Preset re-link + nozzle / my filaments verified (moved from HANDOFF.md on 2026-10-12)
+- Preset re-link: "Bambu Lab A1 0.4 nozzle -No cut No vibe" was detached (`machine/base/`, `"inherits": ""`), so only
+  generic process / filaments were compatible. Fix (user OK'd): `inherits` -> "Bambu Lab A1 0.4 nozzle", `.info`
+  `base_id` = the sibling linked preset's (system A1 id GM030), both files moved to `machine/`, `base/` removed
+  (`cat >` over the old file keeps owner/SELinux, then `mv`). Backups: `~\orca-android-tools\preset-backup-2026-10-12`
+  (WSA) and `...-phone` (phone, `machine.tar` + extracted). Verified WSA (listed, selectable, Bambu PLA, "0.20mm Standard
+  @BBL A1", G-code keys identical) and phone r114 (listed with "0.20mm Standard @BBL A1" + Bambu PLA Basic).
+- Match the installed nozzle, phone r114, printer online: More shows "Bambu Lab A1: 0.4 mm"; printer picker vendor
+  presets 1 (A1 0.4) with the switch on, 4 (0.2/0.4/0.6/0.8) off; selecting A1 0.2 with the switch on shows "The printer
+  reports a 0.4 mm nozzle; this preset is for another size." + "Use Bambu Lab A1 0.4 nozzle" (works).
+- Use my filament presets, phone r114: picking "_BambuCalibrated PLA Basic @BBL A1 (Sunflower Yellow)" in slot 1 saved
+  `my_filaments` {"Bambu PLA Basic @BBL A1": that}; "Sync filaments from printer" kept it in slot 1; picking the system
+  preset cleared the map to {}. The one-user-preset fallback filled both PLA Matte slots with the user's only Matte-based
+  preset. Switching printer presets runs an AMS sync (plate went 1 -> 4 slots); the plate was restored to 1 slot
+  (Bambu PLA Basic, printer "-No cut No vibe", 0.20mm Standard) after the test.
+- Merge: Android main = r127 (PR #7, merge commit 5e2a483, branch `claude/merge-r127` at f138655).
