@@ -1499,3 +1499,12 @@ shaded, `plate_describe` live; details in the archive "AI tools milestone 3").
   Phone: message "The zip's ready-made model is not on the plate.", Add -> plate shown with the variant selected,
   OpenSCAD chip reopens the editor; test variants deleted (Delete key = `input keyevent 112` as root), plate back to 2.
 - `phone-ui.py tap` falls back to a plain `input tap` where `su` is missing (Chromebook ARC).
+
+## Big-screen pass (moved from HANDOFF.md on 2026-10-13)
+- r138 on the Chromebook (ARC, 1920x1080, app area ~1813x948): Prepare, OpenSCAD editor beside the plate, zip open +
+  variant Add (lands on the plate, editor stays open beside it), shape builder (whole panel scrolls; cramped at this
+  height, "Hide preview" helps), Models tab, More page, filament picker dialog, settings editor: all fine.
+- Found: Device page cards stretched across the window; Customizer sliders with >20 steps drew a solid row of tick dots.
+- r140 (5410405 "Wide screens", `ui/device/DeviceScreen.kt`, `ui/scad/ScadEditor.kt`: tick colours transparent when
+  count > 20): verified on the Chromebook 2026-10-13 (run 38358229970, `install-build.ps1 -Device <ip>:5555`):
+  Device page Job/Temperatures left, Loaded filaments right; scadzip-test width slider shows no dot row.
