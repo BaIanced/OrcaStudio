@@ -1531,3 +1531,18 @@ shaded, `plate_describe` live; details in the archive "AI tools milestone 3").
 - Test tools: `cdpnet.mjs <secs> [url part]` (network / console / failures) and `cdpeval.mjs "<js>"` in the session
   scratchpad (recreate if gone); WebView debugging via `setprop log.tag.OrcaWeb DEBUG` + app restart, then
   `adb forward tcp:9222 localabstract:webview_devtools_remote_<pid>`. Temp Plate 2 deleted after each run.
+
+## UI batch WSA checks (moved from HANDOFF.md on 2026-10-13)
+- **WSA r144 checks passed (2026-10-13, landscape 907x481 window only):** Layout lab options, More order, Smooth PEI
+  label, profile update chip installs (user tapped it), filmstrip + label + plate menu, add/delete plate, double-tap
+  focus, taps after a tooltip long-press, tool column scroll with an object selected, builder main canvas, editor
+  resize, slider draft chip (66 mm mid-drag, 91 mm on release), ghost on plate (translucent at the plate centre).
+- **Verified WSA r146:** lab size sliders (text, interface, floating controls; they multiply; reset to 100 %), panel
+  drag resize + snap-to-tuck + drag back out, tool column arrows (tap scrolls, up/down show only when needed), pinned +
+  after the strip, builder slider follows the finger (6e45548).
+- **Verified WSA r149 (0d2bb7b, Models infinite scroll, via CDP):** Thingiverse home (Page 2: 23 cards, images load)
+  + search (Pages 2-3); Back from a page-2 model restores both pages + the exact scroll spot; menu switch off = script
+  not injected (pref `models_infinite_scroll` false), back on. Printables (search + /model listing) scrolls natively
+  with no pager, so the script stays out. CDP: `setprop log.tag.OrcaWeb DEBUG` + restart, forward
+  `localabstract:webview_devtools_remote_<pid>` (from `/proc/net/unix`), Node 24 has a built-in WebSocket
+  (`cdp.mjs` = Runtime.evaluate on the first page target).

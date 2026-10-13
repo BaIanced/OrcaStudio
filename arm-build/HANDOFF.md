@@ -28,7 +28,53 @@ The system file picker is a ChromeOS dialog (adb can't drive it); open files wit
 -t application/zip --grant-read-uri-permission`), which works without root.
 **Big-screen pass done** (r138 + r140 "Wide screens" 5410405, verified Chromebook 2026-10-13; archive "Big-screen
 pass"). Chromebook has r140. r140 merged to main (PR #10, 2026-10-13).
-**Next:** the leftovers in items 0 and 6 mostly need the user (sign-ins) or a web-UI printer; pick the next open item.
+**UI refinement batch (user feedback 2026-10-13).** r144 = f7f4d57 (run 38382691511). r145 (6e45548) cancelled. r146 = a2d3148 (run 38385668787) installed on WSA. r147 = 6e645cb (run 38387270397, on WSA):
+filmstrip + Slice button in one bottom row (column layout) instead of a fixed 190 dp gap; still a sliver of one thumbnail
+at a ~330 dp canvas. **r148** = 9f9978a (run 38388490237, installed on WSA): under 360 dp beside the column the strip
+gets its own row above Slice: verified WSA (panel widened, 5 plates, scrolls to active, + pinned). WSA now has 3 plates
+(plates 2-3 not mine: the user's?). **r149** = 0d2bb7b (run 38407026995, installed on WSA): Models tab infinite scroll (`MORE_JS` in ModelsScreen.kt,
+menu switch "Infinite scroll", pref `models_infinite_scroll`, default on): verified WSA (archive "UI batch WSA checks");
+untested on the phone. WSA's Recent files has AllPoses.3mf (could test fd71b33 there, but opening it replaces the WSA
+project: ask first). **Next: the phone** (r148; portrait + landscape, everything in the batch list below). WSA r144/r146
+checks passed (archive "UI batch WSA checks"). Native fd71b33 still
+untested (needs a multi-plate 3MF, e.g. the user's AllPoses.3mf on the phone). a2d3148 (user 2026-10-13): lab sliders for text size,
+interface size (root `LocalDensity` override in `AppScaffold`) and floating controls (overlay density, Prepare + Preview),
+applied on release; wide settings panel edge drags to resize (`lab.panelWidth`, min 300 dp; let go < 200 dp = tuck; tap
+toggles; keep this when removing the lab); tool column up/down arrows (`ScrollCue`, 28x18 dp, tap scrolls). User said some
+text and the floating icons look huge.
+Ghost on plate overlaps what is already there and is small at plate zoom: mention to the user. **Still untested:** everything on the phone (portrait,
+tool column/fullscreen in portrait, landscape immersive), Chromebook, chips switcher, opacity slider, 20 plates,
+tooltip look (vanished before the screenshot), default-plate-type pinning, native fixes. Lab now = filmstrip + label
++ ghost on WSA. Editor width resets after leaving Prepare (minor). Fixes from WSA in **6e45548** (untested):
+tabs/filmstrip + was scrolling out of view (now pinned, row scrolls to the active plate); builder slider thumb/number
+froze during a drag (`ScadState.value` now reads the design dims; `refreshParams(300)` debounce lagged).
+Batch items:
+- User couldn't pick between mockups (https://claude.ai/artifact/E3MtY8rQ1dMGHhibY2oNCX), so variants are switchable in
+  **More > Layout lab (temporary)** (`core/LayoutLab.kt`, prefs `layout_lab`): plate switcher tabs (default) /
+  filmstrip / chips, "Plate n of m" label, control opacity slider (`LocalOverlayAlpha`), portrait tool column (default
+  on: undo/redo/view at its top), fullscreen in portrait, OpenSCAD view canvas (default) / ghost. Once the user picks,
+  delete the losers and the lab. Wide panel tuck state is in the lab struct too (keep it when removing the lab).
+- More order: Layout lab, Recent files (desktop rows, open), Calibration, Printers & presets (open), then collapsed AI
+  tools, Orca Cloud, Backup, Appearance, Misc, About. Profile updates: auto check once a day (`lastProfileCheck`) ->
+  `UpdatesChip` in the Prepare top bar (tap installs).
+- "High Temp Plate" -> "Smooth PEI Plate" (`Translator.plate`, English only); picking a plate type makes it the default
+  (`PresetController.rememberBedType`; other plates that followed the old default get it pinned).
+- Tooltips (`Tip`, M3 TooltipBox: long press / hover) on tool + top-bar icons; auto-orient icon = arrow + tilted square;
+  filaments collapsible (`CollapsibleTitle`); File button top right; landscape always immersive (`Immersive` in MainActivity).
+- Double tap on an inactive plate (empty spot) focuses it (`PlateRenderer.plateAt`, `PlateListener.onPlateDoubleTap`).
+- OpenSCAD: preview on the main canvas (shape designs always) or ghost (type 98 mesh, translucent pass) on the active
+  plate's centre; editor resizable (`DragHandle`, portrait = split with the canvas above); slider drag = previews after
+  40 ms with `$fn = 16` appended (draft, "Draft while dragging" chip), full render on release (`ScadController.endDrag`).
+- Native: `add_plate` moves the object nearest to the new plate from outside every plate onto it (user's bug: 9-object
+  import, floaters stayed beside the grid). **fd71b33** (pushed, compiled locally, not in a CI build yet, untested):
+  add_plate skips that when a floater already lies in the new spot; likely import cause fixed: `load_models` keeps
+  a single placed file's layout (`keep_layout`) centred on one plate, so a layout wider than a bed (e.g. multi-plate
+  3MF imported as models) floated; now it arranges instead when any object lands off every plate (spills to new plates).
+**Test on the phone first** (portrait + landscape), then Chromebook. Things to check: tooltips don't block taps; tool
+column scrolls in portrait; filmstrip vs Slice button with many plates; 20 plates in tabs/filmstrip; slider follows the finger.
+**Next after the user's picks (G2b, user 2026-10-13):** plate number labels and per-plate icons drawn in the 3D view
+around each plate (like Orca/Bambu: they turn with the camera), useful with many plates; then remove the lab.
+**Older leftovers:** items 0 and 6 mostly need the user (sign-ins) or a web-UI printer.
 **Phone:** serial = the `adb-...._adb-tls-connect._tcp` entry in `adb devices` (`adb disconnect` a stale `ip:port`).
 Has r143. Setup: archive "Phone test setup", memory `test-on-phone`; `phone-ui.py` needs `PYTHONIOENCODING=utf-8`;
 pull binaries with `adb exec-out "su -c '...'"`; Delete key = `su -c 'input keyevent 112'`. **Never
@@ -43,6 +89,8 @@ Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
    switching printer models. Filament picks per AMS tray: verified phone r134. **Untested:** spool change -> printer's
    preset wins and the pick is dropped (only when the user swaps a spool); WSA. Phone plate: 1 slot "Bambu PLA Basic @BBL A1".
 3. Merge: main = r140 (8fe2c9b, PR #10, 2026-10-13, user's `/next-merge`). Unmerged, verified: ec86442 (r142), 4d55156 (r143) -> merge candidate.
+   Unmerged, untested: f7f4d57 (UI batch), fd71b33 (plates), 6e45548 (plate row, sliders), a2d3148 (sizes, panel drag), 6e645cb + 9f9978a (filmstrip row); a merge before they are verified must stop at 4d55156. 0d2bb7b (r149,
+   infinite scroll) is verified on WSA but sits after the untested commits (cherry-pick it if merged early).
    Untested parts already in main stay listed in items 0, 2, 5, 6.
 4. Shape builder by touch: verified phone r134. Raw multi-touch: `~/orca-android-tools/pinch.sh` / `drag1.sh`
    (push with `MSYS_NO_PATHCONV=1` and a `C:/` source path).
@@ -59,7 +107,7 @@ Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
   (user, 2026-10-11): decide branch handling and next steps yourself. **Main merges / releases need
   the user.** Main = r140 (merged 2026-10-13, PR #10, on the user's `/next-merge`); user agreed to merge more
   often, at verified milestones: offer a merge PR when a batch is verified, merge only on their "merge".
-- Installed on WSA: r128 (2026-10-12 late); AI tools on; auto-save 60 s. Plate 1 empty, no Plate 2. Shape-builder
+- Installed on WSA: r149 (2026-10-13); AI tools on; auto-save 60 s. Plate 1 empty, no Plate 2. Shape-builder
   handles by touch untested (WSA has none). Real mouse drags (+Shift): `mdrag.ps1 x1 y1 x2 y2 [-Shift]`
   (Android coords = Windows pixels on WSA); the builder's shape list scrolls only with a real mouse wheel.
 - Draft of the open design: `files/openscad/draft.scad|json` (read with `adb exec-out "su -c 'cat ...'"`,
