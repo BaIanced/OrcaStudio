@@ -18,11 +18,8 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 ## State
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
-- Android main = r190 (f223be2, PR #21, 2026-10-14; r189 snackbar accent + r190 phone message bar / OpenSCAD button
-  placement, phone-verified; archive "r189 + r190").
-- **Work branch, verified, not merged:** r192-r194 (head r194, run 38557528263), 2026-10-14: 3D selection falls back to
-  the Prusa blue near the part orange; design mode "Messages and dialogs" samples (top of screen, clear of the panel on the
-  phone and Chromebook); a real error dialog takes the custom Dialogs colour. Details: archive "r192-r194".
+- Android main = r194 (541c5c4, PR #22, 2026-10-14; r192-r194 selection colour + design mode dialog samples, verified
+  phone + Chromebook; archive "r192-r194"). Work branch = main (nothing unmerged, nothing unverified).
 - Installed: Chromebook r193 (2026-10-14; landscape now; restored to Dark + Prusa default, no
   custom colours, wallpaper off; session = 1 cube on 1 plate). Phone r194 (Dark + Prusa default restored; fullscreen portrait
   lab on (user's setting); session =
@@ -33,8 +30,7 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 - Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
 
 ## Next task
-**Design mode is done and verified on all three devices (r180-r194).** Next: merge r192-r194 when the user says "merge"; then
-the WSA landscape check (r179 line below; only while the user isn't on the PC), then the open items. Background:
+**Design mode is done, verified on all three devices and merged (r180-r194, main r194).** Next: the WSA landscape check (r179 line below; only while the user isn't on the PC), then the open items. Background:
 **Colour presets + design mode (user, 2026-10-14: "code all three as presets, in addition to the customizer; you
 categorize everything").** **Verified on WSA r182** (presets, live design mode, per-part overrides, resets, restart; details: archive
 "2026-10-14: design mode r182-r187").
