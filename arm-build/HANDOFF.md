@@ -18,8 +18,8 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 ## State
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
-- Android main = r170 (76dfdf0, PR #15, 2026-10-13). **Unmerged, verified:** r172 section-view brush clip (6861cc1),
-  r173 paint stroke undo (d6abc60) (archive "r172/r173"). Nothing unverified on the branch.
+- Android main = r173 (af876fd, PR #16, 2026-10-13: r172 section-view brush clip, r173 paint stroke undo). Nothing
+  unmerged or unverified on the branch.
 - Installed: Chromebook r173 (session = 1 cube on 1 plate, Tabs switcher). Phone r168 (session = test downloads, contents
   don't matter; old 8-plate session in `/data/local/tmp/phone-session-backup.{3mf,json}`). WSA r161 (AI tools on; auto-save
   60 s; session = backup `/data/local/tmp/session-backup.{3mf,json}`, 3 plates, plate 3 active).
