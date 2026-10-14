@@ -18,10 +18,9 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 ## State
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
-- Android main = r182 (038b571, PR #18, 2026-10-14; user said "merge all", accepting r179-r182 as WSA/Chromebook-verified).
-  Still untested on main: r179-r182 on the phone (see "Next task"); r178 OpenSCAD in the phone's fullscreen portrait.
-- **Work branch, verified, not merged:** r184 fb09b88 (readable text on a changed background) + r185 3061b3a (selected tab
-  label) = run 38539692983, verified on the Chromebook 2026-10-14 (details: archive "2026-10-14: design mode on the Chromebook").
+- Android main = r185 (c32b1ad, PR #19, 2026-10-14; r184 readable text on a changed background + r185 selected tab label,
+  Chromebook-verified). Work branch = main (nothing unmerged). Still untested on main: r179-r185 on the phone (see "Next
+  task"); r178 OpenSCAD in the phone's fullscreen portrait.
 - Installed: Chromebook r185 (2026-10-14; it was in **portrait tablet mode** 1080x1920; restored to Dark + Prusa default, no
   custom colours, wallpaper off; session = 1 cube on 1 plate). Phone r178 (session =
   test downloads; old 8-plate session in `/data/local/tmp/phone-session-backup.{3mf,json}`). WSA r161 (AI tools on; auto-save
