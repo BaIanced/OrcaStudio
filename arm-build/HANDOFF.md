@@ -19,7 +19,7 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
 - Android main = r194 (541c5c4, PR #22, 2026-10-14; r192-r194 selection colour + design mode dialog samples, verified
-  phone + Chromebook; archive "r192-r194"). **Work branch is 8 commits ahead of main (r195-r202, head = Add-menu icon commit): all
+  phone + Chromebook; archive "r192-r194"). **Work branch is 6 commits ahead of main (r196-r202, head = Add-menu icon commit): all
   verified on WSA only (see Next task); merge them on the user's "merge" (/next-merge).**
 - Installed: Chromebook r193 (2026-10-14; landscape now; restored to Dark + Prusa default, no
   custom colours, wallpaper off; session = 1 cube on 1 plate). Phone r194 (Dark + Prusa default restored; fullscreen portrait
