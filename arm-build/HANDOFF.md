@@ -20,7 +20,7 @@ front**; grep them when a question needs them (e.g. `grep -n "AMS mapping" HANDO
 
 ## Next task
 **r170 (Android 2ea77b3): section view clips travels/markers + picks skip the cut. Verified on the Chromebook 2026-10-13**
-(archive "r170 section view"); waiting for a merge. **Untested:** painting through the cut (picks the far side; the sphere
+(archive "r170 section view"); merged to main 2026-10-13 (PR #15). **Untested:** painting through the cut (picks the far side; the sphere
 brush can still reach cut-away triangles next to the hit, not done), long-press menu with the cut, measure line staying whole.
 **Test devices (user, 2026-10-13):** **phone** = main (root); **Chromebook's Android (ARC)** = big-screen layout
 checks (user wants the app there). Chromebook: `<chromebook-ip>:5555` (memory `test-on-phone`), Android 13, arm64,
@@ -29,7 +29,7 @@ checks (user wants the app there). Chromebook: `<chromebook-ip>:5555` (memory `t
 The system file picker is a ChromeOS dialog (adb can't drive it); open files with a VIEW intent on the MediaStore URI
 (`content query --uri content://media/external/file --where "_display_name='x'"` -> `-d content://media/external/file/<id>
 -t application/zip --grant-read-uri-permission`), which works without root.
-r144-r168 verified, merged to main 2026-10-13 (PRs #12-#14; archive).
+r144-r170 verified, merged to main 2026-10-13 (PRs #12-#15; archive).
 Phone has r168; session = test downloads (contents don't matter); old 8-plate session in `/data/local/tmp/phone-session-backup.{3mf,json}`.
 WSA session backup: `/data/local/tmp/session-backup.{3mf,json}` (restored). Chromebook has r170; session = 1 cube on 1 plate, Tabs switcher.
 Adb on the Chromebook can't zoom the canvas (`input mouse scroll` did nothing); tuck the panel for room.
@@ -57,7 +57,7 @@ Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
 2. Nozzle match + filament picks per AMS tray: verified (archive). **Untested:** newer-firmware `device.nozzle.info`
    path; stale status after switching printer models; spool change -> printer's preset wins and the pick is dropped
    (only when the user swaps a spool); tray picks on WSA. Phone plate: 1 slot "Bambu PLA Basic @BBL A1".
-3. Merge: main = r168 (383b35a, PR #14). Unmerged on the work branch: r170 (2ea77b3, verified, above).
+3. Merge: main = r170 (76dfdf0, PR #15, 2026-10-13). Nothing unmerged on the work branch.
    Untested parts already in main stay listed in items 0, 2, 5, 6.
 4. Shape builder by touch: verified phone r134. Raw multi-touch: `~/orca-android-tools/pinch.sh` / `drag1.sh`
    (push with `MSYS_NO_PATHCONV=1` and a `C:/` source path).
@@ -69,7 +69,7 @@ Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
 ## State
 - Both repos work on branch `claude/handoff-continuation-rseql3` (the "test branch"). Autonomy
   (user, 2026-10-11): decide branch handling and next steps yourself. **Main merges / releases need
-  the user.** Main = r168 (merged 2026-10-13, PR #14, on the user's `/next-merge`); user agreed to merge more
+  the user.** Main = r170 (merged 2026-10-13, PR #15, on the user's `/next-merge`); user agreed to merge more
   often, at verified milestones: offer a merge PR when a batch is verified, merge only on their "merge".
 - Installed on WSA: r161 (2026-10-13; session backup restored after the G2b tests); AI tools on; auto-save 60 s. Session = the backup above (3 plates, plate 3 active). Shape-builder
   handles by touch untested (WSA has none). Real mouse drags (+Shift): `mdrag.ps1 x1 y1 x2 y2 [-Shift]`
@@ -180,6 +180,6 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
 ## Repos
 | Repo | Notes |
 |---|---|
-| `BaIanced/OrcaStudio-Android` | cl1x/Orca-Android + signed Bambu printing via obn (static in `liborca_jni.so`, `android/obn`). main = r168 (PR #14). Bot branch `upstream/orca-main` (never commit). Builds run on dispatch only (`gh workflow run android-apk.yml --ref <branch>`). |
+| `BaIanced/OrcaStudio-Android` | cl1x/Orca-Android + signed Bambu printing via obn (static in `liborca_jni.so`, `android/obn`). main = r170 (PR #15). Bot branch `upstream/orca-main` (never commit). Builds run on dispatch only (`gh workflow run android-apk.yml --ref <branch>`). |
 | `BaIanced/OrcaStudio` | Flatpak fork; ours: `arm-build/`, `.github/workflows/arm-*.yml`. Latest release r9 (MakerLab tab). Details in the archive. |
 | `ClusterM/open-bamboo-networking` | obn pinned v2.2.0 + local patches 0001 (cloud callbacks), 0002 (start_print try LAN first), 0003 (MQTT CA from `SSL_CERT_FILE`). |
