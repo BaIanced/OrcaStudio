@@ -1747,3 +1747,16 @@ was dropped with a missed first sample, `SceneController.kt` paintAt). **Verifie
   is all cut away (cut 0.96) the empty-space menu opens (nothing picked). Pick path: `SceneController.kt:312-329`.
 - Measure line with the cut: both points on faces the 0.50 cut removes; line and markers stay whole (overlays draw with
   the section clip off, `PlateRenderer.kt:505-540`).
+
+## High refresh rate + painting through a mesh boolean (verified 2026-10-13, phone r175, run 38509685106)
+- User asked for ColorOS's "165 Hz ultra refresh rate" (system list: Facebook, Instagram). `dumpsys display` showed the app
+  held at 60 Hz by an `APP_REQUEST_RENDER_FRAME_RATE_RANGE max=60` vote with no app request (`peak_refresh_rate=165`;
+  modes 1-5 = 120/60/90/144/165 Hz). Commit "Display: ask for the fastest refresh mode while the user touches
+  the app": `MainActivity.boostRefresh` (dispatchTouchEvent / dispatchGenericMotionEvent) sets `preferredDisplayModeId` to the
+  fastest mode at the current size, dropped 2 s after the last input (PlateView renders continuously, so no fixed rate).
+  Phone: orbit -> mode 1 / 120 Hz, 3 s later back to 60 Hz. The window asks for mode 5 (`preferredDisplayMode=5`) but
+  ColorOS clamps it to 120 for apps off its 165 Hz list; 165 is a system-side list, not reachable from app code.
+- Painting through a mesh boolean (item 7): temp Plate 2, 20 mm cube, More > Add part (10 mm box), part X 15 -> 8, Color
+  painting with filament 2 (3 strokes, one over the part's corner), More > Mesh boolean > Difference (Cube minus Part 2):
+  notch cut, result one 20x20x20 part, the black strokes stayed on the remaining faces (screenshot). Cube deleted, Plate 2
+  deleted via its canvas delete badge (tab long-press via root `input` didn't open a menu); phone back to 1 plate, box.stl.
