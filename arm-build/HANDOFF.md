@@ -18,25 +18,24 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 ## State
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
-- Android main = r173 (af876fd, PR #16, 2026-10-13: r172 section-view brush clip, r173 paint stroke undo). Nothing
-  unmerged or unverified on the branch.
-- Installed: Chromebook r173 (session = 1 cube on 1 plate, Tabs switcher). Phone r168 (session = test downloads, contents
+- Android main = r175 (b7986b0, PR #17, 2026-10-13: high refresh rate during input). Branch = main; nothing unmerged or
+  unverified.
+- Installed: Chromebook r173 (session = 1 cube on 1 plate, Tabs switcher, cut off). Phone r175 (session = test downloads, contents
   don't matter; old 8-plate session in `/data/local/tmp/phone-session-backup.{3mf,json}`). WSA r161 (AI tools on; auto-save
   60 s; session = backup `/data/local/tmp/session-backup.{3mf,json}`, 3 plates, plate 3 active).
 - Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
 
 ## Next task
-On the Chromebook, the r170 section-view leftovers: long-press menu with the cut on (adb `input swipe x y x y 800`), measure
-line staying whole with the cut. After that nothing open can be done alone: the items below need the user, and the plate
-switcher is still undecided (asked 2026-10-13; ask again later).
+Nothing open can be done alone; nothing awaits a merge. Needs the user: the plate switcher pick (lab stays until they say), the user-only items below.
 
 ## User decisions (2026-10-13)
 - A 3mf landing on the active plate over existing objects stays as is (arranging could move precisely placed objects).
 - Plate activation must not move the camera when zoomed out (sometimes moving is fine).
 - OpenSCAD: design view (main canvas) is the default; an **eye button** shows the design on the build plate and back, with
   the camera the user had on the plates, the project's objects hidden, and new designs on an empty plate.
-- Plate switcher (tabs/filmstrip/chips): **not decided**, keep the lab (mockups https://claude.ai/artifact/E3MtY8rQ1dMGHhibY2oNCX;
-  More > Layout lab). Once picked: delete the losers and the lab (keep the wide panel tuck/width). Chips layout has no picking.
+- Plate switcher (tabs/filmstrip/chips): **keep the lab until the user says otherwise** (user, 2026-10-13, 3rd ask: don't ask
+  again; mockups https://claude.ai/artifact/E3MtY8rQ1dMGHhibY2oNCX; More > Layout lab). Once picked: delete the losers and
+  the lab (keep the wide panel tuck/width). Chips layout has no picking.
 - Modeling goal: model **without writing code**; OpenSCAD code is only a backstop. Roadmap 1-3 done (archive).
 
 ## Open and untested items
@@ -47,13 +46,13 @@ switcher is still undecided (asked 2026-10-13; ask again later).
 2. Nozzle match + filament picks per AMS tray: verified. **Untested:** newer-firmware `device.nozzle.info` path; stale status
    after switching printer models; spool change -> printer's preset wins and the pick is dropped (only when the user swaps a
    spool); tray picks on WSA. Phone plate: 1 slot "Bambu PLA Basic @BBL A1".
-3. Section view (r170/r172): **untested:** long-press menu with the cut, measure line staying whole (Next task).
-4. Shape builder: verified by touch on the phone r134. **Untested:** phone layout; handles by touch on WSA (it has none).
+3. Section view (r170/r172/r173): all verified (archive). Nothing open.
+4. Shape builder: verified by touch + phone layout on the phone r134 (archive). Handles by touch on WSA: n/a (no touch).
 5. .scad zips + Thingiverse downloads: verified. **Untested:** the 16 KB content sniff itself (r143 gets the real name first).
 6. Ad blocking (f138655, ec86442, 08bdf0b = `AdBlock.Client` in all app WebViews): verified. **Untested:** MakerWorld sign-in /
    downloads with it on; Bambu sign-in WebView (needs Sign out + the user's password: leave to the user), Orca Cloud login,
    plugin pages, Device page on the phone (needs a printer with a web UI; the phone only has the A1).
-7. OpenSCAD **untested:** phone layout, a real .scad download, painting through a mesh boolean.
+7. OpenSCAD: phone layout r166/r168, real .scad download r142/r143, painting through a mesh boolean r175: all verified (archive).
 8. Models tab **untested:** MakerWorld sign-in ticket flow.
 9. **Untested:** a true EGL context loss (no repro). Badges are ~23 dp at plate zoom on the phone (under 48 dp; told the user).
 10. User to retest: the 325 MB slice that crashed before the r59 OOM fix; pinch zoom on MakerWorld; whether a real keyboard's
