@@ -31,8 +31,17 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 
 ## Next task
 **Design mode is done, verified on all three devices and merged (r180-r194, main r194).** r179/r178 landscape verified on the Chromebook (archive "r179 delete popup + r178 design view in landscape"). Item 5's 16 KB sniff verified 2026-10-14 (Chromebook). WSA r194 2026-10-14: item 0 mouse right-click and item 2 tray
-picks verified (archive "WSA r194 element blocker right-click + tray picks"). **Next: nothing autonomous is left**; ask the
-user for a new task. Sign-ins + cloud syncs done by the user 2026-10-14 (archive "sign-ins + cloud sync"). User-only: retests, plate switcher pick, launcher icon colour (still teal; user
+picks verified (archive "WSA r194 element blocker right-click + tray picks"). **User away from the PC (2026-10-14), standing orders:** (1) numpad camera views: **verified WSA r196** (Num Lock on: 1 = top,
+3 = front, 7 = frame plate; Num Lock off: no change). (2) Blind bug hunt, in progress on the work branch (no main merge): random-input
+fuzz (`scratchpad/fuzz.sh`, ~470 steps, no crash), then targeted edge cases. **Fixed, on the work branch, UNMERGED** (r197-r200,
+67098ce): Shape dialog Add off outside 0.1-1000 mm + chips wrap (Cone was a sliver); typed scale clamped 0.1 %-100x; NumberField rejects
+NaN/Infinity/|x|>1e6 (they ended in a raw NPE error dialog; **cause of that NPE not found**, stack traces now logged under tag
+`OrcaStore`); "(s)" strings -> plurals (objects outside, files imported; **others still "(s)"**: cloud/preset sync toasts, ai_confirm_save);
+failed OpenSCAD run clears the old log. Verified on WSA r197-r199: dialog validation, scale clamp, NaN rejected. **Untested:** plurals +
+stale-log fix (r200 build 38579919475). Not bugs: OpenSCAD recursion bomb / 420k-triangle loop handled; lab sliders 50-130 %, filmstrip digits
+bottom-aligned on purpose. WSA quirk: the app window jumps position; get offsets from the `Prepare` label in `ui.ps1`. (3) Then design polish:
+centering, sizing, consistency. 
+Sign-ins + cloud syncs done by the user 2026-10-14 (archive "sign-ins + cloud sync"). User-only: retests, plate switcher pick, launcher icon colour (still teal; user
 2026-10-14: "decide later"). Background:
 **Colour presets + design mode (user, 2026-10-14: "code all three as presets, in addition to the customizer; you
 categorize everything").** **Verified on WSA r182** (presets, live design mode, per-part overrides, resets, restart; details: archive
