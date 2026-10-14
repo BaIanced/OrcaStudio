@@ -19,9 +19,11 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
 - Android main = r185 (c32b1ad, PR #19, 2026-10-14; r184 readable text on a changed background + r185 selected tab label,
-  Chromebook-verified). Work branch = main (nothing unmerged). Still untested on main: r179-r185 on the phone (see "Next
-  task"); r178 OpenSCAD in the phone's fullscreen portrait.
-- Installed: Chromebook r185 (2026-10-14; it was in **portrait tablet mode** 1080x1920; restored to Dark + Prusa default, no
+  Chromebook-verified). Still untested on main: r179-r185 on the phone (see "Next task"); r178 OpenSCAD in the phone's
+  fullscreen portrait.
+- **Work branch, verified, not merged:** r187 fd4361d (run 38542190492; design-mode fixes, Chromebook-verified 2026-10-14;
+  only its snackbar-action shading is untested, see "Next task").
+- Installed: Chromebook r187 (2026-10-14; it was in **portrait tablet mode** 1080x1920; restored to Dark + Prusa default, no
   custom colours, wallpaper off; session = 1 cube on 1 plate). Phone r178 (session =
   test downloads; old 8-plate session in `/data/local/tmp/phone-session-backup.{3mf,json}`). WSA r161 (AI tools on; auto-save
   60 s; session = backup `/data/local/tmp/session-backup.{3mf,json}`; showed 1 plate on 2026-10-14). WSA now r182, restored to
@@ -31,11 +33,8 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 
 ## Next task
 **Colour presets + design mode (r180-r182; user, 2026-10-14: "code all three as presets, in addition to the customizer; you
-categorize everything").** **Verified on WSA r182:** More > Appearance preset list with swatch dots (Prusa default, Prusa
-Industrial, Printables Night, Prusa Minimal Warm); Printables Night applies app-wide in dark and its derived light version;
-Design mode opens on Prepare with the floating panel (neutral, no accent tint since r182); hue slider changed the accent live
-(plate outline, badge, Slice, titles, chip); kept after an app restart; per-part override (3D view background via hex) changed
-only the 3D view; slot reset and "Reset custom colors" (confirm) work; light panel no longer peach (surfaceTint = text colour).
+categorize everything").** **Verified on WSA r182** (presets, live design mode, per-part overrides, resets, restart; details: archive
+"2026-10-14: design mode r182-r187").
 - Panel: drag by header, fold, close; preset chips, "Part of the app" dropdown (14 parts), a row of colour chips (• = custom)
   with the slot's hint, HSV sliders + hex + swatches, Reset this part / Reset all. Colours per light/dark mode; sliders save
   on release. Design mode itself isn't kept over a restart (by design).
@@ -44,10 +43,15 @@ only the 3D view; slot reset and "Reset custom colors" (confirm) work; light pan
   `theme_spec` JSON). Regions wired in `AppScaffold.kt`; 3D view `Viewport.kt` + badges `PlateBadgeAtlas.kt` read slots.
 - **Verified on the Chromebook (portrait) 2026-10-14:** Industrial/Minimal light by eye, floating panel fits above the tab bar,
   tab bar slots, Device + Settings editor regions (dark background in light mode, r184+), wallpaper colours + overrides,
-  panel Reset all (no confirm in the panel; More's "Reset custom colors" confirms).
-- **Untested:** phone (bottom-sheet panel colours, panel size with the nav bar, fullscreen portrait), Messages/dialogs,
-  Models/More/Preview regions, OpenSCAD region colours (its layout + eye toggle in portrait verified), a dark **Panels and
-  cards** (Surface) alone in light mode (only Background flips the text, r184).
+  panel Reset all (no confirm in the panel; More's "Reset custom colors" confirms). Also on r185 (light, Background
+  #1E293B per region): More, Models (toolbar/chips), OpenSCAD editor read fine; Preview sheet came out slate grey (fixed r187).
+- **r187 fd4361d (run 38542190492; CI numbered it r187), verified on the Chromebook:** sheets/menus on a dark Background in
+  light mode blend towards the flipped cards (Preview sheet now dark; `Role.BACKGROUND` had lerped to the receiver's light
+  surfaceContainerHigh); panel warning (`AppColors.lowContrast`, text under 3:1 on background or cards) shows for dark Panels
+  and cards alone in light mode; OpenSCAD drag strip follows the editor. **Untested:** snackbar action (`inversePrimary`
+  shaded to 4.5:1; the only action snackbar is "Add" for variants in `FileController.kt:59`).
+- **Untested:** phone (bottom-sheet panel colours, panel size with the nav bar, fullscreen portrait), Messages/dialogs (the
+  busy dialog flashes by on a cube slice; AI-confirm/error dialogs are hard to trigger).
 - Known limits: hard-coded colours (delete popup #2B2C32, red bin, preview legend) don't follow; the Models web page keeps
   its own colours. A dark 3D background under a light theme hides the floating tool icons (user's choice; "Prepare: floating
   buttons" can be changed to match).
