@@ -19,9 +19,14 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
 - Android main = r190 (f223be2, PR #21, 2026-10-14; r189 snackbar accent + r190 phone message bar / OpenSCAD button
-  placement, phone-verified; archive "r189 + r190"). Work branch = main; nothing unmerged.
-  Untested side case: a running slice's progress card (taller) under the OpenSCAD reopen button.
-- Installed: Chromebook r187 (2026-10-14; it was in **portrait tablet mode** 1080x1920; restored to Dark + Prusa default, no
+  placement, phone-verified; archive "r189 + r190").
+- **Work branch, verified, not merged:** r192 04561b3 (run 38553295192) **verified on the Chromebook** 2026-10-14:
+  3D selection falls back to the Prusa blue when Status is within 60° of the part orange (`VIEW_SELECTION`/`nearHue` in
+  `AppColors.kt`; r190 Minimal Warm selection #BE660C vs part #D66B21 was barely visible, Industrial weak; r192 both
+  #868BA9, Printables Night keeps its blue #3676A9). Design mode > "Messages and dialogs" shows a sample dialog + message
+  bar at the top (`DialogSamples` in `DesignPanel.kt`); a hex edit (Panels and cards) recoloured the sample live.
+  **Untested:** a real error/AI dialog in a custom Dialogs region (same `Themed(Region.DIALOGS)` path as the sample).
+- Installed: Chromebook r192 (2026-10-14; Plate 2 deleted; it was in **portrait tablet mode** 1080x1920; restored to Dark + Prusa default, no
   custom colours, wallpaper off; session = 1 cube on 1 plate). Phone r190 (Dark + Prusa default restored; fullscreen portrait
   lab on (user's setting); session =
   test downloads; old 8-plate session in `/data/local/tmp/phone-session-backup.{3mf,json}`). WSA r161 (AI tools on; auto-save
@@ -46,13 +51,13 @@ categorize everything").** **Verified on WSA r182** (presets, live design mode, 
   #1E293B per region): More, Models (toolbar/chips), OpenSCAD editor read fine; Preview sheet came out slate grey (fixed r187).
 - r187 fd4361d (dark-Background sheets, contrast warning, drag strip): verified + merged (archive "2026-10-14: r187"); its
   snackbar shading verified with r189.
-- Phone r189 (fullscreen portrait) checks verified (archive "r189 + r190"). **Untested:** Messages/dialogs in a custom theme
-  (busy dialog flashes by; AI-confirm/error dialogs are hard to trigger); 3D selection blue (plate 2 was empty).
+- Phone r189 (fullscreen portrait) checks verified (archive "r189 + r190"). Dialogs: sample verified r192; **untested:** a real
+  busy/AI-confirm/error dialog in a custom theme (hard to trigger). 3D selection colour: verified Chromebook r192.
 - Known limits: hard-coded colours (delete popup #2B2C32, red bin, preview legend) don't follow; the Models web page keeps
   its own colours. A dark 3D background under a light theme hides the floating tool icons (user's choice; "Prepare: floating
   buttons" can be changed to match).
 
-**r179 de39e04** delete popup + r178 design view: verified r189. **Still untested:** 3D selection blue, WSA landscape.
+**r179 de39e04** delete popup + r178 design view: verified r189. **Still untested:** WSA landscape.
 Slice button = primaryContainer; the user can set "Soft accent" in design mode. Launcher icon still teal (asked the user).
 
 Then: the plate switcher pick (lab stays until they say), the user-only items below.
