@@ -21,12 +21,8 @@ front**; grep them when a question needs them (e.g. `grep -n "AMS mapping" HANDO
 ## Next task
 **r170 (Android 2ea77b3): section view clips travels/markers + picks skip the cut. Verified on the Chromebook 2026-10-13**
 (archive "r170 section view"); merged to main 2026-10-13 (PR #15). **Untested:** painting through the cut (picks the far side), long-press menu with the cut, measure line staying whole.
-**r172 (Android 6861cc1): the sphere brush gets the section plane** (`OrcaTools.cpp` paint, volume coords as desktop
-`get_clipping_plane_in_volume_coordinates`). **Verified on the Chromebook 2026-10-13**: strokes along the cut rim, section off ->
-paint ends in a straight line at the cut, cut-away side clean (paint cleared after).
-**r173 (Android d6abc60, CI run 38506801682): a paint stroke starting off the model gets its own undo step** (the newStroke flag
-was dropped with a missed first sample, `SceneController.kt` paintAt). Compiles; **untested**. Test on the Chromebook: 2 strokes
-each starting off the cube, 1 undo must remove only the last (seen in r172: 3 undos also removed the cube). Then Clear painting.
+**r172 brush clip (6861cc1) + r173 stroke undo (d6abc60): verified on the Chromebook 2026-10-13** (archive "r172/r173");
+waiting for a merge.
 **Chromebook adb zoom works**: `input mouse scroll <x> <y> --axis VSCROLL,1` (the old "can't zoom" note was wrong). Section
 panel X only hides the panel; the reset button (history icon) turns the cut off.
 **Test devices (user, 2026-10-13):** **phone** = main (root); **Chromebook's Android (ARC)** = big-screen layout
@@ -64,7 +60,7 @@ Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
 2. Nozzle match + filament picks per AMS tray: verified (archive). **Untested:** newer-firmware `device.nozzle.info`
    path; stale status after switching printer models; spool change -> printer's preset wins and the pick is dropped
    (only when the user swaps a spool); tray picks on WSA. Phone plate: 1 slot "Bambu PLA Basic @BBL A1".
-3. Merge: main = r170 (76dfdf0, PR #15, 2026-10-13). Unmerged on the work branch: r172 brush clip (6861cc1, verified), r173 stroke undo (d6abc60, untested).
+3. Merge: main = r170 (76dfdf0, PR #15, 2026-10-13). Unmerged on the work branch: r172 brush clip (6861cc1) + r173 stroke undo (d6abc60), both verified.
    Untested parts already in main stay listed in items 0, 2, 5, 6.
 4. Shape builder by touch: verified phone r134. Raw multi-touch: `~/orca-android-tools/pinch.sh` / `drag1.sh`
    (push with `MSYS_NO_PATHCONV=1` and a `C:/` source path).

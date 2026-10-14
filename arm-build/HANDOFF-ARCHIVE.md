@@ -1733,3 +1733,11 @@ back keep an orbited camera. Session unchanged (1 object, 1 plate); backup `/dat
   tap on a cut face selects that object; painting through the cut paints the far side. Code: `SectionView.rayStart/kept/current`,
   `SceneController.pick`, `setSection(program, on)` in `PlateRenderer`, LINE/POINT shaders. **Not done:** the paint brush (sphere)
   can still reach cut-away triangles next to the hit (the desktop clips the brush too).
+
+## r172/r173 (moved from HANDOFF.md on 2026-10-13, verified on the Chromebook)
+**r172 (Android 6861cc1): the sphere brush gets the section plane** (`OrcaTools.cpp` paint, volume coords as desktop
+`get_clipping_plane_in_volume_coordinates`). **Verified on the Chromebook 2026-10-13**: strokes along the cut rim, section off ->
+paint ends in a straight line at the cut, cut-away side clean (paint cleared after).
+**r173 (Android d6abc60, CI run 38506801682): a paint stroke starting off the model gets its own undo step** (the newStroke flag
+was dropped with a missed first sample, `SceneController.kt` paintAt). **Verified on the Chromebook 2026-10-13**: 2 strokes each starting off the cube,
+1 undo removed only the second (r172: 3 undos also removed the cube); test paint undone after.
