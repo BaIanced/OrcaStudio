@@ -19,9 +19,11 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
 - Android main = r182 (038b571, PR #18, 2026-10-14; user said "merge all", accepting r179-r182 as WSA/Chromebook-verified).
-  Branch = main. Still untested on main: r179-r182 on the phone / light mode (see "Next task"); r178 OpenSCAD in fullscreen
-  portrait. Run 38531870817 = r182.
-- Installed: Chromebook r179 (session = 1 cube on 1 plate, Tabs switcher, cut off; adb offline 2026-10-14). Phone r178 (session =
+  Still untested on main: r179-r182 on the phone (see "Next task"); r178 OpenSCAD in the phone's fullscreen portrait.
+- **Work branch, verified, not merged:** r184 fb09b88 (readable text on a changed background) + r185 3061b3a (selected tab
+  label) = run 38539692983, verified on the Chromebook 2026-10-14 (details: archive "2026-10-14: design mode on the Chromebook").
+- Installed: Chromebook r185 (2026-10-14; it was in **portrait tablet mode** 1080x1920; restored to Dark + Prusa default, no
+  custom colours, wallpaper off; session = 1 cube on 1 plate). Phone r178 (session =
   test downloads; old 8-plate session in `/data/local/tmp/phone-session-backup.{3mf,json}`). WSA r161 (AI tools on; auto-save
   60 s; session = backup `/data/local/tmp/session-backup.{3mf,json}`; showed 1 plate on 2026-10-14). WSA now r182, restored to
   Dark + Prusa default, no custom colours.
@@ -41,8 +43,12 @@ only the 3D view; slot reset and "Reset custom colors" (confirm) work; light pan
 - Code: `ui/theme/AppColors.kt` (schemes moved from MainActivity; Role/Slot/Region/ThemePreset; `withRoles` derives Material
   slots; `Themed(region)` = nested MaterialTheme; `OrcaTheme`), `ui/theme/DesignPanel.kt`, `core/ThemeSpec.kt` (prefs
   `theme_spec` JSON). Regions wired in `AppScaffold.kt`; 3D view `Viewport.kt` + badges `PlateBadgeAtlas.kt` read slots.
-- **Untested:** phone (bottom-sheet panel colours, panel size in portrait with the nav bar, fullscreen portrait), Chromebook,
-  tab bar slots, OpenSCAD/Device/editor regions, Industrial/Minimal light versions by eye, wallpaper colours + overrides.
+- **Verified on the Chromebook (portrait) 2026-10-14:** Industrial/Minimal light by eye, floating panel fits above the tab bar,
+  tab bar slots, Device + Settings editor regions (dark background in light mode, r184+), wallpaper colours + overrides,
+  panel Reset all (no confirm in the panel; More's "Reset custom colors" confirms).
+- **Untested:** phone (bottom-sheet panel colours, panel size with the nav bar, fullscreen portrait), Messages/dialogs,
+  Models/More/Preview regions, OpenSCAD region colours (its layout + eye toggle in portrait verified), a dark **Panels and
+  cards** (Surface) alone in light mode (only Background flips the text, r184).
 - Known limits: hard-coded colours (delete popup #2B2C32, red bin, preview legend) don't follow; the Models web page keeps
   its own colours. A dark 3D background under a light theme hides the floating tool icons (user's choice; "Prepare: floating
   buttons" can be changed to match).

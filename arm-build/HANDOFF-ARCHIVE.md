@@ -1780,3 +1780,15 @@ below the strip by the system and touches the File button's bottom edge (r179 mo
 - Before the design-mode build the plan was: per-category seed colour -> scheme, nested `MaterialTheme` per UI region; the user
   asked if a web app is cheaper (told no: only the panel moves, loses the real-UI preview) and made an HTML mock-up with three
   dark palettes, which became the r180 presets.
+
+## 2026-10-14: design mode on the Chromebook (r182 -> r185)
+- Chromebook was in portrait tablet mode (1080x1920, no cutout), so its checks cover portrait but not the phone's camera strip.
+- r182 checks: Industrial and Minimal Warm light versions look coherent (Prepare + More); floating design panel sits bottom
+  right above the tab bar; OpenSCAD editor layout and eye toggle in portrait (design on a new empty Plate 2, project cube
+  hidden; closing the editor removed Plate 2); wallpaper colours on keep the custom overrides.
+- Bugs found and fixed: (1) a custom tab bar colour left unselected icons/labels at the default grey (unreadable on dark blue):
+  `Slot.on` + `AppColors.color` now derives a readable colour when only the backing slot (bar, pill, badge) is custom (r184
+  fb09b88). (2) A dark Background on Device in light mode left dark text: `readableOn` in `AppColors.kt` flips text, cards,
+  lines and soft accents when the text no longer reads on the background (r184). (3) The selected tab label sits on the bar,
+  not the pill: `navLabel` in `AppScaffold.kt` (r185 3061b3a). Verified on r184/r185: Device tab + Settings editor with a dark
+  background in light mode read well; tab labels white on a blue bar.
