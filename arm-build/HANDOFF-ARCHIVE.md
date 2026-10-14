@@ -1698,3 +1698,8 @@ editor on a full single plate adds plate 2, removes it on close if empty, keeps 
 plate view; ghost on plate 1 replaces the object being edited ("Update on plate" mode); "Show plate" (folds the editor) hides the
 ghost and shows the real object, the OpenSCAD pill brings the editor back still in plate view; landscape rotation (wide layout) and
 back keep an orbited camera. Session unchanged (1 object, 1 plate); backup `/data/local/tmp/phone-r166-session.3mf`.
+
+## Moved from HANDOFF.md on 2026-10-13 (r168 merge)
+- r168 (commit 83820be "OpenSCAD editor: the phone's fold button reads Hide editor"): fold button label "Hide editor",
+  icon VerticalAlignBottom (looks like a download arrow; user told). Folds + reopens as before. Verified on the phone
+  2026-10-13; merged to main via PR #14 (383b35a) on the user's `/next-merge`.
