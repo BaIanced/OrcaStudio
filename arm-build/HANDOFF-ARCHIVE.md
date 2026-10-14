@@ -1792,3 +1792,13 @@ below the strip by the system and touches the File button's bottom edge (r179 mo
   lines and soft accents when the text no longer reads on the background (r184). (3) The selected tab label sits on the bar,
   not the pill: `navLabel` in `AppScaffold.kt` (r185 3061b3a). Verified on r184/r185: Device tab + Settings editor with a dark
   background in light mode read well; tab labels white on a blue bar.
+
+## 2026-10-14: design mode r182-r187
+**Verified on WSA r182:** More > Appearance preset list with swatch dots (Prusa default, Prusa
+Industrial, Printables Night, Prusa Minimal Warm); Printables Night applies app-wide in dark and its derived light version;
+Design mode opens on Prepare with the floating panel (neutral, no accent tint since r182); hue slider changed the accent live
+(plate outline, badge, Slice, titles, chip); kept after an app restart; per-part override (3D view background via hex) changed
+only the 3D view; slot reset and "Reset custom colors" (confirm) work; light panel no longer peach (surfaceTint = text colour).
+- r187 (fd4361d) on the Chromebook: a dark Background in light mode had blended sheets/menus towards the light cards
+  (Preview sheet slate grey #555E6D) because `Role.BACKGROUND` lerped to the receiver's surfaceContainerHigh, not the
+  flipped one; fixed. Low-contrast warning, themed OpenSCAD drag strips verified. More/Models/OpenSCAD regions verified on r185.
