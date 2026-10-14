@@ -23,14 +23,17 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 - Installed: Chromebook r193 (2026-10-14; landscape now; restored to Dark + Prusa default, no
   custom colours, wallpaper off; session = 1 cube on 1 plate). Phone r194 (Dark + Prusa default restored; fullscreen portrait
   lab on (user's setting); session =
-  test downloads; old 8-plate session in `/data/local/tmp/phone-session-backup.{3mf,json}`). WSA r161 (AI tools on; auto-save
-  60 s; session = backup `/data/local/tmp/session-backup.{3mf,json}`; showed 1 plate on 2026-10-14). WSA now r182, restored to
-  Dark + Prusa default, no custom colours.
+  test downloads; old 8-plate session in `/data/local/tmp/phone-session-backup.{3mf,json}`). WSA r194 (2026-10-14; AI tools
+  on; auto-save 60 s; Dark + Prusa default; current session empty, the user's is in `/data/local/tmp/session-backup.{3mf,json}`;
+  slots Basic/Matte/Matte/PETG from sync, `tray_picks` {}, ad-block rules {}).
 - A TV box shows up in `adb devices` (USB serial, 2026-10-14): not a test device, leave it alone.
 - Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
 
 ## Next task
-**Design mode is done, verified on all three devices and merged (r180-r194, main r194).** r179/r178 landscape verified on the Chromebook (archive "r179 delete popup + r178 design view in landscape"). Item 5's 16 KB sniff verified 2026-10-14 (Chromebook). Next: what's left needs WSA while the user is away (item 0 mouse right-click, item 2 tray picks) or the user (sign-ins, cloud sync, retests, plate switcher pick, launcher icon colour). Background:
+**Design mode is done, verified on all three devices and merged (r180-r194, main r194).** r179/r178 landscape verified on the Chromebook (archive "r179 delete popup + r178 design view in landscape"). Item 5's 16 KB sniff verified 2026-10-14 (Chromebook). WSA r194 2026-10-14: item 0 mouse right-click and item 2 tray
+picks verified (archive "WSA r194 element blocker right-click + tray picks"). **Next: nothing autonomous is left**; ask the
+user for a new task. User-only: sign-ins, cloud sync, retests, plate switcher pick, launcher icon colour (still teal; user
+2026-10-14: "decide later"). Background:
 **Colour presets + design mode (user, 2026-10-14: "code all three as presets, in addition to the customizer; you
 categorize everything").** **Verified on WSA r182** (presets, live design mode, per-part overrides, resets, restart; details: archive
 "2026-10-14: design mode r182-r187").
@@ -68,14 +71,14 @@ Then: the plate switcher pick (lab stays until they say), the user-only items be
 - Modeling goal: model **without writing code**; OpenSCAD code is only a backstop. Roadmap 1-3 done (archive).
 
 ## Open and untested items
-0. Element blocker + ad-block menu (e4d75ab, a7e63d2): verified phone. **Untested:** mouse right-click (WSA), rules in other
-   WebViews (Device page etc.). User 2026-10-13: MakerWorld, Printables and Orca sign-ins work; a Google-account Orca
+0. Element blocker + ad-block menu (e4d75ab, a7e63d2): verified phone; mouse right-click verified WSA r194. **Untested:**
+   rules in other WebViews (Device page etc.; needs a printer with a web UI). User 2026-10-13: MakerWorld, Printables and Orca sign-ins work; a Google-account Orca
    sign-in goes through Brave (not the WebView). Bambu sign-out is Device tab > Connection > Sign out (told the user).
 1. Preset re-link: verified. **Untested:** a Bambu/Orca cloud sync afterwards (cloud copy still detached; same updated_time,
    so the pull shouldn't replace it); the Chromebook desktop still has it detached.
 2. Nozzle match + filament picks per AMS tray: verified. **Untested:** newer-firmware `device.nozzle.info` path; stale status
    after switching printer models; spool change -> printer's preset wins and the pick is dropped (only when the user swaps a
-   spool); tray picks on WSA. Phone plate: 1 slot "Bambu PLA Basic @BBL A1".
+   spool). Tray picks on WSA r194: verified. Phone plate: 1 slot "Bambu PLA Basic @BBL A1".
 3. Section view (r170/r172/r173): all verified (archive). Nothing open.
 4. Shape builder: verified by touch + phone layout on the phone r134 (archive). Handles by touch on WSA: n/a (no touch).
 5. .scad zips, Thingiverse downloads, the 16 KB content sniff (Chromebook r193): all verified (archive). Nothing open.

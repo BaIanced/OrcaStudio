@@ -36,7 +36,7 @@ user uses the PC.
 - WSA stops drawing when its window isn't in front (taps lost, empty ui dump): focus it first (Alt + SetForegroundWindow
   trick from `wheel.ps1:17` / `tapf.sh`). WSA wedged (no window): stop WsaClient, `Start-Service WsaService`,
   `Start-Process wsa://<package>`. Lost DNS: `wsaclient /shutdown`.
-- Real mouse drags (+Shift): `mdrag.ps1 x1 y1 x2 y2 [-Shift]` (Android coords = Windows pixels on WSA); the builder's
+- Real mouse drags (+Shift): `mdrag.ps1 x1 y1 x2 y2 [-Shift]`, real clicks: `mclick.ps1 x y [-Right]` (Android coords = Windows pixels on WSA); the builder's
   shape list scrolls only with a real mouse wheel.
 - WSA 1080p: the editor panel is short; collapse the preview ("Hide preview") to reach buttons below the Customizer notice.
 - **MCP on WSA:** never `adb forward tcp:X tcp:Y` (WSA routes Android loopback to Windows; the forward loops and wedges

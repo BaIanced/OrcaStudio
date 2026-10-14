@@ -1856,3 +1856,14 @@ Landscape check done on the Chromebook (ARC, 1920x1080, rail layout) instead of 
 - Close editor removed the temp plate, but an adb force-stop right after left Plate 2 in the session (60 s auto-save;
   normal exits save in `onStop`, MainActivity.kt:103). Deleted it, HOME + restart: 1 plate. The Chromebook's OpenSCAD
   draft is now that test box. Debug prop cleared.
+
+## 2026-10-14: WSA r194 element blocker right-click + tray picks
+- Element blocker (item 0) with a **real mouse right-click** (new `~/orca-android-tools/mclick.ps1 x y -Right`): Thingiverse,
+  More > Block an element, right-click on the top notification text picked `p 675×18`, no browser context menu;
+  Larger x2 -> `div 834×40` (whole banner outlined); Block hid it live, rule
+  `thingiverse.com: div[class*="SiteWideNotification__notification--"]`. Blocked elements > Undo all -> rules `{}`.
+- Tray picks (item 2) on WSA (A1 connected, empty plate, no session file): sync -> Basic / Matte / Matte /
+  iSANMATE PETG-HF (engine's match for tray 4), `tray_picks` {}. Slot 2 -> "Bambu PLA Basic @BBL A1 (MOSTLY NO FAN)"
+  -> `tray_picks` = `<serial>/0/1` (loaded "GFA01 #000000"); re-sync kept it; window close + relaunch + sync kept it
+  (slots restored from `filaments:<printer>` with sources); picking the sync's own Matte -> `tray_picks` {}. Prefs end
+  equal to the start apart from the slot sources. App closed.
