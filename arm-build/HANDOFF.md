@@ -19,7 +19,7 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
 - Android main = d231870 (PR #24, 2026-10-14; r203 plurals for the remaining (s) strings + German plural, verified WSA; earlier: PR #23 r196-r202).
-  Work branch = main; nothing unmerged or unverified on it. **Active test target: the tablet (user, 2026-10-14)**; device section of the reference first.
+  Work branch = main; nothing unmerged or unverified on it. **Active test target: the tablet = Chromebook ARC, now at the .33 address (adb connected 2026-10-14; was .32), still r193**.
 - Installed: Chromebook r193 (2026-10-14; landscape now; restored to Dark + Prusa default, no
   custom colours, wallpaper off; session = 1 cube on 1 plate). Phone r194 (Dark + Prusa default restored; fullscreen portrait
   lab on (user's setting); session =
