@@ -18,11 +18,9 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 ## State
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
-- Android main = r175 (b7986b0, PR #17). Branch = main + r177 (Orca Cloud return link, **verified**: user's Brave tap worked
-  2026-10-14) + r178 bd7c7f0 (fullscreen portrait camera strip, **verified** phone) + r179 de39e04 (Prusa theme + switcher
-  touch-ups, verified Chromebook dark mode only) + r180 cbc8eef / r182 b2fa4ee (colour presets + design mode; r181 0c164a8 =
-  slot chips, its build cancelled; **verified on WSA r182**, phone/Chromebook untested, run 38531870817).
-  r177+r178 can merge now; r179-r182 are WSA/Chromebook-verified only (merge all on "merge" if the user accepts that).
+- Android main = r182 (038b571, PR #18, 2026-10-14; user said "merge all", accepting r179-r182 as WSA/Chromebook-verified).
+  Branch = main. Still untested on main: r179-r182 on the phone / light mode (see "Next task"); r178 OpenSCAD in fullscreen
+  portrait. Run 38531870817 = r182.
 - Installed: Chromebook r179 (session = 1 cube on 1 plate, Tabs switcher, cut off; adb offline 2026-10-14). Phone r178 (session =
   test downloads; old 8-plate session in `/data/local/tmp/phone-session-backup.{3mf,json}`). WSA r161 (AI tools on; auto-save
   60 s; session = backup `/data/local/tmp/session-backup.{3mf,json}`; showed 1 plate on 2026-10-14). WSA now r182, restored to
