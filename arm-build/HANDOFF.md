@@ -30,7 +30,7 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 - Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
 
 ## Next task
-**Design mode is done, verified on all three devices and merged (r180-r194, main r194).** Next: the WSA landscape check (r179 line below; only while the user isn't on the PC), then the open items. Background:
+**Design mode is done, verified on all three devices and merged (r180-r194, main r194).** r179/r178 landscape verified on the Chromebook (archive "r179 delete popup + r178 design view in landscape"). Item 5's 16 KB sniff verified 2026-10-14 (Chromebook). Next: what's left needs WSA while the user is away (item 0 mouse right-click, item 2 tray picks) or the user (sign-ins, cloud sync, retests, plate switcher pick, launcher icon colour). Background:
 **Colour presets + design mode (user, 2026-10-14: "code all three as presets, in addition to the customizer; you
 categorize everything").** **Verified on WSA r182** (presets, live design mode, per-part overrides, resets, restart; details: archive
 "2026-10-14: design mode r182-r187").
@@ -52,7 +52,7 @@ categorize everything").** **Verified on WSA r182** (presets, live design mode, 
   its own colours. A dark 3D background under a light theme hides the floating tool icons (user's choice; "Prepare: floating
   buttons" can be changed to match).
 
-**r179 de39e04** delete popup + r178 design view: verified r189. **Still untested:** WSA landscape.
+**r179 de39e04** delete popup + r178 design view: verified r189 (portrait) and Chromebook r193 (landscape).
 Slice button = primaryContainer; the user can set "Soft accent" in design mode. Launcher icon still teal (asked the user).
 
 Then: the plate switcher pick (lab stays until they say), the user-only items below.
@@ -78,7 +78,7 @@ Then: the plate switcher pick (lab stays until they say), the user-only items be
    spool); tray picks on WSA. Phone plate: 1 slot "Bambu PLA Basic @BBL A1".
 3. Section view (r170/r172/r173): all verified (archive). Nothing open.
 4. Shape builder: verified by touch + phone layout on the phone r134 (archive). Handles by touch on WSA: n/a (no touch).
-5. .scad zips + Thingiverse downloads: verified. **Untested:** the 16 KB content sniff itself (r143 gets the real name first).
+5. .scad zips, Thingiverse downloads, the 16 KB content sniff (Chromebook r193): all verified (archive). Nothing open.
 6. Ad blocking (f138655, ec86442, 08bdf0b = `AdBlock.Client` in all app WebViews): verified. **Untested:** MakerWorld sign-in /
    downloads with it on; Bambu sign-in WebView (needs Sign out + the user's password: leave to the user), Orca Cloud login,
    plugin pages, Device page on the phone (needs a printer with a web UI; the phone only has the A1).

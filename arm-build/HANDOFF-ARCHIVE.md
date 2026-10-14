@@ -1837,3 +1837,22 @@ only the 3D view; slot reset and "Reset custom colors" (confirm) work; light pan
   launch, More, expand Appearance, Design mode, Whole app > Messages and dialogs, screenshot.
 - r194 verified on the phone (fullscreen portrait): sample dialog at the top, sample message bar just above the design
   panel. Phone r192 had installed fine; design panel closed, no custom colours left on either device.
+
+## 2026-10-14: r179 delete popup + r178 design view in landscape (Chromebook r193)
+Landscape check done on the Chromebook (ARC, 1920x1080, rail layout) instead of WSA (the PC was in use; same wide layout):
+- Tabs pick mode: Add plate, Plate 1 active, long-press Plate 2 -> 2 highlighted, add slot = X; "Delete 1 plate" popup sits
+  under the stop button reaching right (x ~241-420, y ~100-150), clear of Undo (x 150) and the File button. Tapping it
+  deleted Plate 2; back to 1 plate.
+- Add > OpenSCAD model: design view on the main canvas with the editor panel on the right (Update preview / Frame / eye
+  buttons top right of the canvas). Eye -> design as a ghost on a new empty Plate 2 with tabs, tool column, Slice plate 2;
+  eye again -> design view; Close editor -> back to 1 plate (temp plate gone). Nothing left behind.
+
+## 2026-10-14: .scad download 16 KB content sniff verified (Chromebook r193)
+- Models tab WebView (debug via `log.tag.OrcaWeb`), CDP-evaluated `<a download="" href=blob:...>` click with a 4.5 KB
+  .scad (4.4 KB `//` comment header, then `width = 20; // [10:50]`, `module box`, `cube`). The listener's name had no
+  known extension, so `ModelDownloads.sniffExtension` read past 512 bytes: saved as `<uuid>.scad`, OpenSCAD editor
+  opened, Customizer · 1. A blob link with **no** `download` attribute does nothing: `shouldOverrideUrlLoading` blocks
+  non-http schemes (ModelsScreen.kt:180), so only real downloads reach the sniff (fine).
+- Close editor removed the temp plate, but an adb force-stop right after left Plate 2 in the session (60 s auto-save;
+  normal exits save in `onStop`, MainActivity.kt:103). Deleted it, HOME + restart: 1 plate. The Chromebook's OpenSCAD
+  draft is now that test box. Debug prop cleared.
