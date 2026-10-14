@@ -40,7 +40,8 @@ Tuck the panel for room on the Chromebook.
 precisely placed objects). Plate activation must not move the camera when zoomed out (sometimes moving is fine).
 OpenSCAD: design view (main canvas) is the default; an **eye button** shows the design on the build plate and back, with the
 camera the user had on the plates, the project's objects hidden, and new designs on an empty plate.
-**Next:** nothing open I can do alone: items 0-6 need the user; plate switcher still undecided (asked 2026-10-13).
+**Next:** on the Chromebook, the r170 leftovers: long-press menu with the cut on (adb `input swipe x y x y 800`), measure line
+staying whole with the cut. Items 0-6 need the user; plate switcher still undecided (asked 2026-10-13).
 **Still untested:** a true EGL context loss (no repro). Badges are ~23 dp at plate zoom on the phone (under 48 dp; told the user).
 Plate switcher (tabs/filmstrip/chips): user **not decided yet**, keep the lab; ask again later (mockups
 https://claude.ai/artifact/E3MtY8rQ1dMGHhibY2oNCX; More > Layout lab). Once picked: delete the losers and the lab
