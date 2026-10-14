@@ -30,12 +30,19 @@ UI batch r144-r163 verified (WSA, phone, Chromebook) and **merged to main 2026-1
 Phone has r163; session = test downloads (contents don't matter); old 8-plate session in `/data/local/tmp/phone-session-backup.{3mf,json}`.
 WSA session backup: `/data/local/tmp/session-backup.{3mf,json}` (restored). Chromebook has r163; session = 1 cube on 1 plate, Tabs switcher.
 Adb on the Chromebook can't zoom the canvas (`input mouse scroll` did nothing); tuck the panel for room.
-**Next:** the user's lab picks; open question to the user (2026-10-13, no answer yet): a 3mf (keep_layout, 3 plates)
-downloaded on the phone landed on plate 1 over the STL already there; is that expected?
-**Still untested:** a true EGL context loss (no repro). Ghost on plate overlaps what is already there and is small at plate zoom:
-mention to the user. Badges are ~23 dp at plate zoom on the phone (under 48 dp; fixed 10 % of the bed): mention.
-Switcher (tabs/filmstrip/chips) and SCAD view (canvas/ghost): user **not decided yet**, keep the lab; ask again later
-(mockups https://claude.ai/artifact/E3MtY8rQ1dMGHhibY2oNCX; More > Layout lab). Once picked: delete the losers and the lab
+**User decisions 2026-10-13:** a 3mf landing on the active plate over existing objects stays as is (arranging could move
+precisely placed objects). Plate activation must not move the camera when zoomed out (sometimes moving is fine).
+OpenSCAD: design view (main canvas) is the default; an **eye button** shows the design on the build plate and back, with the
+camera the user had on the plates, the project's objects hidden, and new designs on an empty plate.
+**d8f3e98 (r164, build running, untested):** lab's SCAD-view choice removed; eye in the design view's top-right buttons,
+eye-off over the plate view (top right, 76 dp down); ghost = `state.scadOnPlate` (reset on close), models hidden while a
+ghost shows (`PlateRenderer` draw); camera saved on view dispose and restored in the next PlateView (`Viewport.kt`
+`savedCamera`); active-plate change frames only when the plate centre is off screen (`plateInView`); double tap still
+frames. New design (`open`/`load` with no onPlate) -> `ScadController.useEmptyPlate()` (empty active plate, first empty,
+else adds one; the added one is deleted on close if still empty). **Test:** all of that on the Chromebook / phone.
+**Still untested:** a true EGL context loss (no repro). Badges are ~23 dp at plate zoom on the phone (under 48 dp; told the user).
+Plate switcher (tabs/filmstrip/chips): user **not decided yet**, keep the lab; ask again later (mockups
+https://claude.ai/artifact/E3MtY8rQ1dMGHhibY2oNCX; More > Layout lab). Once picked: delete the losers and the lab
 (keep the wide panel tuck/width). Chips layout has no picking.
 The user drives sessions from the phone: ask before taking it over. WSA phone view (`phone-view.sh`) is back-burnered.
 **Older leftovers:** items 0 and 6 mostly need the user (sign-ins) or a web-UI printer.
