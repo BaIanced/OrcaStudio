@@ -20,15 +20,15 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
 - Android main = r173 (af876fd, PR #16, 2026-10-13: r172 section-view brush clip, r173 paint stroke undo). Nothing
   unmerged or unverified on the branch.
-- Installed: Chromebook r173 (session = 1 cube on 1 plate, Tabs switcher). Phone r168 (session = test downloads, contents
+- Installed: Chromebook r173 (session = 1 cube on 1 plate, Tabs switcher, cut off). Phone r168 (session = test downloads, contents
   don't matter; old 8-plate session in `/data/local/tmp/phone-session-backup.{3mf,json}`). WSA r161 (AI tools on; auto-save
   60 s; session = backup `/data/local/tmp/session-backup.{3mf,json}`, 3 plates, plate 3 active).
 - Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
 
 ## Next task
-On the Chromebook, the r170 section-view leftovers: long-press menu with the cut on (adb `input swipe x y x y 800`), measure
-line staying whole with the cut. After that nothing open can be done alone: the items below need the user, and the plate
-switcher is still undecided (asked 2026-10-13; ask again later).
+Nothing open can be done alone (r170 section-view leftovers verified 2026-10-13, archive). Needs the user: the plate
+switcher pick (asked twice on 2026-10-13), the phone for phone-layout checks (items 4, 7; ask before taking it over),
+and the user-only items below.
 
 ## User decisions (2026-10-13)
 - A 3mf landing on the active plate over existing objects stays as is (arranging could move precisely placed objects).
@@ -47,7 +47,7 @@ switcher is still undecided (asked 2026-10-13; ask again later).
 2. Nozzle match + filament picks per AMS tray: verified. **Untested:** newer-firmware `device.nozzle.info` path; stale status
    after switching printer models; spool change -> printer's preset wins and the pick is dropped (only when the user swaps a
    spool); tray picks on WSA. Phone plate: 1 slot "Bambu PLA Basic @BBL A1".
-3. Section view (r170/r172): **untested:** long-press menu with the cut, measure line staying whole (Next task).
+3. Section view (r170/r172/r173): all verified (archive). Nothing open.
 4. Shape builder: verified by touch on the phone r134. **Untested:** phone layout; handles by touch on WSA (it has none).
 5. .scad zips + Thingiverse downloads: verified. **Untested:** the 16 KB content sniff itself (r143 gets the real name first).
 6. Ad blocking (f138655, ec86442, 08bdf0b = `AdBlock.Client` in all app WebViews): verified. **Untested:** MakerWorld sign-in /

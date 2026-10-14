@@ -1741,3 +1741,9 @@ paint ends in a straight line at the cut, cut-away side clean (paint cleared aft
 **r173 (Android d6abc60, CI run 38506801682): a paint stroke starting off the model gets its own undo step** (the newStroke flag
 was dropped with a missed first sample, `SceneController.kt` paintAt). **Verified on the Chromebook 2026-10-13**: 2 strokes each starting off the cube,
 1 undo removed only the second (r172: 3 undos also removed the cube); test paint undone after.
+
+## r170/r172 section-view leftovers verified (2026-10-13, Chromebook r173)
+- Long-press with the cut on: on the kept part the object menu opens with the cube selected; on a spot whose geometry
+  is all cut away (cut 0.96) the empty-space menu opens (nothing picked). Pick path: `SceneController.kt:312-329`.
+- Measure line with the cut: both points on faces the 0.50 cut removes; line and markers stay whole (overlays draw with
+  the section clip off, `PlateRenderer.kt:505-540`).
