@@ -26,7 +26,7 @@ checks (user wants the app there). Chromebook: `<chromebook-ip>:5555` (memory `t
 The system file picker is a ChromeOS dialog (adb can't drive it); open files with a VIEW intent on the MediaStore URI
 (`content query --uri content://media/external/file --where "_display_name='x'"` -> `-d content://media/external/file/<id>
 -t application/zip --grant-read-uri-permission`), which works without root.
-UI batch r144-r163 verified (WSA, phone, Chromebook) and **merged to main 2026-10-13 (r163, PR #12)**; details in the archive.
+UI batch r144-r163 verified and merged (PR #12); r166 (OpenSCAD eye + plate camera) **merged to main 2026-10-13 (PR #13)**.
 Phone has r163; session = test downloads (contents don't matter); old 8-plate session in `/data/local/tmp/phone-session-backup.{3mf,json}`.
 WSA session backup: `/data/local/tmp/session-backup.{3mf,json}` (restored). Chromebook has r163; session = 1 cube on 1 plate, Tabs switcher.
 Adb on the Chromebook can't zoom the canvas (`input mouse scroll` did nothing); tuck the panel for room.
@@ -40,7 +40,7 @@ editor on a full single plate adds plate 2, removes it on close if empty, keeps 
 (1 cube, 1 plate). Code: `state.scadOnPlate`, `ScadPlateToggle`, `PlateRenderer.plateInView`, `showPlate`, Viewport
 `savedCamera` (restored in `remember(v)`, not the factory), `ScadController.useEmptyPlate()`.
 **Untested:** the phone (narrow layout: eye-off button placement, Hide preview + ghost, rotation keeps the camera).
-**Merge offer pending** (user decides): d8f3e98 + bb47717 on top of main r163.
+Merged to main (r166, PR #13); the phone check above is still open.
 **Still untested:** a true EGL context loss (no repro). Badges are ~23 dp at plate zoom on the phone (under 48 dp; told the user).
 Plate switcher (tabs/filmstrip/chips): user **not decided yet**, keep the lab; ask again later (mockups
 https://claude.ai/artifact/E3MtY8rQ1dMGHhibY2oNCX; More > Layout lab). Once picked: delete the losers and the lab
@@ -60,8 +60,8 @@ Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
 2. Nozzle match: verified phone r114. **Untested:** newer-firmware `device.nozzle.info` path; stale status after
    switching printer models. Filament picks per AMS tray: verified phone r134. **Untested:** spool change -> printer's
    preset wins and the pick is dropped (only when the user swaps a spool); WSA. Phone plate: 1 slot "Bambu PLA Basic @BBL A1".
-3. Merge: main = r163 (53d39b7, PR #12 from the work branch at 4b3bd99, 2026-10-13, user's `/next-merge`).
-   Unmerged: d8f3e98 + bb47717 (r166), verified Chromebook, phone untested. Merge offer pending.
+3. Merge: main = r166 (a686f06, PR #13 from the work branch at bb47717, 2026-10-13, user's `/next-merge`).
+   Nothing unmerged. r166 phone (narrow layout) check still open (Next task).
    Untested parts already in main stay listed in items 0, 2, 5, 6.
 4. Shape builder by touch: verified phone r134. Raw multi-touch: `~/orca-android-tools/pinch.sh` / `drag1.sh`
    (push with `MSYS_NO_PATHCONV=1` and a `C:/` source path).
@@ -76,7 +76,7 @@ Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
 ## State
 - Both repos work on branch `claude/handoff-continuation-rseql3` (the "test branch"). Autonomy
   (user, 2026-10-11): decide branch handling and next steps yourself. **Main merges / releases need
-  the user.** Main = r163 (merged 2026-10-13, PR #12, on the user's `/next-merge`); user agreed to merge more
+  the user.** Main = r166 (merged 2026-10-13, PR #13, on the user's `/next-merge`); user agreed to merge more
   often, at verified milestones: offer a merge PR when a batch is verified, merge only on their "merge".
 - Installed on WSA: r161 (2026-10-13; session backup restored after the G2b tests); AI tools on; auto-save 60 s. Session = the backup above (3 plates, plate 3 active). Shape-builder
   handles by touch untested (WSA has none). Real mouse drags (+Shift): `mdrag.ps1 x1 y1 x2 y2 [-Shift]`
@@ -190,6 +190,6 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
 ## Repos
 | Repo | Notes |
 |---|---|
-| `BaIanced/OrcaStudio-Android` | cl1x/Orca-Android + signed Bambu printing via obn (static in `liborca_jni.so`, `android/obn`). main = r163 (PR #12). Bot branch `upstream/orca-main` (never commit). Builds run on dispatch only (`gh workflow run android-apk.yml --ref <branch>`). |
+| `BaIanced/OrcaStudio-Android` | cl1x/Orca-Android + signed Bambu printing via obn (static in `liborca_jni.so`, `android/obn`). main = r166 (PR #13). Bot branch `upstream/orca-main` (never commit). Builds run on dispatch only (`gh workflow run android-apk.yml --ref <branch>`). |
 | `BaIanced/OrcaStudio` | Flatpak fork; ours: `arm-build/`, `.github/workflows/arm-*.yml`. Latest release r9 (MakerLab tab). Details in the archive. |
 | `ClusterM/open-bamboo-networking` | obn pinned v2.2.0 + local patches 0001 (cloud callbacks), 0002 (start_print try LAN first), 0003 (MQTT CA from `SSL_CERT_FILE`). |
