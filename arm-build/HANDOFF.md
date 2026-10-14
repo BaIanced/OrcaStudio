@@ -18,15 +18,40 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 ## State
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
-- Android main = r175 (b7986b0, PR #17, 2026-10-13: high refresh rate during input). Branch = main; nothing unmerged or
-  unverified.
-- Installed: Chromebook r173 (session = 1 cube on 1 plate, Tabs switcher, cut off). Phone r175 (session = test downloads, contents
-  don't matter; old 8-plate session in `/data/local/tmp/phone-session-backup.{3mf,json}`). WSA r161 (AI tools on; auto-save
-  60 s; session = backup `/data/local/tmp/session-backup.{3mf,json}`, 3 plates, plate 3 active).
+- Android main = r182 (038b571, PR #18, 2026-10-14; user said "merge all", accepting r179-r182 as WSA/Chromebook-verified).
+  Branch = main. Still untested on main: r179-r182 on the phone / light mode (see "Next task"); r178 OpenSCAD in fullscreen
+  portrait. Run 38531870817 = r182.
+- Installed: Chromebook r179 (session = 1 cube on 1 plate, Tabs switcher, cut off; adb offline 2026-10-14). Phone r178 (session =
+  test downloads; old 8-plate session in `/data/local/tmp/phone-session-backup.{3mf,json}`). WSA r161 (AI tools on; auto-save
+  60 s; session = backup `/data/local/tmp/session-backup.{3mf,json}`; showed 1 plate on 2026-10-14). WSA now r182, restored to
+  Dark + Prusa default, no custom colours.
+- A TV box shows up in `adb devices` (USB serial, 2026-10-14): not a test device, leave it alone.
 - Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
 
 ## Next task
-Nothing open can be done alone; nothing awaits a merge. Needs the user: the plate switcher pick (lab stays until they say), the user-only items below.
+**Colour presets + design mode (r180-r182; user, 2026-10-14: "code all three as presets, in addition to the customizer; you
+categorize everything").** **Verified on WSA r182:** More > Appearance preset list with swatch dots (Prusa default, Prusa
+Industrial, Printables Night, Prusa Minimal Warm); Printables Night applies app-wide in dark and its derived light version;
+Design mode opens on Prepare with the floating panel (neutral, no accent tint since r182); hue slider changed the accent live
+(plate outline, badge, Slice, titles, chip); kept after an app restart; per-part override (3D view background via hex) changed
+only the 3D view; slot reset and "Reset custom colors" (confirm) work; light panel no longer peach (surfaceTint = text colour).
+- Panel: drag by header, fold, close; preset chips, "Part of the app" dropdown (14 parts), a row of colour chips (• = custom)
+  with the slot's hint, HSV sliders + hex + swatches, Reset this part / Reset all. Colours per light/dark mode; sliders save
+  on release. Design mode itself isn't kept over a restart (by design).
+- Code: `ui/theme/AppColors.kt` (schemes moved from MainActivity; Role/Slot/Region/ThemePreset; `withRoles` derives Material
+  slots; `Themed(region)` = nested MaterialTheme; `OrcaTheme`), `ui/theme/DesignPanel.kt`, `core/ThemeSpec.kt` (prefs
+  `theme_spec` JSON). Regions wired in `AppScaffold.kt`; 3D view `Viewport.kt` + badges `PlateBadgeAtlas.kt` read slots.
+- **Untested:** phone (bottom-sheet panel colours, panel size in portrait with the nav bar, fullscreen portrait), Chromebook,
+  tab bar slots, OpenSCAD/Device/editor regions, Industrial/Minimal light versions by eye, wallpaper colours + overrides.
+- Known limits: hard-coded colours (delete popup #2B2C32, red bin, preview legend) don't follow; the Models web page keeps
+  its own colours. A dark 3D background under a light theme hides the floating tool icons (user's choice; "Prepare: floating
+  buttons" can be changed to match).
+
+**r179 de39e04 still untested:** phone (delete popup vs File/More in fullscreen portrait), light mode, 3D selection blue, WSA
+landscape. Slice button = primaryContainer (dark brown in dark mode); the user can now set "Soft accent" in design mode.
+Launcher icon still teal (asked the user). r178 untested: OpenSCAD design view + plate toggle in fullscreen portrait.
+
+Then: the plate switcher pick (lab stays until they say), the user-only items below.
 
 ## User decisions (2026-10-13)
 - A 3mf landing on the active plate over existing objects stays as is (arranging could move precisely placed objects).
@@ -40,7 +65,8 @@ Nothing open can be done alone; nothing awaits a merge. Needs the user: the plat
 
 ## Open and untested items
 0. Element blocker + ad-block menu (e4d75ab, a7e63d2): verified phone. **Untested:** mouse right-click (WSA), rules in other
-   WebViews (Device page etc.); Orca Cloud login WebView (08bdf0b) needs a sign-out: leave to the user.
+   WebViews (Device page etc.). User 2026-10-13: MakerWorld, Printables and Orca sign-ins work; a Google-account Orca
+   sign-in goes through Brave (not the WebView). Bambu sign-out is Device tab > Connection > Sign out (told the user).
 1. Preset re-link: verified. **Untested:** a Bambu/Orca cloud sync afterwards (cloud copy still detached; same updated_time,
    so the pull shouldn't replace it); the Chromebook desktop still has it detached.
 2. Nozzle match + filament picks per AMS tray: verified. **Untested:** newer-firmware `device.nozzle.info` path; stale status

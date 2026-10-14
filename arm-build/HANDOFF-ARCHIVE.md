@@ -1760,3 +1760,23 @@ was dropped with a missed first sample, `SceneController.kt` paintAt). **Verifie
   painting with filament 2 (3 strokes, one over the part's corner), More > Mesh boolean > Difference (Cube minus Part 2):
   notch cut, result one 20x20x20 part, the black strokes stayed on the remaining faces (screenshot). Cube deleted, Plate 2
   deleted via its canvas delete badge (tab long-press via root `input` didn't open a menu); phone back to 1 plate, box.stl.
+
+## 2026-10-14: r178 fullscreen portrait camera strip (verified on the phone 2026-10-13)
+**Fullscreen portrait camera strip (r178 = bd7c7f0, run 38515400592): verified on the phone 2026-10-13** (installed there now):
+3D view fills the strip; Prepare File button and Preview "Line type" bar sit right of the hole (y 24-167, hole x 597-675);
+tool column starts at 203; More/Device/Models start at y >= 141; Tabs switcher fits left of the hole (5 plates scroll and
+end at x 585); section panel below the bar; swipe shows transient bars over the app; landscape unchanged (rail in the hole
+strip as before). Code: `MainActivity.kt` ~70, `components/CutoutRow.kt`. **Untested:** OpenSCAD design view and its plate
+toggle in fullscreen portrait. Minor (left as is, tell the user): Tabs pick mode's "Delete n plates" popup is pushed just
+below the strip by the system and touches the File button's bottom edge (r179 moves it under the stop button).
+
+## 2026-10-14: r177 Orca Cloud return link verified
+- Orca Cloud browser sign-in (Google -> Brave) ends on the app's loopback page `localhost:41172/callback`; its old "Return" link
+  (`intent:#...MAIN;LAUNCHER;package=...`) opened the Play Store, because browsers add BROWSABLE (`cmd package resolve-activity`
+  MAIN+LAUNCHER+BROWSABLE = "No activity found"). r177 link = `intent://signed-in#Intent;scheme=orcastudio-android;package=<pkg>;end`
+  + VIEW/BROWSABLE manifest filter; MainActivity skips the scheme (`OrcaCloudLoopback.kt:66`, `OrcaCloud.RETURN_SCHEME`).
+- Verified: Chromebook r177 over adb (resolves to MainActivity, opens Prepare, no file error); the user's real tap in Brave on the
+  phone (r178) worked, 2026-10-14.
+- Before the design-mode build the plan was: per-category seed colour -> scheme, nested `MaterialTheme` per UI region; the user
+  asked if a web app is cheaper (told no: only the panel moves, loses the real-UI preview) and made an HTML mock-up with three
+  dark palettes, which became the r180 presets.
