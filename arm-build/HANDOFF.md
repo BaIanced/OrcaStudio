@@ -20,14 +20,11 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
 - Android main = r190 (f223be2, PR #21, 2026-10-14; r189 snackbar accent + r190 phone message bar / OpenSCAD button
   placement, phone-verified; archive "r189 + r190").
-- **Work branch, verified, not merged:** r192 04561b3 (run 38553295192) **verified on the Chromebook** 2026-10-14:
-  3D selection falls back to the Prusa blue when Status is within 60° of the part orange (`VIEW_SELECTION`/`nearHue` in
-  `AppColors.kt`; r190 Minimal Warm selection #BE660C vs part #D66B21 was barely visible, Industrial weak; r192 both
-  #868BA9, Printables Night keeps its blue #3676A9). Design mode > "Messages and dialogs" shows a sample dialog + message
-  bar at the top (`DialogSamples` in `DesignPanel.kt`); a hex edit (Panels and cards) recoloured the sample live.
-  **Untested:** a real error/AI dialog in a custom Dialogs region (same `Themed(Region.DIALOGS)` path as the sample).
-- Installed: Chromebook r192 (2026-10-14; Plate 2 deleted; it was in **portrait tablet mode** 1080x1920; restored to Dark + Prusa default, no
-  custom colours, wallpaper off; session = 1 cube on 1 plate). Phone r190 (Dark + Prusa default restored; fullscreen portrait
+- **Work branch, verified, not merged:** r192-r194 (head r194, run 38557528263), 2026-10-14: 3D selection falls back to
+  the Prusa blue near the part orange; design mode "Messages and dialogs" samples (top of screen, clear of the panel on the
+  phone and Chromebook); a real error dialog takes the custom Dialogs colour. Details: archive "r192-r194".
+- Installed: Chromebook r193 (2026-10-14; landscape now; restored to Dark + Prusa default, no
+  custom colours, wallpaper off; session = 1 cube on 1 plate). Phone r194 (Dark + Prusa default restored; fullscreen portrait
   lab on (user's setting); session =
   test downloads; old 8-plate session in `/data/local/tmp/phone-session-backup.{3mf,json}`). WSA r161 (AI tools on; auto-save
   60 s; session = backup `/data/local/tmp/session-backup.{3mf,json}`; showed 1 plate on 2026-10-14). WSA now r182, restored to
@@ -36,7 +33,9 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 - Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
 
 ## Next task
-**Colour presets + design mode (r180-r182; user, 2026-10-14: "code all three as presets, in addition to the customizer; you
+**Design mode is done and verified on all three devices (r180-r194).** Next: merge r192-r194 when the user says "merge"; then
+the WSA landscape check (r179 line below; only while the user isn't on the PC), then the open items. Background:
+**Colour presets + design mode (user, 2026-10-14: "code all three as presets, in addition to the customizer; you
 categorize everything").** **Verified on WSA r182** (presets, live design mode, per-part overrides, resets, restart; details: archive
 "2026-10-14: design mode r182-r187").
 - Panel: drag by header, fold, close; preset chips, "Part of the app" dropdown (14 parts), a row of colour chips (• = custom)
@@ -51,8 +50,8 @@ categorize everything").** **Verified on WSA r182** (presets, live design mode, 
   #1E293B per region): More, Models (toolbar/chips), OpenSCAD editor read fine; Preview sheet came out slate grey (fixed r187).
 - r187 fd4361d (dark-Background sheets, contrast warning, drag strip): verified + merged (archive "2026-10-14: r187"); its
   snackbar shading verified with r189.
-- Phone r189 (fullscreen portrait) checks verified (archive "r189 + r190"). Dialogs: sample verified r192; **untested:** a real
-  busy/AI-confirm/error dialog in a custom theme (hard to trigger). 3D selection colour: verified Chromebook r192.
+- Phone r189 checks, dialogs (sample + real error dialog; busy/AI-confirm share `GlobalDialogs`), 3D selection colour:
+  all verified (archive "r189 + r190", "r192-r194"). Nothing open in design mode except the known limits below.
 - Known limits: hard-coded colours (delete popup #2B2C32, red bin, preview legend) don't follow; the Models web page keeps
   its own colours. A dark 3D background under a light theme hides the floating tool icons (user's choice; "Prepare: floating
   buttons" can be changed to match).

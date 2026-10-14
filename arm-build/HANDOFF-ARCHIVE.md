@@ -1821,3 +1821,19 @@ only the 3D view; slot reset and "Reset custom colors" (confirm) work; light pan
 - Phone r189 design-mode checks (fullscreen portrait): floating panel (360 dp, right-aligned) fits above the tab bar;
   Industrial / Printables Night recolour 3D view, OpenSCAD sheet, File menu, tab bar; light mode (Prepare, editor, More)
   reads fine; Quit dialog shows. r179 delete popup and r178 OpenSCAD design view + eye toggle verified on r189.
+
+## 2026-10-14: r192-r194 (selection colour, dialog samples), verified
+- r192 04561b3 (run 38553295192) **verified on the Chromebook** 2026-10-14:
+  3D selection falls back to the Prusa blue when Status is within 60° of the part orange (`VIEW_SELECTION`/`nearHue` in
+  `AppColors.kt`; r190 Minimal Warm selection #BE660C vs part #D66B21 was barely visible, Industrial weak; r192 both
+  #868BA9, Printables Night keeps its blue #3676A9). Design mode > "Messages and dialogs" shows a sample dialog + message
+  bar at the top (`DialogSamples` in `DesignPanel.kt`); a hex edit (Panels and cards) recoloured the sample live. A real
+  error dialog (VIEW intent on a corrupt .stl: "Loading of a model file failed.") took the custom Dialogs #5A2D82
+  (Chromebook r192, 2026-10-14; reset after).
+- r194 (run 38557528263): on the phone r192 the design panel covered the sample message
+  bar. r193 (8 dp under the safe-drawing inset, spacing 8 dp) still did: the camera cutout inset is ~48 dp; r194 uses only
+  the status-bar inset. r193 on the Chromebook: both samples clear of the panel. Check r194 on the phone (More >
+  Appearance > Design mode > Messages and dialogs: snackbar sample above the panel). Script: `dlgcheck.ps1` idea =
+  launch, More, expand Appearance, Design mode, Whole app > Messages and dialogs, screenshot.
+- r194 verified on the phone (fullscreen portrait): sample dialog at the top, sample message bar just above the design
+  panel. Phone r192 had installed fine; design panel closed, no custom colours left on either device.
