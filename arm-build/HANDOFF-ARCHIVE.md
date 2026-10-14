@@ -1669,3 +1669,21 @@ presets, then collapsed sections; daily profile check (`lastProfileCheck`) -> `U
 (`PlateRenderer.plateAt`, `PlateListener.onPlateDoubleTap`); OpenSCAD ghost = type 98 mesh, draft `$fn = 16` after 40 ms,
 `ScadController.endDrag`. Plate delete -> upstream behaviour (2db1d53): objects move to free grid spots after the last
 plate; b4a0789 tabs delete button; 0e8f7c2 undo restores the active plate.
+
+
+## Moved from HANDOFF.md on 2026-10-13: UI batch r144-r163 verified + merged (PR #12)
+Big-screen pass verified + merged (r140, PR #10). UI batch (r144-r162) verified on WSA and, **2026-10-13, on the phone**
+(r161/r162: badges, rotation, 1 plate, 20 plates, filmstrip, double tap, group delete + undo, tooltips, opacity, tool
+column, plate-type pinning, Customizer drag, Models infinite scroll; archive "Phone pass r161/r162").
+Phone now has **r163**; session = test downloads (contents don't matter, user 2026-10-13); its old 8-plate session is in
+`/data/local/tmp/phone-session-backup.{3mf,json}`. Lab + auto-rotate put back after the tests. WSA session backup:
+`/data/local/tmp/session-backup.{3mf,json}` (restored). **4b3bd99 (r163) verified on the phone**: MakerWorld "Download 3MF"
+now saves `Plier_Racks_Ikea_Skadis_Version.3mf` (was "…3mf_filename__utf-8__….3mf"); Printables STL name clean.
+**Merged to main 2026-10-13 (r163, PR #12).** Chromebook (r163 installed, session = 1 cube on 1 plate, restored):
+wide layout, plate badge/icons and **fd71b33 add_plate floater skip verified** (cube dropped in plate 2's spot stayed put).
+**Next:** rest of the Chromebook checks (switcher variants, Layout lab, many plates), the user's lab picks. Seen: a 3mf
+(keep_layout, 3 plates) landed on plate 1 over the STL already there: asked the user 2026-10-13, no answer yet.
+Adb on the Chromebook can't zoom the canvas (`input mouse scroll` did nothing); tuck the panel for room.
+Chromebook r163 (2026-10-13): Tabs / Filmstrip (numbered boxes, shares the Slice row) / Chips switchers, Layout lab, wide panel,
+plate badges and plate icons look right; fd71b33 add_plate floater skip verified (cube dragged into plate 2's future spot,
+Add plate left it near plate 2's left edge instead of centring it). Session restored with undo.

@@ -26,17 +26,13 @@ checks (user wants the app there). Chromebook: `<chromebook-ip>:5555` (memory `t
 The system file picker is a ChromeOS dialog (adb can't drive it); open files with a VIEW intent on the MediaStore URI
 (`content query --uri content://media/external/file --where "_display_name='x'"` -> `-d content://media/external/file/<id>
 -t application/zip --grant-read-uri-permission`), which works without root.
-Big-screen pass verified + merged (r140, PR #10). UI batch (r144-r162) verified on WSA and, **2026-10-13, on the phone**
-(r161/r162: badges, rotation, 1 plate, 20 plates, filmstrip, double tap, group delete + undo, tooltips, opacity, tool
-column, plate-type pinning, Customizer drag, Models infinite scroll; archive "Phone pass r161/r162").
-Phone now has **r163**; session = test downloads (contents don't matter, user 2026-10-13); its old 8-plate session is in
-`/data/local/tmp/phone-session-backup.{3mf,json}`. Lab + auto-rotate put back after the tests. WSA session backup:
-`/data/local/tmp/session-backup.{3mf,json}` (restored). **4b3bd99 (r163) verified on the phone**: MakerWorld "Download 3MF"
-now saves `Plier_Racks_Ikea_Skadis_Version.3mf` (was "…3mf_filename__utf-8__….3mf"); Printables STL name clean.
-**Next:** Chromebook checks of the batch, the user's lab picks, merge when the user says so. Seen: that 3mf (keep_layout,
-3 plates) landed on plate 1 over the STL already there: ask the user if that matches what they expect.
-**Still untested:** Chromebook (everything in the batch), fd71b33 add_plate floater skip (needs a floater on the new plate's
-spot), a true EGL context loss (no repro). Ghost on plate overlaps what is already there and is small at plate zoom:
+UI batch r144-r163 verified (WSA, phone, Chromebook) and **merged to main 2026-10-13 (r163, PR #12)**; details in the archive.
+Phone has r163; session = test downloads (contents don't matter); old 8-plate session in `/data/local/tmp/phone-session-backup.{3mf,json}`.
+WSA session backup: `/data/local/tmp/session-backup.{3mf,json}` (restored). Chromebook has r163; session = 1 cube on 1 plate, Tabs switcher.
+Adb on the Chromebook can't zoom the canvas (`input mouse scroll` did nothing); tuck the panel for room.
+**Next:** the user's lab picks; open question to the user (2026-10-13, no answer yet): a 3mf (keep_layout, 3 plates)
+downloaded on the phone landed on plate 1 over the STL already there; is that expected?
+**Still untested:** a true EGL context loss (no repro). Ghost on plate overlaps what is already there and is small at plate zoom:
 mention to the user. Badges are ~23 dp at plate zoom on the phone (under 48 dp; fixed 10 % of the bed): mention.
 Switcher (tabs/filmstrip/chips) and SCAD view (canvas/ghost): user **not decided yet**, keep the lab; ask again later
 (mockups https://claude.ai/artifact/E3MtY8rQ1dMGHhibY2oNCX; More > Layout lab). Once picked: delete the losers and the lab
@@ -56,10 +52,8 @@ Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
 2. Nozzle match: verified phone r114. **Untested:** newer-firmware `device.nozzle.info` path; stale status after
    switching printer models. Filament picks per AMS tray: verified phone r134. **Untested:** spool change -> printer's
    preset wins and the pick is dropped (only when the user swaps a spool); WSA. Phone plate: 1 slot "Bambu PLA Basic @BBL A1".
-3. Merge: main = r143 (cc7abe4, PR #11 from `claude/merge-r143` at 4d55156, 2026-10-13, user's `/next-merge`). No merge offer pending.
-   Unmerged (after 4d55156), **verified on WSA + phone 2026-10-13** (r161/r162): f7f4d57, 6e45548, a2d3148, 6e645cb + 9f9978a,
-   31f6b58, 49e4cdf, 0afd458, 4dac2f4, eac2d13, c315432 + 8d70911, 2db1d53, b4a0789 + 0e8f7c2, 314bbcd + d8204a3, 0d2bb7b, 506e1df.
-   Partly untested: fd71b33 (keep_layout import verified; add_plate floater skip untested). 4b3bd99 (r163, download names): verified phone. Chromebook not checked for any of them. Merge offer pending: user decides (fd71b33 sits mid-range).
+3. Merge: main = r163 (53d39b7, PR #12 from the work branch at 4b3bd99, 2026-10-13, user's `/next-merge`). Nothing unmerged.
+   No merge offer pending.
    Untested parts already in main stay listed in items 0, 2, 5, 6.
 4. Shape builder by touch: verified phone r134. Raw multi-touch: `~/orca-android-tools/pinch.sh` / `drag1.sh`
    (push with `MSYS_NO_PATHCONV=1` and a `C:/` source path).
@@ -74,7 +68,7 @@ Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
 ## State
 - Both repos work on branch `claude/handoff-continuation-rseql3` (the "test branch"). Autonomy
   (user, 2026-10-11): decide branch handling and next steps yourself. **Main merges / releases need
-  the user.** Main = r143 (merged 2026-10-13, PR #11, on the user's `/next-merge`); user agreed to merge more
+  the user.** Main = r163 (merged 2026-10-13, PR #12, on the user's `/next-merge`); user agreed to merge more
   often, at verified milestones: offer a merge PR when a batch is verified, merge only on their "merge".
 - Installed on WSA: r161 (2026-10-13; session backup restored after the G2b tests); AI tools on; auto-save 60 s. Session = the backup above (3 plates, plate 3 active). Shape-builder
   handles by touch untested (WSA has none). Real mouse drags (+Shift): `mdrag.ps1 x1 y1 x2 y2 [-Shift]`
@@ -188,6 +182,6 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
 ## Repos
 | Repo | Notes |
 |---|---|
-| `BaIanced/OrcaStudio-Android` | cl1x/Orca-Android + signed Bambu printing via obn (static in `liborca_jni.so`, `android/obn`). main = r143 (PR #11). Bot branch `upstream/orca-main` (never commit). Builds run on dispatch only (`gh workflow run android-apk.yml --ref <branch>`). |
+| `BaIanced/OrcaStudio-Android` | cl1x/Orca-Android + signed Bambu printing via obn (static in `liborca_jni.so`, `android/obn`). main = r163 (PR #12). Bot branch `upstream/orca-main` (never commit). Builds run on dispatch only (`gh workflow run android-apk.yml --ref <branch>`). |
 | `BaIanced/OrcaStudio` | Flatpak fork; ours: `arm-build/`, `.github/workflows/arm-*.yml`. Latest release r9 (MakerLab tab). Details in the archive. |
 | `ClusterM/open-bamboo-networking` | obn pinned v2.2.0 + local patches 0001 (cloud callbacks), 0002 (start_print try LAN first), 0003 (MQTT CA from `SSL_CERT_FILE`). |
