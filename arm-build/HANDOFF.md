@@ -32,7 +32,7 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 ## Next task
 **Design mode is done, verified on all three devices and merged (r180-r194, main r194).** r179/r178 landscape verified on the Chromebook (archive "r179 delete popup + r178 design view in landscape"). Item 5's 16 KB sniff verified 2026-10-14 (Chromebook). WSA r194 2026-10-14: item 0 mouse right-click and item 2 tray
 picks verified (archive "WSA r194 element blocker right-click + tray picks"). **Next: nothing autonomous is left**; ask the
-user for a new task. User-only: sign-ins, cloud sync, retests, plate switcher pick, launcher icon colour (still teal; user
+user for a new task. Sign-ins + cloud syncs done by the user 2026-10-14 (archive "sign-ins + cloud sync"). User-only: retests, plate switcher pick, launcher icon colour (still teal; user
 2026-10-14: "decide later"). Background:
 **Colour presets + design mode (user, 2026-10-14: "code all three as presets, in addition to the customizer; you
 categorize everything").** **Verified on WSA r182** (presets, live design mode, per-part overrides, resets, restart; details: archive
@@ -74,22 +74,22 @@ Then: the plate switcher pick (lab stays until they say), the user-only items be
 0. Element blocker + ad-block menu (e4d75ab, a7e63d2): verified phone; mouse right-click verified WSA r194. **Untested:**
    rules in other WebViews (Device page etc.; needs a printer with a web UI). User 2026-10-13: MakerWorld, Printables and Orca sign-ins work; a Google-account Orca
    sign-in goes through Brave (not the WebView). Bambu sign-out is Device tab > Connection > Sign out (told the user).
-1. Preset re-link: verified. **Untested:** a Bambu/Orca cloud sync afterwards (cloud copy still detached; same updated_time,
-   so the pull shouldn't replace it); the Chromebook desktop still has it detached.
+1. Preset re-link + cloud syncs afterwards: verified (syncs by the user 2026-10-14). Nothing open.
 2. Nozzle match + filament picks per AMS tray: verified. **Untested:** newer-firmware `device.nozzle.info` path; stale status
    after switching printer models; spool change -> printer's preset wins and the pick is dropped (only when the user swaps a
    spool). Tray picks on WSA r194: verified. Phone plate: 1 slot "Bambu PLA Basic @BBL A1".
 3. Section view (r170/r172/r173): all verified (archive). Nothing open.
 4. Shape builder: verified by touch + phone layout on the phone r134 (archive). Handles by touch on WSA: n/a (no touch).
 5. .scad zips, Thingiverse downloads, the 16 KB content sniff (Chromebook r193): all verified (archive). Nothing open.
-6. Ad blocking (f138655, ec86442, 08bdf0b = `AdBlock.Client` in all app WebViews): verified. **Untested:** MakerWorld sign-in /
-   downloads with it on; Bambu sign-in WebView (needs Sign out + the user's password: leave to the user), Orca Cloud login,
-   plugin pages, Device page on the phone (needs a printer with a web UI; the phone only has the A1).
+6. Ad blocking (f138655, ec86442, 08bdf0b = `AdBlock.Client` in all app WebViews): verified; MakerWorld sign-in / downloads with
+   it on, Bambu sign-in WebView, Orca Cloud login verified by the user 2026-10-14. **Untested:** plugin pages, Device page on
+   the phone (needs a printer with a web UI; the phone only has the A1).
 7. OpenSCAD: phone layout r166/r168, real .scad download r142/r143, painting through a mesh boolean r175: all verified (archive).
-8. Models tab **untested:** MakerWorld sign-in ticket flow.
+8. Models tab MakerWorld sign-in ticket flow: verified by the user 2026-10-14. Nothing open.
 9. **Untested:** a true EGL context loss (no repro). Badges are ~23 dp at plate zoom on the phone (under 48 dp; told the user).
-10. User to retest: the 325 MB slice that crashed before the r59 OOM fix; pinch zoom on MakerWorld; whether a real keyboard's
-    Ctrl+1 works (WSA drops synthetic Ctrl+1..9).
+10. User to retest: the 325 MB slice that crashed before the r59 OOM fix. MakerWorld pinch zoom works (user 2026-10-14).
+    Real keyboard Ctrl+1 (camera top view, MainActivity.kt:190) does nothing: the system takes it as a hotkey (user
+    2026-10-14). Offered: numpad 0-7 as an extra view binding (not done, untested).
 11. Orca plugin runtime: kept as a general capability (no plugin in use). Not done: audit prompts, create_window, per-preset
     config overrides, printerAgent capability. **FilamentHub is dropped for good; never suggest, test with, or mention it.**
 12. REA MCP (github.com/morluto/rea), looked at 2026-10-12, not installed (needs the user's OK; changes MCP config): fits release

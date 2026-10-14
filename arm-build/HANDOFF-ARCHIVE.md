@@ -1867,3 +1867,9 @@ Landscape check done on the Chromebook (ARC, 1920x1080, rail layout) instead of 
   -> `tray_picks` = `<serial>/0/1` (loaded "GFA01 #000000"); re-sync kept it; window close + relaunch + sync kept it
   (slots restored from `filaments:<printer>` with sources); picking the sync's own Matte -> `tray_picks` {}. Prefs end
   equal to the start apart from the slot sources. App closed.
+
+## 2026-10-14: sign-ins + cloud sync (user-tested)
+- User reported done: MakerWorld sign-in ticket flow (item 8), MakerWorld downloads with ad blocking on, Bambu sign-in
+  WebView (sign-out + password), Orca Cloud login (item 6), and the Bambu/Orca cloud syncs after the preset re-link (item 1).
+  No problems reported.
+- Same day, user: MakerWorld pinch zoom works; real-keyboard Ctrl+1 is taken by a system hotkey (kept open in the handoff).
