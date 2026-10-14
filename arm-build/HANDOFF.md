@@ -18,13 +18,12 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 ## State
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
-- Android main = r194 (541c5c4, PR #22, 2026-10-14; r192-r194 selection colour + design mode dialog samples, verified
-  phone + Chromebook; archive "r192-r194"). **Work branch is 6 commits ahead of main (r196-r202, head = Add-menu icon commit): all
-  verified on WSA only (see Next task); merge them on the user's "merge" (/next-merge).**
+- Android main = d231870 (PR #24, 2026-10-14; r203 plurals for the remaining (s) strings + German plural, verified WSA; earlier: PR #23 r196-r202).
+  Work branch = main; nothing unmerged or unverified on it. **Active test target: the tablet (user, 2026-10-14)**; device section of the reference first.
 - Installed: Chromebook r193 (2026-10-14; landscape now; restored to Dark + Prusa default, no
   custom colours, wallpaper off; session = 1 cube on 1 plate). Phone r194 (Dark + Prusa default restored; fullscreen portrait
   lab on (user's setting); session =
-  test downloads; old 8-plate session in `/data/local/tmp/phone-session-backup.{3mf,json}`). WSA r194 (2026-10-14; AI tools
+  test downloads; old 8-plate session in `/data/local/tmp/phone-session-backup.{3mf,json}`). WSA r203 (2026-10-14; was r194: AI tools
   on; auto-save 60 s; Dark + Prusa default; current session empty, the user's is in `/data/local/tmp/session-backup.{3mf,json}`;
   slots Basic/Matte/Matte/PETG from sync, `tray_picks` {}, ad-block rules {}).
 - A TV box shows up in `adb devices` (USB serial, 2026-10-14): not a test device, leave it alone.
@@ -38,8 +37,7 @@ extreme numbers, lab sliders 50-130 %, portrait window 430x900): **no crash foun
 dialog Add off outside 0.1-1000 mm and the chips wrap (Cone was a sliver); typed scale clamped 0.1 %-100x; NumberField rejects
 NaN/Infinity/|x|>1e6 (they ended in a raw NPE error dialog; **root cause of that NPE not found**, stack traces now logged under tag
 `OrcaStore`); "(s)" -> plurals for objects outside / files imported ("1 object outside the plates" seen); a failed OpenSCAD run clears
-the old log (**untested**: no repro of the stale hint); Shape builder menu icon (compass) differs from Shape. **Not done:** other "(s)"
-strings (cloud/preset sync toasts, ai_confirm_save). **Unexplained:** once, in a freshly resized portrait window, the Prepare 3D
+the old log (**untested**: no repro of the stale hint); Shape builder menu icon (compass) differs from Shape. Other "(s)" strings: done in 897a708 (verified r203). **Unexplained:** once, in a freshly resized portrait window, the Prepare 3D
 background drew ~30 % lighter for ~15 s (not seen again; Preview fine). Not bugs: lab sliders, filmstrip digits at the bottom
 (thumbnail style), tune icon blue when an object has overrides. Design polish found nothing else to change on Prepare / Preview / Device /
 More / Models in landscape and phone-portrait sizes. WSA quirk: the app window jumps position; take offsets from the `Prepare` label in
