@@ -34,17 +34,13 @@ Adb on the Chromebook can't zoom the canvas (`input mouse scroll` did nothing); 
 precisely placed objects). Plate activation must not move the camera when zoomed out (sometimes moving is fine).
 OpenSCAD: design view (main canvas) is the default; an **eye button** shows the design on the build plate and back, with the
 camera the user had on the plates, the project's objects hidden, and new designs on an empty plate.
-**d8f3e98 (built as r165) + bb47717 (r166, build running):** lab's SCAD-view choice removed; eye in the design view's top-right buttons,
-eye-off over the plate view (top right, 76 dp down); ghost = `state.scadOnPlate` (reset on close), models hidden while a
-ghost shows (`PlateRenderer` draw); camera saved on view dispose and restored in the next PlateView (`Viewport.kt`
-`savedCamera`); active-plate change frames only when the plate centre is off screen (`plateInView`); double tap still
-frames. New design (`open`/`load` with no onPlate) -> `ScadController.useEmptyPlate()` (empty active plate, first empty,
-else adds one; the added one is deleted on close if still empty).
-Chromebook r165: eye / eye-off, ghost on the empty plate with the other objects hidden, editor moved to the first empty
-plate: verified. Found + fixed in bb47717 (untested): tab taps still framed (`framePlate` in the switchers -> `showPlate`);
-the restored camera kept showing plate 1 while the design sat on plate 2 (new view now frames an off-screen active plate).
-**Test on r166:** zoomed out (key `O` zooms out over adb) + tab tap keeps the camera; ghost view frames the design's plate;
-editor on a full single plate adds plate 2 and removes it on close if empty.
+**d8f3e98 + bb47717 (r166) verified on the Chromebook 2026-10-13** (wide layout): eye / eye-off; ghost on the empty plate
+with other objects hidden; plate view frames the design's plate; zoomed out (key `O` over adb) a tab tap keeps the camera;
+editor on a full single plate adds plate 2, removes it on close if empty, keeps it once the design is placed. Session restored
+(1 cube, 1 plate). Code: `state.scadOnPlate`, `ScadPlateToggle`, `PlateRenderer.plateInView`, `showPlate`, Viewport
+`savedCamera` (restored in `remember(v)`, not the factory), `ScadController.useEmptyPlate()`.
+**Untested:** the phone (narrow layout: eye-off button placement, Hide preview + ghost, rotation keeps the camera).
+**Merge offer pending** (user decides): d8f3e98 + bb47717 on top of main r163.
 **Still untested:** a true EGL context loss (no repro). Badges are ~23 dp at plate zoom on the phone (under 48 dp; told the user).
 Plate switcher (tabs/filmstrip/chips): user **not decided yet**, keep the lab; ask again later (mockups
 https://claude.ai/artifact/E3MtY8rQ1dMGHhibY2oNCX; More > Layout lab). Once picked: delete the losers and the lab
@@ -64,8 +60,8 @@ Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
 2. Nozzle match: verified phone r114. **Untested:** newer-firmware `device.nozzle.info` path; stale status after
    switching printer models. Filament picks per AMS tray: verified phone r134. **Untested:** spool change -> printer's
    preset wins and the pick is dropped (only when the user swaps a spool); WSA. Phone plate: 1 slot "Bambu PLA Basic @BBL A1".
-3. Merge: main = r163 (53d39b7, PR #12 from the work branch at 4b3bd99, 2026-10-13, user's `/next-merge`). Nothing unmerged.
-   No merge offer pending.
+3. Merge: main = r163 (53d39b7, PR #12 from the work branch at 4b3bd99, 2026-10-13, user's `/next-merge`).
+   Unmerged: d8f3e98 + bb47717 (r166), verified Chromebook, phone untested. Merge offer pending.
    Untested parts already in main stay listed in items 0, 2, 5, 6.
 4. Shape builder by touch: verified phone r134. Raw multi-touch: `~/orca-android-tools/pinch.sh` / `drag1.sh`
    (push with `MSYS_NO_PATHCONV=1` and a `C:/` source path).
