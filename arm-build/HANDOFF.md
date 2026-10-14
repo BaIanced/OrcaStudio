@@ -19,7 +19,8 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
 - Android main = r194 (541c5c4, PR #22, 2026-10-14; r192-r194 selection colour + design mode dialog samples, verified
-  phone + Chromebook; archive "r192-r194"). Work branch = main (nothing unmerged, nothing unverified).
+  phone + Chromebook; archive "r192-r194"). **Work branch is 8 commits ahead of main (r195-r202, head = Add-menu icon commit): all
+  verified on WSA only (see Next task); merge them on the user's "merge" (/next-merge).**
 - Installed: Chromebook r193 (2026-10-14; landscape now; restored to Dark + Prusa default, no
   custom colours, wallpaper off; session = 1 cube on 1 plate). Phone r194 (Dark + Prusa default restored; fullscreen portrait
   lab on (user's setting); session =
@@ -31,16 +32,18 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 
 ## Next task
 **Design mode is done, verified on all three devices and merged (r180-r194, main r194).** r179/r178 landscape verified on the Chromebook (archive "r179 delete popup + r178 design view in landscape"). Item 5's 16 KB sniff verified 2026-10-14 (Chromebook). WSA r194 2026-10-14: item 0 mouse right-click and item 2 tray
-picks verified (archive "WSA r194 element blocker right-click + tray picks"). **User away from the PC (2026-10-14), standing orders:** (1) numpad camera views: **verified WSA r196** (Num Lock on: 1 = top,
-3 = front, 7 = frame plate; Num Lock off: no change). (2) Blind bug hunt, in progress on the work branch (no main merge): random-input
-fuzz (`scratchpad/fuzz.sh`, ~470 steps, no crash), then targeted edge cases. **Fixed, on the work branch, UNMERGED** (r197-r200,
-67098ce): Shape dialog Add off outside 0.1-1000 mm + chips wrap (Cone was a sliver); typed scale clamped 0.1 %-100x; NumberField rejects
-NaN/Infinity/|x|>1e6 (they ended in a raw NPE error dialog; **cause of that NPE not found**, stack traces now logged under tag
-`OrcaStore`); "(s)" strings -> plurals (objects outside, files imported; **others still "(s)"**: cloud/preset sync toasts, ai_confirm_save);
-failed OpenSCAD run clears the old log. Verified on WSA r197-r199: dialog validation, scale clamp, NaN rejected. **Untested:** plurals +
-stale-log fix (r200 build 38579919475). Not bugs: OpenSCAD recursion bomb / 420k-triangle loop handled; lab sliders 50-130 %, filmstrip digits
-bottom-aligned on purpose. WSA quirk: the app window jumps position; get offsets from the `Prepare` label in `ui.ps1`. (3) Then design polish:
-centering, sizing, consistency. 
+picks verified (archive "WSA r194 element blocker right-click + tray picks"). **User was away (2026-10-14); orders done:** numpad 0-7 camera views (r196, **verified WSA**: Num Lock on 1 = top, 3 = front, 7 = frame
+plate; off = nothing); blind bug hunt on WSA (3 fuzz runs, ~550 random steps, malformed STL/3MF/SVG imports, hostile OpenSCAD,
+extreme numbers, lab sliders 50-130 %, portrait window 430x900): **no crash found**. Fixed + **verified on WSA** (r197-r202): Shape
+dialog Add off outside 0.1-1000 mm and the chips wrap (Cone was a sliver); typed scale clamped 0.1 %-100x; NumberField rejects
+NaN/Infinity/|x|>1e6 (they ended in a raw NPE error dialog; **root cause of that NPE not found**, stack traces now logged under tag
+`OrcaStore`); "(s)" -> plurals for objects outside / files imported ("1 object outside the plates" seen); a failed OpenSCAD run clears
+the old log (**untested**: no repro of the stale hint); Shape builder menu icon (compass) differs from Shape. **Not done:** other "(s)"
+strings (cloud/preset sync toasts, ai_confirm_save). **Unexplained:** once, in a freshly resized portrait window, the Prepare 3D
+background drew ~30 % lighter for ~15 s (not seen again; Preview fine). Not bugs: lab sliders, filmstrip digits at the bottom
+(thumbnail style), tune icon blue when an object has overrides. Design polish found nothing else to change on Prepare / Preview / Device /
+More / Models in landscape and phone-portrait sizes. WSA quirk: the app window jumps position; take offsets from the `Prepare` label in
+`ui.ps1`; WSA shows black unless focused. WSA now: r202, empty plate, panel open, app stopped. 
 Sign-ins + cloud syncs done by the user 2026-10-14 (archive "sign-ins + cloud sync"). User-only: retests, plate switcher pick, launcher icon colour (still teal; user
 2026-10-14: "decide later"). Background:
 **Colour presets + design mode (user, 2026-10-14: "code all three as presets, in addition to the customizer; you
