@@ -1581,3 +1581,109 @@ Retest WSA r154: both beepers landed on plate 3 beside the poses, Assembly on ne
 Duplicate of a beeper on filled plate 3 put the copy left of the poses, on the bed, no overlap; Arrange still packs and
 centres the plate. WSA session backup (`/data/local/tmp/session-backup.{3mf,json}`) restored afterwards (cmp same).
 Gotcha: tapping the tool column's "Scroll up" cue after it reached the top hits Undo (cue sits at the Undo button's edge).
+
+## keep_layout import verified on WSA r154 (moved 2026-10-13)
+fd71b33 `load_models` (OrcaScene.cpp:540-586): a single placed file onto an *empty* plate keeps its layout unless an
+object lands off every plate, then it arranges. Test: session backup (3 plates), Add plate -> empty plate 4 active, VIEW
+intent on `/sdcard/Download/swatch2.3mf` (2-plate 3MF, MediaStore id 1000460178). Result: Assembly + both beeper3.stl
+packed on plate 4, nothing beside the plates, no extra plate needed. Session backup restored afterwards (cmp same),
+app force-stopped.
+
+## Plate organisation verified on WSA r156/r157 (moved 2026-10-13)
+User's ask (2026-10-13): empty plate deletes without asking; long press an inactive plate in tabs / filmstrip -> pick
+several, delete (dialog only if one holds objects); Arrange moves floaters onto the nearest plate.
+- c315432: native `delete_plates(vector)` (OrcaScene.cpp, one undo step; `deletePlate` call takes `plates` or `plate`),
+  `Engine.deletePlates`, `SceneController.deletePlates` keeps the active plate (index minus deleted ones before it).
+  `PlateMenu`: empty plate (`scene.objectsOn`) deletes at once. `PlatePicks` + `plateClicks` (combinedClickable, haptic)
+  in `OverlayParts.kt`; `PlateRow` holds the picks (cleared when the plate count changes; active plate dropped; Back
+  clears). `OrcaEngine::arrange(plate)`: floaters (off every plate) go to the nearest plate by distance to its rectangle;
+  other plates get them via `arrange_plate(p, &floaters)` (their objects fixed), the arranged plate takes its own along.
+- 8d70911 (r157): r156 put "Delete n plates" + close in the add slot; the wider end shifted the plates under the finger
+  and a next tap hit Delete. Now the add slot (kept invisible, `clearAndSetSemantics`) is covered by a same-size close
+  button and the delete button floats in a `Popup` (custom `PopupPositionProvider`: above when the row aligns Bottom =
+  filmstrip, below otherwise), non-focusable so plate taps pass.
+- WSA tests (session backup, temp plates): empty plates deleted without a dialog; picked plates 1+2 -> "Some of the picked
+  plates hold objects" dialog, Cancel kept them; Back left picking; active plate kept after deletes; r157 popup tap deleted
+  plates 2+3, plates didn't shift on long press. Arrange: MCP `object_duplicate` x2 + `object_transform` (pos [330,128] on
+  plate 4, [-80,128] on plate 1) made 2 floaters; `plate_arrange {plate:4}` put one beside copy 1 on plate 1 (copy 1 stayed
+  at [128,128]) and one at plate 4's centre. MCP helper: PowerShell job POSTing to `http://127.0.0.1:8765/mcp` with the
+  `ai_token` pref as Bearer (never printed). Session backup restored (cmp same), app force-stopped.
+
+## r159 verified on WSA (2026-10-13)
+Build r159 = b4a0789 + 0e8f7c2 (run 38481343757). Filmstrip layout: added a cube on plate 2 and a cylinder on plate 3
+(Add > Shape), plate 3 active; long press plate 1 + tap plate 2, "Delete 2 plates" (popup above the row's end) ->
+"Plate 1 of 1", Objects (3), plate 3's cylinder on the remaining plate. Undo -> "Plate 3 of 3" (0e8f7c2: active plate
+restored; was plate 1 before). Redo, Add plate x2 -> each new plate picked up one floater (cube on plate 3, the old
+plate-1 object on plate 2), so the two floaters had separate spots. Tabs layout: picking 1+3 put "Delete 2 plates"
+right of the stop button, vertically centred, Undo uncovered (b4a0789). OpenSCAD editor (shape builder draft): handle
+dragged 1008 -> 850, panel title x 1153 -> 1014; Preview (confirmed "This plate has not been sliced yet") and back to
+Prepare kept 1014 (0e8f7c2 `ScadEditorSize`). Filmstrip first plate not clipped at rest (clip seen earlier not
+reproduced). Lab back to filmstrip, session backup restored (cmp same), app force-stopped.
+
+## G2b plate badges verified on WSA r160/r161 (moved from HANDOFF.md on 2026-10-13)
+Started before the user's lab picks (user's choice, 2026-10-13). Commits 314bbcd (r160, run 38485569529) + d8204a3
+(r161, run 38486763547). Textured quads on the bed (`render/PlateBadges.kt`, atlas built in Compose by
+`ui/components/PlateBadgeAtlas.kt` from Material icons + bold digits, `PlateRenderer.uploadBadges/drawBadges`, shader
+`Shaders.BADGE_VS/FS`, premultiplied blend): per plate the number at its bottom right (active = primary colour) and, in
+Prepare only, delete (only with >1 plate) / arrange / menu icons down its right side (desktop layout,
+`PartPlate::calc_vertex_for_icons`), size 0.1 x bed depth, gap 0.02. Taps: `PlateView` ACTION_UP -> `renderer.badgeAt`
+-> `PlateListener.onPlateBadge` (number = focus plate, delete, arrange = focus + arrange, menu = focus + `PlateMenu` at
+the tap). Badge taps within the double-tap timeout are ignored, and `onDoubleTap` does nothing when its first tap hit a
+badge (r160 bug: after deleting the last plate the view re-framed and the 2nd tap focused plate 2).
+Verified WSA r160: perspective + top view look, numbers on all plates, number tap focuses, delete, arrange, menu at the
+tap, Preview = numbers only. Verified r161: fast double tap on the last plate's delete deletes one plate and the new last
+plate stays active; badges survive background/resume. Testing notes: `wheel.ps1` zoom didn't work that day; tap the
+view then `O`/`I` keys (keyevent 43/37) zoom out/in; View > Top for precise badge taps.
+
+## Phone pass r161/r162 + UI batch details (moved from HANDOFF.md on 2026-10-13)
+Phone (portrait 1272x2772, root), r161 then r162 (506e1df), user's PiP video was over the top right at first:
+- G2b badges: render beside every plate; menu badge opens the plate menu; real rotation (`settings put system
+  user_rotation 1/0`, auto-rotate off) keeps badges + reframes; landscape immersive. Badges are ~70 px (~23 dp) at plate
+  zoom: tappable but under the 48 dp guideline (fixed 10 % of the bed, `BADGE_SIZE` in PlateRenderer.kt:15).
+- New project (r162) -> 1 plate, arrange + menu badges only (no delete). Same on WSA r161 after deleting plates.
+- WSA r161: badges survive Home + return, Device tab round trip, `am task resize` to 412x720 and back. Rotation only calls
+  `onSurfaceChanged` (manifest `configChanges`), so it never makes a new EGL context; a true context loss on the same
+  renderer had no repro.
+- 20 plates in tabs (auto-scroll to the new plate, + pinned, scroll back + select) and filmstrip (row above the Slice
+  button, no overlap; plate 1 not clipped after scrolling back from far plates).
+- Double tap on an inactive plate focuses it. Group pick (long press 7, tap 8) -> "Delete 2 plates" -> undo restores.
+  The "Delete n plates" button is missing from the uiautomator dump (tap by screenshot coords).
+- Tooltip: long press shows "Add" (M3 plain tooltip, capture with a background `input swipe x y x y 3000` + screencap),
+  doesn't fire the action, next tap works.
+- Opacity slider (45 %) makes the controls see-through. Floating controls slider max = 120 %.
+- Tool column: fits in portrait even at 120 %; in landscape it scrolls by swipe and by the cue arrows. With the bottom
+  sheet pulled up, the sheet covers the column (by design: the sheet overlays the 3D view).
+- Default plate type pinning: Textured PEI on plate 6 -> plate 2 kept Smooth PEI, a new plate got Textured PEI; set back
+  (pref `preferred_bed_type` = "High Temp Plate").
+- OpenSCAD Customizer (scadzip-test.zip via VIEW intent): slow drag -> mid-drag slider 45, draft 44 mm + "Draft while
+  dragging" chip; release -> 56 full render.
+- Models infinite scroll (0d2bb7b) on the phone: Thingiverse home reached "Page 10".
+
+UI batch builds detail kept from the hot file (lab = `core/LayoutLab.kt`, prefs `layout_lab`): plate switcher tabs /
+filmstrip / chips, "Plate n of m" label (default off), opacity slider (`LocalOverlayAlpha`), portrait tool column,
+fullscreen in portrait, OpenSCAD view canvas / ghost; a2d3148 text size / interface size (root `LocalDensity` override in
+`AppScaffold`) / floating controls sliders applied on release; wide panel edge drag (`lab.panelWidth`, min 300 dp, < 200 dp
+= tuck; keep when removing the lab); `ScrollCue` arrows. More order: Layout lab, Recent files, Calibration, Printers &
+presets, then collapsed sections; daily profile check (`lastProfileCheck`) -> `UpdatesChip`. "High Temp Plate" shown as
+"Smooth PEI Plate" (`Translator.plate`); `PresetController.rememberBedType`. Tooltips (`Tip`); double tap
+(`PlateRenderer.plateAt`, `PlateListener.onPlateDoubleTap`); OpenSCAD ghost = type 98 mesh, draft `$fn = 16` after 40 ms,
+`ScadController.endDrag`. Plate delete -> upstream behaviour (2db1d53): objects move to free grid spots after the last
+plate; b4a0789 tabs delete button; 0e8f7c2 undo restores the active plate.
+
+
+## Moved from HANDOFF.md on 2026-10-13: UI batch r144-r163 verified + merged (PR #12)
+Big-screen pass verified + merged (r140, PR #10). UI batch (r144-r162) verified on WSA and, **2026-10-13, on the phone**
+(r161/r162: badges, rotation, 1 plate, 20 plates, filmstrip, double tap, group delete + undo, tooltips, opacity, tool
+column, plate-type pinning, Customizer drag, Models infinite scroll; archive "Phone pass r161/r162").
+Phone now has **r163**; session = test downloads (contents don't matter, user 2026-10-13); its old 8-plate session is in
+`/data/local/tmp/phone-session-backup.{3mf,json}`. Lab + auto-rotate put back after the tests. WSA session backup:
+`/data/local/tmp/session-backup.{3mf,json}` (restored). **4b3bd99 (r163) verified on the phone**: MakerWorld "Download 3MF"
+now saves `Plier_Racks_Ikea_Skadis_Version.3mf` (was "…3mf_filename__utf-8__….3mf"); Printables STL name clean.
+**Merged to main 2026-10-13 (r163, PR #12).** Chromebook (r163 installed, session = 1 cube on 1 plate, restored):
+wide layout, plate badge/icons and **fd71b33 add_plate floater skip verified** (cube dropped in plate 2's spot stayed put).
+**Next:** rest of the Chromebook checks (switcher variants, Layout lab, many plates), the user's lab picks. Seen: a 3mf
+(keep_layout, 3 plates) landed on plate 1 over the STL already there: asked the user 2026-10-13, no answer yet.
+Adb on the Chromebook can't zoom the canvas (`input mouse scroll` did nothing); tuck the panel for room.
+Chromebook r163 (2026-10-13): Tabs / Filmstrip (numbered boxes, shares the Slice row) / Chips switchers, Layout lab, wide panel,
+plate badges and plate icons look right; fd71b33 add_plate floater skip verified (cube dragged into plate 2's future spot,
+Add plate left it near plate 2's left edge instead of centring it). Session restored with undo.
