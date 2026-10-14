@@ -34,12 +34,17 @@ Adb on the Chromebook can't zoom the canvas (`input mouse scroll` did nothing); 
 precisely placed objects). Plate activation must not move the camera when zoomed out (sometimes moving is fine).
 OpenSCAD: design view (main canvas) is the default; an **eye button** shows the design on the build plate and back, with the
 camera the user had on the plates, the project's objects hidden, and new designs on an empty plate.
-**d8f3e98 (r164, build running, untested):** lab's SCAD-view choice removed; eye in the design view's top-right buttons,
+**d8f3e98 (built as r165) + bb47717 (r166, build running):** lab's SCAD-view choice removed; eye in the design view's top-right buttons,
 eye-off over the plate view (top right, 76 dp down); ghost = `state.scadOnPlate` (reset on close), models hidden while a
 ghost shows (`PlateRenderer` draw); camera saved on view dispose and restored in the next PlateView (`Viewport.kt`
 `savedCamera`); active-plate change frames only when the plate centre is off screen (`plateInView`); double tap still
 frames. New design (`open`/`load` with no onPlate) -> `ScadController.useEmptyPlate()` (empty active plate, first empty,
-else adds one; the added one is deleted on close if still empty). **Test:** all of that on the Chromebook / phone.
+else adds one; the added one is deleted on close if still empty).
+Chromebook r165: eye / eye-off, ghost on the empty plate with the other objects hidden, editor moved to the first empty
+plate: verified. Found + fixed in bb47717 (untested): tab taps still framed (`framePlate` in the switchers -> `showPlate`);
+the restored camera kept showing plate 1 while the design sat on plate 2 (new view now frames an off-screen active plate).
+**Test on r166:** zoomed out (key `O` zooms out over adb) + tab tap keeps the camera; ghost view frames the design's plate;
+editor on a full single plate adds plate 2 and removes it on close if empty.
 **Still untested:** a true EGL context loss (no repro). Badges are ~23 dp at plate zoom on the phone (under 48 dp; told the user).
 Plate switcher (tabs/filmstrip/chips): user **not decided yet**, keep the lab; ask again later (mockups
 https://claude.ai/artifact/E3MtY8rQ1dMGHhibY2oNCX; More > Layout lab). Once picked: delete the losers and the lab
