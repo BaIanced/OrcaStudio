@@ -1802,3 +1802,12 @@ only the 3D view; slot reset and "Reset custom colors" (confirm) work; light pan
 - r187 (fd4361d) on the Chromebook: a dark Background in light mode had blended sheets/menus towards the light cards
   (Preview sheet slate grey #555E6D) because `Role.BACKGROUND` lerped to the receiver's surfaceContainerHigh, not the
   flipped one; fixed. Low-contrast warning, themed OpenSCAD drag strips verified. More/Models/OpenSCAD regions verified on r185.
+
+### 2026-10-14: r187 (merged as Android PR #20)
+- **r187 fd4361d (run 38542190492; CI numbered it r187), verified on the Chromebook:** sheets/menus on a dark Background in
+  light mode blend towards the flipped cards (Preview sheet now dark; `Role.BACKGROUND` had lerped to the receiver's light
+  surfaceContainerHigh); panel warning (`AppColors.lowContrast`, text under 3:1 on background or cards) shows for dark Panels
+  and cards alone in light mode; OpenSCAD drag strip follows the editor. **Untested:** snackbar action (`inversePrimary`
+  shaded to 4.5:1; the only action snackbar is "Add" for variants in `FileController.kt:59`; test: VIEW intent on
+  `scadzip-test.zip`, recipe in the reference "Chromebook"). r187 only shaded it with an Accent override; r189 fixes the rest.
+- Snackbar action: verified on the phone with r189 (2026-10-14).

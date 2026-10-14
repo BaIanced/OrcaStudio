@@ -56,6 +56,8 @@ user uses the PC.
 - System file picker (phone/WSA): plain `adb input tap` (focus.ps1 finds no app window while it is up), scroll with `input swipe`, avoid its Search (list broke); delete test
   files from `/sdcard/Download` after. Close with `adb shell am force-stop com.android.documentsui`.
 - adb `input` has no Shift/Alt state: use `keys.ps1 -Keys <vk codes>` (WSA; real key presses; tap a row first for focus).
+- Action snackbar ("Add"): VIEW intent on `scadzip-test.zip` (MediaStore id via `content query`, see "Chromebook");
+  it shows ~10 s, screenshot 3 s after the intent.
 - Test with `ui.ps1` text dumps; screenshots only when the look matters. After launching the app, wait until `ui.ps1`
   lists the tabs before tapping (the first tap after start is often lost).
 
