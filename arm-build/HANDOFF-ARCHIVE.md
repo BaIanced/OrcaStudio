@@ -1687,3 +1687,19 @@ Adb on the Chromebook can't zoom the canvas (`input mouse scroll` did nothing); 
 Chromebook r163 (2026-10-13): Tabs / Filmstrip (numbered boxes, shares the Slice row) / Chips switchers, Layout lab, wide panel,
 plate badges and plate icons look right; fd71b33 add_plate floater skip verified (cube dragged into plate 2's future spot,
 Add plate left it near plate 2's left edge instead of centring it). Session restored with undo.
+
+## r166 OpenSCAD plate view + plate camera (moved from HANDOFF.md on 2026-10-13, merged PR #13)
+**d8f3e98 + bb47717 (r166) verified on the Chromebook 2026-10-13** (wide layout): eye / eye-off; ghost on the empty plate
+with other objects hidden; plate view frames the design's plate; zoomed out (key `O` over adb) a tab tap keeps the camera;
+editor on a full single plate adds plate 2, removes it on close if empty, keeps it once the design is placed. Session restored
+(1 cube, 1 plate). Code: `state.scadOnPlate`, `ScadPlateToggle`, `PlateRenderer.plateInView`, `showPlate`, Viewport
+`savedCamera` (restored in `remember(v)`, not the factory), `ScadController.useEmptyPlate()`.
+**Phone r166 verified 2026-10-13** (narrow layout): eye button top right in the design view; eye-off sits top right under File in
+plate view; ghost on plate 1 replaces the object being edited ("Update on plate" mode); "Show plate" (folds the editor) hides the
+ghost and shows the real object, the OpenSCAD pill brings the editor back still in plate view; landscape rotation (wide layout) and
+back keep an orbited camera. Session unchanged (1 object, 1 plate); backup `/data/local/tmp/phone-r166-session.3mf`.
+
+## Moved from HANDOFF.md on 2026-10-13 (r168 merge)
+- r168 (commit 83820be "OpenSCAD editor: the phone's fold button reads Hide editor"): fold button label "Hide editor",
+  icon VerticalAlignBottom (looks like a download arrow; user told). Folds + reopens as before. Verified on the phone
+  2026-10-13; merged to main via PR #14 (383b35a) on the user's `/next-merge`.
