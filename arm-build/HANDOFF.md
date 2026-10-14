@@ -34,7 +34,7 @@ Plate label default is off (`plateLabel = false`). Phone has plates 1-8 (user's)
 from the phone: don't take the phone over without asking. WSA phone view (`phone-view.sh`) was back-burnered by the user.
 Import/arrange fix eac2d13 **verified on WSA r154** (import onto a filled plate, Duplicate, Arrange; archive "Import/arrange
 fix verified on WSA r154"). WSA session backup stays in `/data/local/tmp/session-backup.{3mf,json}` (restored).
-**Next:** WSA-testable work is done as of r159. Left: phone + Chromebook checks of the batch list below (ask the user
+**Next:** WSA-testable work is done as of r161 (G2b badges included). Left: phone + Chromebook checks of the batch list below (ask the user
 before taking the phone over; phone wasn't on adb 2026-10-13) and the user's lab picks (then G2b). WSA r144/r146 checks passed (archive "UI batch WSA
 checks"). fd71b33's keep_layout path verified WSA r154 (2026-10-13); a2d3148 (user 2026-10-13): lab sliders for text size,
 interface size (root `LocalDensity` override in `AppScaffold`) and floating controls (overlay density, Prepare + Preview),
@@ -81,8 +81,9 @@ Switcher (tabs/filmstrip/chips) and SCAD view (canvas/ghost): user **not decided
 Chips layout has no picking. User wants phone checks later (phone not on adb now; WSA meanwhile). Minor, seen on WSA
 once: the filmstrip's first plate clipped a little at the left edge (not reproduced at rest on r159; maybe after the
 strip auto-scrolls to a far plate: check with many plates).
-**Next after the user's picks (G2b, user 2026-10-13):** plate number labels and per-plate icons drawn in the 3D view
-around each plate (like Orca/Bambu: they turn with the camera), useful with many plates; then remove the lab.
+**G2b plate badges (314bbcd + d8204a3): verified WSA r161** (archive "G2b plate badges verified"): numbers + delete /
+arrange / menu icons on the bed beside each plate. **Untested:** 1 plate (no delete badge), a real new GL context
+(rotation), phone/Chromebook touch size (badges ~25 mm on an A1, small when zoomed out). After the user's picks: remove the lab.
 **Older leftovers:** items 0 and 6 mostly need the user (sign-ins) or a web-UI printer.
 **Phone:** serial = the `adb-...._adb-tls-connect._tcp` entry in `adb devices` (`adb disconnect` a stale `ip:port`).
 Has r143. Setup: archive "Phone test setup", memory `test-on-phone`; `phone-ui.py` needs `PYTHONIOENCODING=utf-8`;
@@ -98,7 +99,7 @@ Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
    switching printer models. Filament picks per AMS tray: verified phone r134. **Untested:** spool change -> printer's
    preset wins and the pick is dropped (only when the user swaps a spool); WSA. Phone plate: 1 slot "Bambu PLA Basic @BBL A1".
 3. Merge: main = r143 (cc7abe4, PR #11 from `claude/merge-r143` at 4d55156, 2026-10-13, user's `/next-merge`). No merge offer pending.
-   Unmerged, untested (all after 4d55156): f7f4d57 (UI batch), fd71b33 (plates; import part verified WSA r154, add_plate floater skip untested), 6e45548 (plate row, sliders; verified WSA r158), a2d3148 (sizes, panel drag), 6e645cb + 9f9978a (filmstrip row), 31f6b58 (chips, verified phone), 49e4cdf (tabs numbers + switch rows verified phone; cutout), 0afd458 (rail insets), 4dac2f4 (rail cutout, verified phone), eac2d13 (arrange fix, verified WSA r154), c315432 + 8d70911 (plate organisation, verified WSA r157), 2db1d53 (delete keeps objects, verified WSA r158), b4a0789 + 0e8f7c2 (verified WSA r159). 0d2bb7b (r149,
+   Unmerged, untested (all after 4d55156): f7f4d57 (UI batch), fd71b33 (plates; import part verified WSA r154, add_plate floater skip untested), 6e45548 (plate row, sliders; verified WSA r158), a2d3148 (sizes, panel drag), 6e645cb + 9f9978a (filmstrip row), 31f6b58 (chips, verified phone), 49e4cdf (tabs numbers + switch rows verified phone; cutout), 0afd458 (rail insets), 4dac2f4 (rail cutout, verified phone), eac2d13 (arrange fix, verified WSA r154), c315432 + 8d70911 (plate organisation, verified WSA r157), 2db1d53 (delete keeps objects, verified WSA r158), b4a0789 + 0e8f7c2 (verified WSA r159), 314bbcd + d8204a3 (G2b plate badges, verified WSA r161). 0d2bb7b (r149,
    infinite scroll) is verified on WSA but sits after the untested commits (cherry-pick it if merged early).
    Untested parts already in main stay listed in items 0, 2, 5, 6.
 4. Shape builder by touch: verified phone r134. Raw multi-touch: `~/orca-android-tools/pinch.sh` / `drag1.sh`
@@ -116,7 +117,7 @@ Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
   (user, 2026-10-11): decide branch handling and next steps yourself. **Main merges / releases need
   the user.** Main = r143 (merged 2026-10-13, PR #11, on the user's `/next-merge`); user agreed to merge more
   often, at verified milestones: offer a merge PR when a batch is verified, merge only on their "merge".
-- Installed on WSA: r159 (2026-10-13); AI tools on; auto-save 60 s. Session = the backup above (3 plates, plate 3 active). Shape-builder
+- Installed on WSA: r161 (2026-10-13; session backup restored after the G2b tests); AI tools on; auto-save 60 s. Session = the backup above (3 plates, plate 3 active). Shape-builder
   handles by touch untested (WSA has none). Real mouse drags (+Shift): `mdrag.ps1 x1 y1 x2 y2 [-Shift]`
   (Android coords = Windows pixels on WSA); the builder's shape list scrolls only with a real mouse wheel.
 - Draft of the open design: `files/openscad/draft.scad|json` (read with `adb exec-out "su -c 'cat ...'"`,

@@ -1619,3 +1619,18 @@ right of the stop button, vertically centred, Undo uncovered (b4a0789). OpenSCAD
 dragged 1008 -> 850, panel title x 1153 -> 1014; Preview (confirmed "This plate has not been sliced yet") and back to
 Prepare kept 1014 (0e8f7c2 `ScadEditorSize`). Filmstrip first plate not clipped at rest (clip seen earlier not
 reproduced). Lab back to filmstrip, session backup restored (cmp same), app force-stopped.
+
+## G2b plate badges verified on WSA r160/r161 (moved from HANDOFF.md on 2026-10-13)
+Started before the user's lab picks (user's choice, 2026-10-13). Commits 314bbcd (r160, run 38485569529) + d8204a3
+(r161, run 38486763547). Textured quads on the bed (`render/PlateBadges.kt`, atlas built in Compose by
+`ui/components/PlateBadgeAtlas.kt` from Material icons + bold digits, `PlateRenderer.uploadBadges/drawBadges`, shader
+`Shaders.BADGE_VS/FS`, premultiplied blend): per plate the number at its bottom right (active = primary colour) and, in
+Prepare only, delete (only with >1 plate) / arrange / menu icons down its right side (desktop layout,
+`PartPlate::calc_vertex_for_icons`), size 0.1 x bed depth, gap 0.02. Taps: `PlateView` ACTION_UP -> `renderer.badgeAt`
+-> `PlateListener.onPlateBadge` (number = focus plate, delete, arrange = focus + arrange, menu = focus + `PlateMenu` at
+the tap). Badge taps within the double-tap timeout are ignored, and `onDoubleTap` does nothing when its first tap hit a
+badge (r160 bug: after deleting the last plate the view re-framed and the 2nd tap focused plate 2).
+Verified WSA r160: perspective + top view look, numbers on all plates, number tap focuses, delete, arrange, menu at the
+tap, Preview = numbers only. Verified r161: fast double tap on the last plate's delete deletes one plate and the new last
+plate stays active; badges survive background/resume. Testing notes: `wheel.ps1` zoom didn't work that day; tap the
+view then `O`/`I` keys (keyevent 43/37) zoom out/in; View > Top for precise badge taps.
