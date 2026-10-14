@@ -18,16 +18,15 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 ## State
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
-- Android main = r173 (af876fd, PR #16). Branch: r175 high refresh rate (60 -> 120 Hz during input; ColorOS caps at 120; verified phone, unmerged). Nothing else
-  unmerged or unverified on the branch.
+- Android main = r175 (b7986b0, PR #17, 2026-10-13: high refresh rate during input). Branch = main; nothing unmerged or
+  unverified.
 - Installed: Chromebook r173 (session = 1 cube on 1 plate, Tabs switcher, cut off). Phone r175 (session = test downloads, contents
   don't matter; old 8-plate session in `/data/local/tmp/phone-session-backup.{3mf,json}`). WSA r161 (AI tools on; auto-save
   60 s; session = backup `/data/local/tmp/session-backup.{3mf,json}`, 3 plates, plate 3 active).
 - Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
 
 ## Next task
-Nothing open can be done alone. Verified, unmerged: r175 high refresh rate (Android branch; archive "High refresh rate").
-Needs the user: the plate switcher pick (lab stays until they say), the user-only items below.
+Nothing open can be done alone; nothing awaits a merge. Needs the user: the plate switcher pick (lab stays until they say), the user-only items below.
 
 ## User decisions (2026-10-13)
 - A 3mf landing on the active plate over existing objects stays as is (arranging could move precisely placed objects).
