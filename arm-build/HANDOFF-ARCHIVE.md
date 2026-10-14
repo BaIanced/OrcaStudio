@@ -1811,3 +1811,13 @@ only the 3D view; slot reset and "Reset custom colors" (confirm) work; light pan
   shaded to 4.5:1; the only action snackbar is "Add" for variants in `FileController.kt:59`; test: VIEW intent on
   `scadzip-test.zip`, recipe in the reference "Chromebook"). r187 only shaded it with an Accent override; r189 fixes the rest.
 - Snackbar action: verified on the phone with r189 (2026-10-14).
+
+### 2026-10-14: r189 + r190 (merged as Android PR #21, main f223be2)
+- **r189 ff9e977 (run 38547994468), verified on the phone:** snackbar action = accent shaded to 4.5:1 for every scheme
+  (r187 showed Material purple #6650A4 on "Add" with plain Prusa dark; r189: dark orange on Prusa dark, orange on navy in
+  Printables Night light).
+- **r190 0170b41 (run 38550070114), verified on the phone:** message bar drawn over the design panel (the folded panel hid
+  it); OpenSCAD reopen button above Slice (it covered Slice with the editor hidden); folded panel button "Unfold the panel".
+- Phone r189 design-mode checks (fullscreen portrait): floating panel (360 dp, right-aligned) fits above the tab bar;
+  Industrial / Printables Night recolour 3D view, OpenSCAD sheet, File menu, tab bar; light mode (Prepare, editor, More)
+  reads fine; Quit dialog shows. r179 delete popup and r178 OpenSCAD design view + eye toggle verified on r189.
