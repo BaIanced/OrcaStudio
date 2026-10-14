@@ -18,11 +18,10 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 ## State
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
-- Android main = r190 (f223be2, PR #21, 2026-10-14; r189 snackbar accent + r190 phone message bar / OpenSCAD button
-  placement, phone-verified; archive "r189 + r190"). Work branch = main; nothing unmerged.
-  Untested side case: a running slice's progress card (taller) under the OpenSCAD reopen button.
-- Installed: Chromebook r187 (2026-10-14; it was in **portrait tablet mode** 1080x1920; restored to Dark + Prusa default, no
-  custom colours, wallpaper off; session = 1 cube on 1 plate). Phone r190 (Dark + Prusa default restored; fullscreen portrait
+- Android main = r194 (541c5c4, PR #22, 2026-10-14; r192-r194 selection colour + design mode dialog samples, verified
+  phone + Chromebook; archive "r192-r194"). Work branch = main (nothing unmerged, nothing unverified).
+- Installed: Chromebook r193 (2026-10-14; landscape now; restored to Dark + Prusa default, no
+  custom colours, wallpaper off; session = 1 cube on 1 plate). Phone r194 (Dark + Prusa default restored; fullscreen portrait
   lab on (user's setting); session =
   test downloads; old 8-plate session in `/data/local/tmp/phone-session-backup.{3mf,json}`). WSA r161 (AI tools on; auto-save
   60 s; session = backup `/data/local/tmp/session-backup.{3mf,json}`; showed 1 plate on 2026-10-14). WSA now r182, restored to
@@ -31,7 +30,8 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 - Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
 
 ## Next task
-**Colour presets + design mode (r180-r182; user, 2026-10-14: "code all three as presets, in addition to the customizer; you
+**Design mode is done, verified on all three devices and merged (r180-r194, main r194).** Next: the WSA landscape check (r179 line below; only while the user isn't on the PC), then the open items. Background:
+**Colour presets + design mode (user, 2026-10-14: "code all three as presets, in addition to the customizer; you
 categorize everything").** **Verified on WSA r182** (presets, live design mode, per-part overrides, resets, restart; details: archive
 "2026-10-14: design mode r182-r187").
 - Panel: drag by header, fold, close; preset chips, "Part of the app" dropdown (14 parts), a row of colour chips (• = custom)
@@ -46,13 +46,13 @@ categorize everything").** **Verified on WSA r182** (presets, live design mode, 
   #1E293B per region): More, Models (toolbar/chips), OpenSCAD editor read fine; Preview sheet came out slate grey (fixed r187).
 - r187 fd4361d (dark-Background sheets, contrast warning, drag strip): verified + merged (archive "2026-10-14: r187"); its
   snackbar shading verified with r189.
-- Phone r189 (fullscreen portrait) checks verified (archive "r189 + r190"). **Untested:** Messages/dialogs in a custom theme
-  (busy dialog flashes by; AI-confirm/error dialogs are hard to trigger); 3D selection blue (plate 2 was empty).
+- Phone r189 checks, dialogs (sample + real error dialog; busy/AI-confirm share `GlobalDialogs`), 3D selection colour:
+  all verified (archive "r189 + r190", "r192-r194"). Nothing open in design mode except the known limits below.
 - Known limits: hard-coded colours (delete popup #2B2C32, red bin, preview legend) don't follow; the Models web page keeps
   its own colours. A dark 3D background under a light theme hides the floating tool icons (user's choice; "Prepare: floating
   buttons" can be changed to match).
 
-**r179 de39e04** delete popup + r178 design view: verified r189. **Still untested:** 3D selection blue, WSA landscape.
+**r179 de39e04** delete popup + r178 design view: verified r189. **Still untested:** WSA landscape.
 Slice button = primaryContainer; the user can set "Soft accent" in design mode. Launcher icon still teal (asked the user).
 
 Then: the plate switcher pick (lab stays until they say), the user-only items below.
