@@ -1703,3 +1703,33 @@ back keep an orbited camera. Session unchanged (1 object, 1 plate); backup `/dat
 - r168 (commit 83820be "OpenSCAD editor: the phone's fold button reads Hide editor"): fold button label "Hide editor",
   icon VerticalAlignBottom (looks like a download arrow; user told). Folds + reopens as before. Verified on the phone
   2026-10-13; merged to main via PR #14 (383b35a) on the user's `/next-merge`.
+
+## Moved from HANDOFF.md on 2026-10-13 (trim before r170)
+- Verified history of hot items: nozzle match verified phone r114; filament picks per AMS tray verified phone r134.
+  .scad zips + Thingiverse downloads verified WSA r126, phone r138/r142/r143, Chromebook r138 ("Thingiverse downloads on
+  the phone"). Ad blocking f138655 (Models tab) verified WSA r127 + phone r134; Thingiverse download fix ec86442 verified
+  phone r142; 08bdf0b (all app WebViews use `AdBlock.Client`) verified WSA r128 (Device page, Models tab).
+- Merges 2026-10-13: r144-r163 = PR #12, r166 (OpenSCAD eye + plate camera) = PR #13, r168 ("Hide editor") = PR #14
+  (main 383b35a from work branch 83820be, user's `/next-merge`).
+- WSA phone view (back-burnered 2026-10-13, reference):
+   phone, WSA in its normal window as before). Kept for reference: `sh ~/orca-android-tools/phone-view.sh`
+   (launches + `am task resize` to 412x720 dp portrait, sw412 "nrml port"); `... land` = 720x412. WSA display is
+   1280x720 px at 160 dpi, so 720 dp is the max height (a real phone is ~900 dp). Task ID changes per launch (script finds it).
+
+## r170 section view (verified on the Chromebook 2026-10-13, run 38503903000, Android 2ea77b3)
+- Travel lines (LINE shader) and retract/seam markers (POINT shader, moved off screen in the VS) are cut by the section
+  plane; beds, measure and cut-plane overlays draw whole (`setSection(program, on = false)` in `PlateRenderer`).
+- Picks (tap, long-press menu, paint) go through `SceneController.pick`: the ray starts where it enters the kept side
+  (`SectionView.rayStart`) and hits on the cut-away side are dropped (`SectionView.kept`); Viewport passes
+  `v.section.current` (the plane last handed to the renderer).
+- Chromebook test (1 cube): at 0.50 a tap on the cut cube selected it; at 0.98 (cube fully cut away) the same tap
+  deselected (before: selected via the hidden front face). Preview with travels/retractions/seams on: at 0.50 the front
+  travel line and near-side markers are gone, far-side ones and the bed stay; at 0.01 all show. Restored after (section
+  closed, chips off, session unchanged).
+- Earlier test plan text:
+  **r170 = Android 2ea77b3 (run 38503903000): section view clips travels + retract/seam markers, picks skip the cut. Built, UNTESTED.**
+  Test (WSA or Chromebook; session objects only, no prints): View > Section view ~0.5. Preview: travels and markers on the camera
+  side gone, beds + measure line whole. Prepare: tap / long-press on the cut-away half selects what lies behind it (or nothing); a
+  tap on a cut face selects that object; painting through the cut paints the far side. Code: `SectionView.rayStart/kept/current`,
+  `SceneController.pick`, `setSection(program, on)` in `PlateRenderer`, LINE/POINT shaders. **Not done:** the paint brush (sphere)
+  can still reach cut-away triangles next to the hit (the desktop clips the brush too).

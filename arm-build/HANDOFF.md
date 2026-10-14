@@ -19,6 +19,9 @@ front**; grep them when a question needs them (e.g. `grep -n "AMS mapping" HANDO
   time to `/clear` then `/next`** (and why: task done + handoff updated). Don't suggest it mid-task.
 
 ## Next task
+**r170 (Android 2ea77b3): section view clips travels/markers + picks skip the cut. Verified on the Chromebook 2026-10-13**
+(archive "r170 section view"); waiting for a merge. **Untested:** painting through the cut (picks the far side; the sphere
+brush can still reach cut-away triangles next to the hit, not done), long-press menu with the cut, measure line staying whole.
 **Test devices (user, 2026-10-13):** **phone** = main (root); **Chromebook's Android (ARC)** = big-screen layout
 checks (user wants the app there). Chromebook: `<chromebook-ip>:5555` (memory `test-on-phone`), Android 13, arm64,
 1920x1080 (app area ~1813x948, shelf below), **no root**. Launch: `am start -n io.github.baianced.orcastudio_android/app.orcaandroid.ui.MainActivity`
@@ -26,15 +29,15 @@ checks (user wants the app there). Chromebook: `<chromebook-ip>:5555` (memory `t
 The system file picker is a ChromeOS dialog (adb can't drive it); open files with a VIEW intent on the MediaStore URI
 (`content query --uri content://media/external/file --where "_display_name='x'"` -> `-d content://media/external/file/<id>
 -t application/zip --grant-read-uri-permission`), which works without root.
-r144-r163 (PR #12), r166 (OpenSCAD eye + plate camera, PR #13) and r168 ("Hide editor" fold button, PR #14) verified, merged to main 2026-10-13; archive.
+r144-r168 verified, merged to main 2026-10-13 (PRs #12-#14; archive).
 Phone has r168; session = test downloads (contents don't matter); old 8-plate session in `/data/local/tmp/phone-session-backup.{3mf,json}`.
-WSA session backup: `/data/local/tmp/session-backup.{3mf,json}` (restored). Chromebook has r166; session = 1 cube on 1 plate, Tabs switcher.
+WSA session backup: `/data/local/tmp/session-backup.{3mf,json}` (restored). Chromebook has r170; session = 1 cube on 1 plate, Tabs switcher.
 Adb on the Chromebook can't zoom the canvas (`input mouse scroll` did nothing); tuck the panel for room.
 **User decisions 2026-10-13:** a 3mf landing on the active plate over existing objects stays as is (arranging could move
 precisely placed objects). Plate activation must not move the camera when zoomed out (sometimes moving is fine).
 OpenSCAD: design view (main canvas) is the default; an **eye button** shows the design on the build plate and back, with the
 camera the user had on the plates, the project's objects hidden, and new designs on an empty plate.
-**Next:** nothing open that I can do alone: items 0-6 need the user; plate switcher still undecided (asked 2026-10-13).
+**Next:** nothing open I can do alone: items 0-6 need the user; plate switcher still undecided (asked 2026-10-13).
 **Still untested:** a true EGL context loss (no repro). Badges are ~23 dp at plate zoom on the phone (under 48 dp; told the user).
 Plate switcher (tabs/filmstrip/chips): user **not decided yet**, keep the lab; ask again later (mockups
 https://claude.ai/artifact/E3MtY8rQ1dMGHhibY2oNCX; More > Layout lab). Once picked: delete the losers and the lab
@@ -51,19 +54,15 @@ Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
    other WebViews (Device page etc.); Orca Cloud login WebView (08bdf0b) needs a sign-out: leave to the user.
 1. Preset re-link: verified. **Untested:** a Bambu/Orca cloud sync afterwards (cloud copy still detached; same
    updated_time, so the pull shouldn't replace it); the Chromebook desktop still has it detached.
-2. Nozzle match: verified phone r114. **Untested:** newer-firmware `device.nozzle.info` path; stale status after
-   switching printer models. Filament picks per AMS tray: verified phone r134. **Untested:** spool change -> printer's
-   preset wins and the pick is dropped (only when the user swaps a spool); WSA. Phone plate: 1 slot "Bambu PLA Basic @BBL A1".
-3. Merge: main = r168 (383b35a, PR #14 from the work branch at 83820be, 2026-10-13, user's `/next-merge`).
-   Nothing unmerged on the work branch.
+2. Nozzle match + filament picks per AMS tray: verified (archive). **Untested:** newer-firmware `device.nozzle.info`
+   path; stale status after switching printer models; spool change -> printer's preset wins and the pick is dropped
+   (only when the user swaps a spool); tray picks on WSA. Phone plate: 1 slot "Bambu PLA Basic @BBL A1".
+3. Merge: main = r168 (383b35a, PR #14). Unmerged on the work branch: r170 (2ea77b3, verified, above).
    Untested parts already in main stay listed in items 0, 2, 5, 6.
 4. Shape builder by touch: verified phone r134. Raw multi-touch: `~/orca-android-tools/pinch.sh` / `drag1.sh`
    (push with `MSYS_NO_PATHCONV=1` and a `C:/` source path).
-5. .scad zips + Thingiverse downloads: verified (WSA r126, phone r138/r142/r143, Chromebook r138; archive "Thingiverse
-   downloads on the phone"). **Untested:** the 16 KB content sniff itself (r143 now gets the real name first).
-6. Ad blocking (f138655, Models tab): verified WSA r127 + phone r134; Thingiverse download fix ec86442 verified phone
-   r142 (archive "Thingiverse downloads on the phone"). 08bdf0b, all app WebViews use `AdBlock.Client`: verified WSA
-   r128 (Device page, Models tab). **Untested:** MakerWorld sign-in / downloads with it on; Bambu sign-in WebView
+5. .scad zips + Thingiverse downloads: verified (archive). **Untested:** the 16 KB content sniff itself (r143 gets the real name first).
+6. Ad blocking (f138655, ec86442, 08bdf0b = `AdBlock.Client` in all app WebViews): verified (archive). **Untested:** MakerWorld sign-in / downloads with it on; Bambu sign-in WebView
    (needs Sign out + the user's password: leave to the user), Orca Cloud login, plugin pages, Device page on the phone
    (needs a printer with a web UI; the phone only has the A1).
 
@@ -94,7 +93,7 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
   press Subtract in tests.
 - AMS mapping verified (user printed from A1). User's AMS lite: A1 yellow, A2 matte black, A3
   white, A4 PETG. **Any test print needs the user's OK.**
-- Section view: travels/markers not clipped, picking ignores the cut.
+- Section view: the paint brush isn't clipped (r170 fixed travels/markers/picking).
 - OpenSCAD untested: phone layout, a real .scad download (Next task 5),
   painting through a mesh boolean.
 - Models tab untested: MakerWorld sign-in ticket flow. (Thingiverse download verified r126.)
@@ -168,10 +167,7 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
 - WSA adb `127.0.0.1:58526` (root via `su -c '...'`, Android 13 / API 33; `run-as` fails, release build); an Android TV box is also attached, so always
   pass `-s`. WSA stops drawing the app when its window isn't in front (taps are lost, ui dump empty): focus it with
   the Alt + SetForegroundWindow trick from `wheel.ps1:17`.
-- **Phone view on WSA: back-burnered** (user, 2026-10-13: "didn't look right on my end"; test phone layouts on the
-  phone, WSA in its normal window as before). Kept for reference: `sh ~/orca-android-tools/phone-view.sh`
-  (launches + `am task resize` to 412x720 dp portrait, sw412 "nrml port"); `... land` = 720x412. WSA display is
-  1280x720 px at 160 dpi, so 720 dp is the max height (a real phone is ~900 dp). Task ID changes per launch (script finds it).
+- **Phone view on WSA: back-burnered** (user, 2026-10-13: "didn't look right"; test phone layouts on the phone). `phone-view.sh` notes: archive (2026-10-13 trim).
 - `~\orca-android-tools`: `install-build.ps1 -Run <id>` (WSA default), `ui.ps1 [-Shot png]`,
   `step.ps1`, `wheel.ps1` (real mouse wheel / drags), `drag.ps1`, `reinstall-with-data.ps1`.
 - Debug logs / Models WebView CDP: archive "Logs and CDP (moved 2026-10-12)".
