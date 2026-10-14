@@ -1802,3 +1802,22 @@ only the 3D view; slot reset and "Reset custom colors" (confirm) work; light pan
 - r187 (fd4361d) on the Chromebook: a dark Background in light mode had blended sheets/menus towards the light cards
   (Preview sheet slate grey #555E6D) because `Role.BACKGROUND` lerped to the receiver's surfaceContainerHigh, not the
   flipped one; fixed. Low-contrast warning, themed OpenSCAD drag strips verified. More/Models/OpenSCAD regions verified on r185.
+
+### 2026-10-14: r187 (merged as Android PR #20)
+- **r187 fd4361d (run 38542190492; CI numbered it r187), verified on the Chromebook:** sheets/menus on a dark Background in
+  light mode blend towards the flipped cards (Preview sheet now dark; `Role.BACKGROUND` had lerped to the receiver's light
+  surfaceContainerHigh); panel warning (`AppColors.lowContrast`, text under 3:1 on background or cards) shows for dark Panels
+  and cards alone in light mode; OpenSCAD drag strip follows the editor. **Untested:** snackbar action (`inversePrimary`
+  shaded to 4.5:1; the only action snackbar is "Add" for variants in `FileController.kt:59`; test: VIEW intent on
+  `scadzip-test.zip`, recipe in the reference "Chromebook"). r187 only shaded it with an Accent override; r189 fixes the rest.
+- Snackbar action: verified on the phone with r189 (2026-10-14).
+
+### 2026-10-14: r189 + r190 (merged as Android PR #21, main f223be2)
+- **r189 ff9e977 (run 38547994468), verified on the phone:** snackbar action = accent shaded to 4.5:1 for every scheme
+  (r187 showed Material purple #6650A4 on "Add" with plain Prusa dark; r189: dark orange on Prusa dark, orange on navy in
+  Printables Night light).
+- **r190 0170b41 (run 38550070114), verified on the phone:** message bar drawn over the design panel (the folded panel hid
+  it); OpenSCAD reopen button above Slice (it covered Slice with the editor hidden); folded panel button "Unfold the panel".
+- Phone r189 design-mode checks (fullscreen portrait): floating panel (360 dp, right-aligned) fits above the tab bar;
+  Industrial / Printables Night recolour 3D view, OpenSCAD sheet, File menu, tab bar; light mode (Prepare, editor, More)
+  reads fine; Quit dialog shows. r179 delete popup and r178 OpenSCAD design view + eye toggle verified on r189.
