@@ -21,9 +21,14 @@ front**; grep them when a question needs them (e.g. `grep -n "AMS mapping" HANDO
 ## Next task
 **r170 (Android 2ea77b3): section view clips travels/markers + picks skip the cut. Verified on the Chromebook 2026-10-13**
 (archive "r170 section view"); merged to main 2026-10-13 (PR #15). **Untested:** painting through the cut (picks the far side), long-press menu with the cut, measure line staying whole.
-**r172 (Android 6861cc1, CI run 38505582971): the sphere brush gets the section plane** (`OrcaTools.cpp` paint, volume coords
-as desktop `get_clipping_plane_in_volume_coordinates`), so cut-away triangles next to the hit stay unpainted. Compiles; **untested**.
-Test on the Chromebook: section view on the cube, paint across the cut edge, cut-away side must stay clean (then undo the paint).
+**r172 (Android 6861cc1): the sphere brush gets the section plane** (`OrcaTools.cpp` paint, volume coords as desktop
+`get_clipping_plane_in_volume_coordinates`). **Verified on the Chromebook 2026-10-13**: strokes along the cut rim, section off ->
+paint ends in a straight line at the cut, cut-away side clean (paint cleared after).
+**r173 (Android d6abc60, CI run 38506801682): a paint stroke starting off the model gets its own undo step** (the newStroke flag
+was dropped with a missed first sample, `SceneController.kt` paintAt). Compiles; **untested**. Test on the Chromebook: 2 strokes
+each starting off the cube, 1 undo must remove only the last (seen in r172: 3 undos also removed the cube). Then Clear painting.
+**Chromebook adb zoom works**: `input mouse scroll <x> <y> --axis VSCROLL,1` (the old "can't zoom" note was wrong). Section
+panel X only hides the panel; the reset button (history icon) turns the cut off.
 **Test devices (user, 2026-10-13):** **phone** = main (root); **Chromebook's Android (ARC)** = big-screen layout
 checks (user wants the app there). Chromebook: `<chromebook-ip>:5555` (memory `test-on-phone`), Android 13, arm64,
 1920x1080 (app area ~1813x948, shelf below), **no root**. Launch: `am start -n io.github.baianced.orcastudio_android/app.orcaandroid.ui.MainActivity`
@@ -34,7 +39,7 @@ The system file picker is a ChromeOS dialog (adb can't drive it); open files wit
 r144-r170 verified, merged to main 2026-10-13 (PRs #12-#15; archive).
 Phone has r168; session = test downloads (contents don't matter); old 8-plate session in `/data/local/tmp/phone-session-backup.{3mf,json}`.
 WSA session backup: `/data/local/tmp/session-backup.{3mf,json}` (restored). Chromebook has r170; session = 1 cube on 1 plate, Tabs switcher.
-Adb on the Chromebook can't zoom the canvas (`input mouse scroll` did nothing); tuck the panel for room.
+Tuck the panel for room on the Chromebook.
 **User decisions 2026-10-13:** a 3mf landing on the active plate over existing objects stays as is (arranging could move
 precisely placed objects). Plate activation must not move the camera when zoomed out (sometimes moving is fine).
 OpenSCAD: design view (main canvas) is the default; an **eye button** shows the design on the build plate and back, with the
@@ -59,7 +64,7 @@ Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
 2. Nozzle match + filament picks per AMS tray: verified (archive). **Untested:** newer-firmware `device.nozzle.info`
    path; stale status after switching printer models; spool change -> printer's preset wins and the pick is dropped
    (only when the user swaps a spool); tray picks on WSA. Phone plate: 1 slot "Bambu PLA Basic @BBL A1".
-3. Merge: main = r170 (76dfdf0, PR #15, 2026-10-13). Unmerged on the work branch: r172 brush clip (6861cc1, untested).
+3. Merge: main = r170 (76dfdf0, PR #15, 2026-10-13). Unmerged on the work branch: r172 brush clip (6861cc1, verified), r173 stroke undo (d6abc60, untested).
    Untested parts already in main stay listed in items 0, 2, 5, 6.
 4. Shape builder by touch: verified phone r134. Raw multi-touch: `~/orca-android-tools/pinch.sh` / `drag1.sh`
    (push with `MSYS_NO_PATHCONV=1` and a `C:/` source path).
@@ -95,7 +100,7 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
   press Subtract in tests.
 - AMS mapping verified (user printed from A1). User's AMS lite: A1 yellow, A2 matte black, A3
   white, A4 PETG. **Any test print needs the user's OK.**
-- Section view: paint brush clipped in r172 (untested, Next task).
+- Section view: paint brush clipped in r172 (verified).
 - OpenSCAD untested: phone layout, a real .scad download (Next task 5),
   painting through a mesh boolean.
 - Models tab untested: MakerWorld sign-in ticket flow. (Thingiverse download verified r126.)
