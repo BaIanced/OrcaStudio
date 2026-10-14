@@ -20,8 +20,10 @@ front**; grep them when a question needs them (e.g. `grep -n "AMS mapping" HANDO
 
 ## Next task
 **r170 (Android 2ea77b3): section view clips travels/markers + picks skip the cut. Verified on the Chromebook 2026-10-13**
-(archive "r170 section view"); merged to main 2026-10-13 (PR #15). **Untested:** painting through the cut (picks the far side; the sphere
-brush can still reach cut-away triangles next to the hit, not done), long-press menu with the cut, measure line staying whole.
+(archive "r170 section view"); merged to main 2026-10-13 (PR #15). **Untested:** painting through the cut (picks the far side), long-press menu with the cut, measure line staying whole.
+**r172 (Android 6861cc1, CI run 38505582971): the sphere brush gets the section plane** (`OrcaTools.cpp` paint, volume coords
+as desktop `get_clipping_plane_in_volume_coordinates`), so cut-away triangles next to the hit stay unpainted. Compiles; **untested**.
+Test on the Chromebook: section view on the cube, paint across the cut edge, cut-away side must stay clean (then undo the paint).
 **Test devices (user, 2026-10-13):** **phone** = main (root); **Chromebook's Android (ARC)** = big-screen layout
 checks (user wants the app there). Chromebook: `<chromebook-ip>:5555` (memory `test-on-phone`), Android 13, arm64,
 1920x1080 (app area ~1813x948, shelf below), **no root**. Launch: `am start -n io.github.baianced.orcastudio_android/app.orcaandroid.ui.MainActivity`
@@ -57,7 +59,7 @@ Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
 2. Nozzle match + filament picks per AMS tray: verified (archive). **Untested:** newer-firmware `device.nozzle.info`
    path; stale status after switching printer models; spool change -> printer's preset wins and the pick is dropped
    (only when the user swaps a spool); tray picks on WSA. Phone plate: 1 slot "Bambu PLA Basic @BBL A1".
-3. Merge: main = r170 (76dfdf0, PR #15, 2026-10-13). Nothing unmerged on the work branch.
+3. Merge: main = r170 (76dfdf0, PR #15, 2026-10-13). Unmerged on the work branch: r172 brush clip (6861cc1, untested).
    Untested parts already in main stay listed in items 0, 2, 5, 6.
 4. Shape builder by touch: verified phone r134. Raw multi-touch: `~/orca-android-tools/pinch.sh` / `drag1.sh`
    (push with `MSYS_NO_PATHCONV=1` and a `C:/` source path).
@@ -93,7 +95,7 @@ User goal: model **without writing code**; OpenSCAD code is only a backstop.
   press Subtract in tests.
 - AMS mapping verified (user printed from A1). User's AMS lite: A1 yellow, A2 matte black, A3
   white, A4 PETG. **Any test print needs the user's OK.**
-- Section view: the paint brush isn't clipped (r170 fixed travels/markers/picking).
+- Section view: paint brush clipped in r172 (untested, Next task).
 - OpenSCAD untested: phone layout, a real .scad download (Next task 5),
   painting through a mesh boolean.
 - Models tab untested: MakerWorld sign-in ticket flow. (Thingiverse download verified r126.)
