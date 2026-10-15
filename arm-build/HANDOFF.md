@@ -19,15 +19,14 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
 - Android main = d231870 (PR #24, 2026-10-14; r203 plurals for the remaining (s) strings + German plural, verified WSA; earlier: PR #23 r196-r202).
-  Work branch = main + 6 commits (head efe1c8e, **not merged**); build **run 38662555130 in progress** (then install on WSA + phone + Chromebook;
-  installed now: phone + Chromebook + WSA r208 = run 38659366121, which has the camera card, edge swipes and the first Models toolbar):
+  Work branch = main + 7 commits (head 77fa594, **not merged**); build **run 38667213644 = r211 (77fa594) succeeded and is installed on WSA + phone + Chromebook (2026-10-14; r210 before)** (2026-10-14; r210 = the Models toolbar with Full site in the 3-dot menu; r208 had the camera card, edge swipes, first toolbar):
   portrait bottom sheet full width (**verified Chromebook portrait r208**: Slice button fully behind the open sheet like phones);
   Bambu LAN camera card on Device (net/BambuCamera.kt, ui/device/CameraCard.kt; TLS port 6000, login packet + JPEG frames; **verified
   Chromebook landscape + portrait**: live frames, snapshot to Downloads, stop; **untested:** wrong access code, unreachable, phone);
   Models edge swipes (**verified WSA + phone by the user**); Models toolbar redesign (user 2026-10-14, **untested, needs the phone**): buttons
   left of the camera hole, only the 3-dot menu right of it (Full site is a checkbox item in that menu, MakerWorld only), site tabs in their own
   row as text + line under the active tab (like plate tabs); SplitAroundCutout in components/CutoutRow.kt.
-  **USB serial 0323418175493 in `adb devices` = the SHIELD TV: never install there** (the phone is the wireless adb-... entry).
+  **USB serial 0323418175493 in `adb devices` = the user's NVIDIA SHIELD TV, rooted like the phone (user 2026-10-14: install there when asked; r210 + the phone's settings/logins copied 2026-10-14, sign-ins untested; copy recipe = `reinstall-with-data.ps1` style tar via su, excluding `files/session`).** The phone is the wireless adb-... entry.
   **Active test target: tablet = Chromebook ARC at .33 (adb: see the Chromebook section of the reference).** Landscape r203 pass found nothing; portrait found the Slice overlap.
   **Plan (user, 2026-10-14):** camera LAN (done above) -> off-LAN camera (cloud P2P path; REA on Handy is the tool; VPN-home is the fallback)
   -> print history (capture Handy's history call, own client, Device tab) -> REA on MakerWorld. Own printer/account, personal use, own code only;
@@ -38,7 +37,7 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
   test downloads; old 8-plate session in `/data/local/tmp/phone-session-backup.{3mf,json}`). WSA r208 (2026-10-14; was r194: AI tools
   on; auto-save 60 s; Dark + Prusa default; current session empty, the user's is in `/data/local/tmp/session-backup.{3mf,json}`;
   slots Basic/Matte/Matte/PETG from sync, `tray_picks` {}, ad-block rules {}).
-- A TV box shows up in `adb devices` (USB serial, 2026-10-14): not a test device, leave it alone.
+- The Shield (USB serial) is the user's own device: only touch it when asked.
 - Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
 
 ## Next task
@@ -79,6 +78,13 @@ categorize everything").** **Verified on WSA r182** (presets, live design mode, 
 
 **r179 de39e04** delete popup + r178 design view: verified r189 (portrait) and Chromebook r193 (landscape).
 Slice button = primaryContainer; the user can set "Soft accent" in design mode. Launcher icon still teal (asked the user).
+
+**User asks 2026-10-14 (77fa594, build run 38667213644 = r211 installed on phone+WSA+Chromebook, all UNTESTED, needs the phone):** object/preset
+settings editor: swipe sideways to switch tabs (80 dp threshold; `SettingsEditor.kt`); tabs with no visible option at the mode are
+hidden (Speed in Simple); Models: MakerWorld links row (Following/MakerLab/...) has its own shade (surfaceContainerHigh) and the
+site-tab active line is white (onSurface) instead of orange (user: orange clashed with the page's orange). Maybe also a line under
+inactive settings tabs (user's idea, not done). **Later, low priority (user):** navigation-refinement pass over the whole app
+(gesture nav: back/forward swipes, tab swipes, other affordances); analysis first, then propose.
 
 Then: the plate switcher pick (lab stays until they say), the user-only items below.
 
