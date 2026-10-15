@@ -19,11 +19,20 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
 - Android main = d231870 (PR #24, 2026-10-14; r203 plurals for the remaining (s) strings + German plural, verified WSA; earlier: PR #23 r196-r202).
-  Work branch = main; nothing unmerged or unverified on it. **Active test target: the tablet = Chromebook ARC, now at the .33 address (adb connected 2026-10-14; was .32), still r193**.
+  Work branch = main + 4 commits (r205-r208, run 38659366121 = r208; code in Android repo, **not merged**):
+  portrait bottom sheet full width (Slice button no longer half covered; installed on Chromebook r205, **portrait recheck pending**);
+  Bambu LAN camera card on Device (net/BambuCamera.kt, ui/device/CameraCard.kt; TLS port 6000, login packet + JPEG frames; **verified
+  Chromebook landscape r206**: live frames, snapshot to Downloads, stop; **untested:** wrong access code, unreachable, portrait, phone);
+  Models toolbar shares the camera strip (SplitAroundCutout; **untested: needs the phone's hole**; WSA r208 normal layout fine);
+  Models edge swipes (left = back, right = forward; **verified WSA r208** via adb swipes; real touch untested).
+  **Active test target: tablet = Chromebook ARC at .33 (adb: see the Chromebook section of the reference).** Landscape r203 pass found nothing; portrait found the Slice overlap.
+  **Plan (user, 2026-10-14):** camera LAN (done above) -> off-LAN camera (cloud P2P path; REA on Handy is the tool; VPN-home is the fallback)
+  -> print history (capture Handy's history call, own client, Device tab) -> REA on MakerWorld. Own printer/account, personal use, own code only;
+  rule 7 (no certs/keys) holds. LAN access code was given in chat: never write it anywhere.
 - Installed: Chromebook r193 (2026-10-14; landscape now; restored to Dark + Prusa default, no
   custom colours, wallpaper off; session = 1 cube on 1 plate). Phone r194 (Dark + Prusa default restored; fullscreen portrait
   lab on (user's setting); session =
-  test downloads; old 8-plate session in `/data/local/tmp/phone-session-backup.{3mf,json}`). WSA r203 (2026-10-14; was r194: AI tools
+  test downloads; old 8-plate session in `/data/local/tmp/phone-session-backup.{3mf,json}`). WSA r208 (2026-10-14; was r194: AI tools
   on; auto-save 60 s; Dark + Prusa default; current session empty, the user's is in `/data/local/tmp/session-backup.{3mf,json}`;
   slots Basic/Matte/Matte/PETG from sync, `tray_picks` {}, ad-block rules {}).
 - A TV box shows up in `adb devices` (USB serial, 2026-10-14): not a test device, leave it alone.
