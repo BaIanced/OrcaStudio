@@ -19,12 +19,15 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
 - Android main = d231870 (PR #24, 2026-10-14; r203 plurals for the remaining (s) strings + German plural, verified WSA; earlier: PR #23 r196-r202).
-  Work branch = main + 4 commits (r205-r208, run 38659366121 = r208; code in Android repo, **not merged**):
-  portrait bottom sheet full width (Slice button no longer half covered; installed on Chromebook r205, **portrait recheck pending**);
+  Work branch = main + 6 commits (head efe1c8e, **not merged**); build **run 38662555130 in progress** (then install on WSA + phone + Chromebook;
+  installed now: phone + Chromebook + WSA r208 = run 38659366121, which has the camera card, edge swipes and the first Models toolbar):
+  portrait bottom sheet full width (**verified Chromebook portrait r208**: Slice button fully behind the open sheet like phones);
   Bambu LAN camera card on Device (net/BambuCamera.kt, ui/device/CameraCard.kt; TLS port 6000, login packet + JPEG frames; **verified
-  Chromebook landscape r206**: live frames, snapshot to Downloads, stop; **untested:** wrong access code, unreachable, portrait, phone);
-  Models toolbar shares the camera strip (SplitAroundCutout; **untested: needs the phone's hole**; WSA r208 normal layout fine);
-  Models edge swipes (left = back, right = forward; **verified WSA r208** via adb swipes; real touch untested).
+  Chromebook landscape + portrait**: live frames, snapshot to Downloads, stop; **untested:** wrong access code, unreachable, phone);
+  Models edge swipes (**verified WSA + phone by the user**); Models toolbar redesign (user 2026-10-14, **untested, needs the phone**): buttons
+  left of the camera hole, only the 3-dot menu right of it (Full site is a checkbox item in that menu, MakerWorld only), site tabs in their own
+  row as text + line under the active tab (like plate tabs); SplitAroundCutout in components/CutoutRow.kt.
+  **USB serial 0323418175493 in `adb devices` = the SHIELD TV: never install there** (the phone is the wireless adb-... entry).
   **Active test target: tablet = Chromebook ARC at .33 (adb: see the Chromebook section of the reference).** Landscape r203 pass found nothing; portrait found the Slice overlap.
   **Plan (user, 2026-10-14):** camera LAN (done above) -> off-LAN camera (cloud P2P path; REA on Handy is the tool; VPN-home is the fallback)
   -> print history (capture Handy's history call, own client, Device tab) -> REA on MakerWorld. Own printer/account, personal use, own code only;
