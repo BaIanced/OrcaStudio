@@ -18,78 +18,56 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 ## State
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
-- Android main = d231870 (PR #24, 2026-10-14; r203 plurals for the remaining (s) strings + German plural, verified WSA; earlier: PR #23 r196-r202).
-  Work branch = main + 7 commits (head 77fa594, **not merged**); build **run 38667213644 = r211 (77fa594) succeeded and is installed on WSA + phone + Chromebook (2026-10-14; r210 before)** (2026-10-14; r210 = the Models toolbar with Full site in the 3-dot menu; r208 had the camera card, edge swipes, first toolbar):
-  portrait bottom sheet full width (**verified Chromebook portrait r208**: Slice button fully behind the open sheet like phones);
-  Bambu LAN camera card on Device (net/BambuCamera.kt, ui/device/CameraCard.kt; TLS port 6000, login packet + JPEG frames; **verified
-  Chromebook landscape + portrait**: live frames, snapshot to Downloads, stop; **untested:** wrong access code, unreachable, phone);
-  Models edge swipes (**verified WSA + phone by the user**); Models toolbar redesign (user 2026-10-14, **untested, needs the phone**): buttons
-  left of the camera hole, only the 3-dot menu right of it (Full site is a checkbox item in that menu, MakerWorld only), site tabs in their own
-  row as text + line under the active tab (like plate tabs); SplitAroundCutout in components/CutoutRow.kt.
-  **USB serial 0323418175493 in `adb devices` = the user's NVIDIA SHIELD TV, rooted like the phone (user 2026-10-14: install there when asked; r210 + the phone's settings/logins copied 2026-10-14, sign-ins untested; copy recipe = `reinstall-with-data.ps1` style tar via su, excluding `files/session`).** The phone is the wireless adb-... entry.
-  **Active test target: tablet = Chromebook ARC at .33 (adb: see the Chromebook section of the reference).** Landscape r203 pass found nothing; portrait found the Slice overlap.
-  **Plan (user, 2026-10-14):** camera LAN (done above) -> off-LAN camera (cloud P2P path; REA on Handy is the tool; VPN-home is the fallback)
-  -> print history (capture Handy's history call, own client, Device tab) -> REA on MakerWorld. Own printer/account, personal use, own code only;
-  rule 7 (no certs/keys) holds. LAN access code was given in chat: never write it anywhere.
-- Installed: Chromebook r193 (2026-10-14; landscape now; restored to Dark + Prusa default, no
-  custom colours, wallpaper off; session = 1 cube on 1 plate). Phone r194 (Dark + Prusa default restored; fullscreen portrait
-  lab on (user's setting); session =
-  test downloads; old 8-plate session in `/data/local/tmp/phone-session-backup.{3mf,json}`). WSA r208 (2026-10-14; was r194: AI tools
-  on; auto-save 60 s; Dark + Prusa default; current session empty, the user's is in `/data/local/tmp/session-backup.{3mf,json}`;
-  slots Basic/Matte/Matte/PETG from sync, `tray_picks` {}, ad-block rules {}).
-- The Shield (USB serial) is the user's own device: only touch it when asked.
-- Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
+- Android main = d231870 (PR #24, r203). Work branch = main + many commits since r204 (**not merged**; head 382eb15 = r221).
+  Verified details of r204-r220 are in the archive ("2026-10-15: handoff trim"). Mergeable once the phone checks below pass.
+- Installed: **r220 on phone + WSA + Chromebook + Shield** (2026-10-15). **r221 = run 38705941780 building** (started 2026-10-15).
+  Install with `install-build.ps1 -Run <id> -Device <serial>` on all 4 (memory: install on all devices).
+- Devices: phone = wireless `adb-...` entry; Chromebook ARC `<chromebook-ip>:5555` (reference); WSA `127.0.0.1:58526`; **USB serial = the user's
+  SHIELD TV** (rooted; installs only; r210 settings/logins copied from the phone, sign-ins untested).
+- **User is gaming on the PC: phone only, not WSA** (WSA needs window focus). User wants /clear cues often.
+- User sessions backed up: phone `/data/local/tmp/phone-session-backup.{3mf,json}` (8 plates), WSA `/data/local/tmp/session-backup.{3mf,json}`.
+  Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook. LAN access code was given in chat: never write it anywhere.
+- **Plan (user, 2026-10-14):** camera LAN (done) -> off-LAN camera (cloud P2P path; REA on Handy is the tool; VPN-home the
+  fallback) -> print history (capture Handy's history call, own client, Device tab) -> REA on MakerWorld. Own printer/account,
+  personal use, own code only; rule 7 holds.
 
 ## Next task
-**Design mode is done, verified on all three devices and merged (r180-r194, main r194).** r179/r178 landscape verified on the Chromebook (archive "r179 delete popup + r178 design view in landscape"). Item 5's 16 KB sniff verified 2026-10-14 (Chromebook). WSA r194 2026-10-14: item 0 mouse right-click and item 2 tray
-picks verified (archive "WSA r194 element blocker right-click + tray picks"). **User was away (2026-10-14); orders done:** numpad 0-7 camera views (r196, **verified WSA**: Num Lock on 1 = top, 3 = front, 7 = frame
-plate; off = nothing); blind bug hunt on WSA (3 fuzz runs, ~550 random steps, malformed STL/3MF/SVG imports, hostile OpenSCAD,
-extreme numbers, lab sliders 50-130 %, portrait window 430x900): **no crash found**. Fixed + **verified on WSA** (r197-r202): Shape
-dialog Add off outside 0.1-1000 mm and the chips wrap (Cone was a sliver); typed scale clamped 0.1 %-100x; NumberField rejects
-NaN/Infinity/|x|>1e6 (they ended in a raw NPE error dialog; **root cause of that NPE not found**, stack traces now logged under tag
-`OrcaStore`); "(s)" -> plurals for objects outside / files imported ("1 object outside the plates" seen); a failed OpenSCAD run clears
-the old log (**untested**: no repro of the stale hint); Shape builder menu icon (compass) differs from Shape. Other "(s)" strings: done in 897a708 (verified r203). **Unexplained:** once, in a freshly resized portrait window, the Prepare 3D
-background drew ~30 % lighter for ~15 s (not seen again; Preview fine). Not bugs: lab sliders, filmstrip digits at the bottom
-(thumbnail style), tune icon blue when an object has overrides. Design polish found nothing else to change on Prepare / Preview / Device /
-More / Models in landscape and phone-portrait sizes. WSA quirk: the app window jumps position; take offsets from the `Prepare` label in
-`ui.ps1`; WSA shows black unless focused. WSA now: r202, empty plate, panel open, app stopped. 
-Sign-ins + cloud syncs done by the user 2026-10-14 (archive "sign-ins + cloud sync"). User-only: retests, plate switcher pick, launcher icon colour (still teal; user
-2026-10-14: "decide later"). Background:
-**Colour presets + design mode (user, 2026-10-14: "code all three as presets, in addition to the customizer; you
-categorize everything").** **Verified on WSA r182** (presets, live design mode, per-part overrides, resets, restart; details: archive
-"2026-10-14: design mode r182-r187").
-- Panel: drag by header, fold, close; preset chips, "Part of the app" dropdown (14 parts), a row of colour chips (• = custom)
-  with the slot's hint, HSV sliders + hex + swatches, Reset this part / Reset all. Colours per light/dark mode; sliders save
-  on release. Design mode itself isn't kept over a restart (by design).
-- Code: `ui/theme/AppColors.kt` (schemes moved from MainActivity; Role/Slot/Region/ThemePreset; `withRoles` derives Material
-  slots; `Themed(region)` = nested MaterialTheme; `OrcaTheme`), `ui/theme/DesignPanel.kt`, `core/ThemeSpec.kt` (prefs
-  `theme_spec` JSON). Regions wired in `AppScaffold.kt`; 3D view `Viewport.kt` + badges `PlateBadgeAtlas.kt` read slots.
-- **Verified on the Chromebook (portrait) 2026-10-14:** Industrial/Minimal light by eye, floating panel fits above the tab bar,
-  tab bar slots, Device + Settings editor regions (dark background in light mode, r184+), wallpaper colours + overrides,
-  panel Reset all (no confirm in the panel; More's "Reset custom colors" confirms). Also on r185 (light, Background
-  #1E293B per region): More, Models (toolbar/chips), OpenSCAD editor read fine; Preview sheet came out slate grey (fixed r187).
-- r187 fd4361d (dark-Background sheets, contrast warning, drag strip): verified + merged (archive "2026-10-14: r187"); its
-  snackbar shading verified with r189.
-- Phone r189 checks, dialogs (sample + real error dialog; busy/AI-confirm share `GlobalDialogs`), 3D selection colour:
-  all verified (archive "r189 + r190", "r192-r194"). Nothing open in design mode except the known limits below.
-- Known limits: hard-coded colours (delete popup #2B2C32, red bin, preview legend) don't follow; the Models web page keeps
-  its own colours. A dark 3D background under a light theme hides the floating tool icons (user's choice; "Prepare: floating
-  buttons" can be changed to match).
+1. **When r221 is green: install on all 4 devices, then test on the phone** (all r221 UNTESTED): zoom toward the fingers / wheel
+   cursor (`Camera.zoomAt`); stage 2 contact shadow (`render/SceneEffects.kt`: top-down R8 map, max blend, MESH_FS pass 3 fades
+   over 12 mm, 2 blur rounds, quad under the grid, Prepare only, strength 0.55) - look + follows a drag; stage 3 SSAO (half-res
+   depth pre-pass, `SSAO_FS` 12 samples radius 3/6 mm, bilateral blur, multiplied after opaque geometry incl. toolpaths) Soft/Full
+   on Prepare + Preview; FPS (counter top left). Settings: More > Appearance "3D view: ambient occlusion" Off/Soft/Full (default
+   Off) + "shadows under objects" (default on). Also recheck close up on a box wall in Preview (zoom limit ~2.5 px per layer).
+2. **Phone checks waiting on the user** (ask; all UNTESTED on the phone):
+   - r214 object-drag jump-back fix (`PlateView.kt` release branch, `Viewport.kt` `dragPending`, `SceneController.moveSelected` -> Job): drag an object.
+   - r215 single-filament slice crash fix (`OrcaEngine.cpp` ~507: rebuild `flush_volumes_matrix` for `>= 1` filaments) and r217
+     dual-nozzle fix (one n*n block per nozzle: `heads = max(1, multiplier, nozzle_diameter count)`): slice with the X2D selected.
+   - r216 projects keep the current printer (`FileController.openProjectFile`, toast `project_printer_kept`; session restore still restores its printer).
+   - r218 Preview colour-scheme pill opens from its text too (`Surface(onClick)`).
+   - r213: settings tabs swipe repeatedly (stale `current` fix, `SettingsEditor.kt`), haptics (settings tabs TextHandleMove, Models
+     edge swipes CLOCK_TICK), import 2 files onto a plate with objects (own-plate rule), site-tab line visible (pinned to tab bottom).
+   - r211: object settings editor on the phone.
+   - Camera card: wrong access code, unreachable printer, on the phone.
+   - 165 Hz: added the app (`7-0-0-7`) to `/data/system/refresh_rate_config_user_override.xml` (backup
+     `/data/local/tmp/refresh_override.bak`); ask whether the refresh-rate setting now lists it.
+3. **Not done / ideas:** auto-select the A1 on the MakerWorld/MakerLab page at load (look at how the site stores its printer pick;
+   CDP on the Models WebView); a slice/print-time guard comparing the sliced printer with the connected one; a line under inactive
+   settings tabs (user's idea). 3D stage 4 wishlist: real shadow map. Preview colours stay flat on purpose.
+4. **Nav proposal (awaiting user OK; analysis 2026-10-14, nothing changed):** Back = AppScaffold.kt:148; Models back + edge swipes
+   ModelsScreen.kt:464/:182; settings tab swipe SettingsEditor.kt:303. Gap: no BackHandler for the OpenSCAD editor (`state.scad`,
+   AppScaffold.kt:281 -> Back opens the quit prompt), the eye "design on plate" mode, the section panel, the design panel.
+   Proposal: Back in OpenSCAD = on-plate view -> design view -> `scad.close()`; optional horizontal swipe between main tabs (not on Prepare).
+5. Then: the plate switcher pick (lab stays until they say), the user-only items below.
 
-**r179 de39e04** delete popup + r178 design view: verified r189 (portrait) and Chromebook r193 (landscape).
-Slice button = primaryContainer; the user can set "Soft accent" in design mode. Launcher icon still teal (asked the user).
-
-**User asks 2026-10-14 (77fa594, build run 38667213644 = r211 installed on phone+WSA+Chromebook, all UNTESTED, needs the phone):** object/preset
-settings editor: swipe sideways to switch tabs (80 dp threshold; `SettingsEditor.kt`); tabs with no visible option at the mode are
-hidden (Speed in Simple); Models: MakerWorld links row (Following/MakerLab/...) has its own shade (surfaceContainerHigh) and the
-site-tab active line is white (onSurface) instead of orange (user: orange clashed with the page's orange). Maybe also a line under
-inactive settings tabs (user's idea, not done). **Later, low priority (user):** navigation-refinement pass over the whole app
-(gesture nav: back/forward swipes, tab swipes, other affordances); analysis first, then propose.
-
-Then: the plate switcher pick (lab stays until they say), the user-only items below.
+Still open from earlier batches: **root cause of the r197 NumberField NPE not found** (stack traces now logged under `OrcaStore`);
+"failed OpenSCAD run clears the old log" **untested** (no repro); **unexplained:** once a freshly resized portrait window on WSA drew
+the Prepare 3D background ~30 % lighter for ~15 s. Design mode known limits: hard-coded colours (delete popup #2B2C32, red bin,
+preview legend) don't follow; the Models page keeps its own colours; a dark 3D background under a light theme hides the floating
+tool icons ("Prepare: floating buttons" can be changed). User-only: retests, plate switcher pick, launcher icon colour (still teal, "decide later").
 
 ## User decisions (2026-10-13)
-- A 3mf landing on the active plate over existing objects stays as is (arranging could move precisely placed objects).
+- **Changed 2026-10-14:** objects already in the project stay on their plate; each newly imported file gets a plate of its own
+  (active plate if empty, else first empty, else a new one; `FileController.useEmptyPlate`). Replaces the 2026-10-13 rule that a file lands on the active plate.
 - Plate activation must not move the camera when zoomed out (sometimes moving is fine).
 - OpenSCAD: design view (main canvas) is the default; an **eye button** shows the design on the build plate and back, with
   the camera the user had on the plates, the project's objects hidden, and new designs on an empty plate.
@@ -102,18 +80,14 @@ Then: the plate switcher pick (lab stays until they say), the user-only items be
 0. Element blocker + ad-block menu (e4d75ab, a7e63d2): verified phone; mouse right-click verified WSA r194. **Untested:**
    rules in other WebViews (Device page etc.; needs a printer with a web UI). User 2026-10-13: MakerWorld, Printables and Orca sign-ins work; a Google-account Orca
    sign-in goes through Brave (not the WebView). Bambu sign-out is Device tab > Connection > Sign out (told the user).
-1. Preset re-link + cloud syncs afterwards: verified (syncs by the user 2026-10-14). Nothing open.
+1. Verified, nothing open (archive): preset re-link + syncs, section view, shape builder, .scad zips / 16 KB sniff, OpenSCAD
+   phone layout / downloads / painting, MakerWorld sign-in ticket flow.
 2. Nozzle match + filament picks per AMS tray: verified. **Untested:** newer-firmware `device.nozzle.info` path; stale status
    after switching printer models; spool change -> printer's preset wins and the pick is dropped (only when the user swaps a
    spool). Tray picks on WSA r194: verified. Phone plate: 1 slot "Bambu PLA Basic @BBL A1".
-3. Section view (r170/r172/r173): all verified (archive). Nothing open.
-4. Shape builder: verified by touch + phone layout on the phone r134 (archive). Handles by touch on WSA: n/a (no touch).
-5. .scad zips, Thingiverse downloads, the 16 KB content sniff (Chromebook r193): all verified (archive). Nothing open.
 6. Ad blocking (f138655, ec86442, 08bdf0b = `AdBlock.Client` in all app WebViews): verified; MakerWorld sign-in / downloads with
    it on, Bambu sign-in WebView, Orca Cloud login verified by the user 2026-10-14. **Untested:** plugin pages, Device page on
    the phone (needs a printer with a web UI; the phone only has the A1).
-7. OpenSCAD: phone layout r166/r168, real .scad download r142/r143, painting through a mesh boolean r175: all verified (archive).
-8. Models tab MakerWorld sign-in ticket flow: verified by the user 2026-10-14. Nothing open.
 9. **Untested:** a true EGL context loss (no repro). Badges are ~23 dp at plate zoom on the phone (under 48 dp; told the user).
 10. User to retest: the 325 MB slice that crashed before the r59 OOM fix. MakerWorld pinch zoom works (user 2026-10-14).
     Real keyboard Ctrl+1 (camera top view, MainActivity.kt:190) does nothing: the system takes it as a hotkey (user

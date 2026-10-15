@@ -1873,3 +1873,43 @@ Landscape check done on the Chromebook (ARC, 1920x1080, rail layout) instead of 
   WebView (sign-out + password), Orca Cloud login (item 6), and the Bambu/Orca cloud syncs after the preset re-link (item 1).
   No problems reported.
 - Same day, user: MakerWorld pinch zoom works; real-keyboard Ctrl+1 is taken by a system hotkey (kept open in the handoff).
+
+## 2026-10-15: handoff trim (verified details moved from the hot file)
+### Design mode + colour presets (r180-r194, merged; verified WSA r182, Chromebook, phone r189)
+- User 2026-10-14: "code all three as presets, in addition to the customizer; you categorize everything".
+- Panel: drag by header, fold, close; preset chips, "Part of the app" dropdown (14 parts), colour chips (• = custom) with the
+  slot's hint, HSV sliders + hex + swatches, Reset this part / Reset all. Colours per light/dark mode; sliders save on release.
+  Design mode itself isn't kept over a restart (by design).
+- Code: `ui/theme/AppColors.kt` (Role/Slot/Region/ThemePreset; `withRoles`; `Themed(region)`; `OrcaTheme`),
+  `ui/theme/DesignPanel.kt`, `core/ThemeSpec.kt` (prefs `theme_spec` JSON). Regions wired in `AppScaffold.kt`; `Viewport.kt` +
+  `PlateBadgeAtlas.kt` read slots.
+- Chromebook portrait checks: Industrial/Minimal light, panel fits above the tab bar, tab bar slots, Device + Settings editor
+  regions, wallpaper colours + overrides, Reset all (no confirm in panel; More's "Reset custom colors" confirms); r185 More,
+  Models, OpenSCAD editor fine; Preview sheet slate grey fixed r187 (fd4361d, merged). Phone r189: dialogs, 3D selection colour.
+- r179 de39e04 delete popup + r178 design view: verified r189 portrait + Chromebook r193 landscape. Slice button = primaryContainer.
+### Away orders r196-r202 (merged, verified WSA)
+- Numpad 0-7 camera views (Num Lock on: 1 top, 3 front, 7 frame plate; off = nothing). Blind bug hunt on WSA: 3 fuzz runs,
+  ~550 random steps, malformed STL/3MF/SVG, hostile OpenSCAD, extreme numbers, lab sliders 50-130 %, portrait 430x900: no crash.
+- Fixes: Shape dialog Add off outside 0.1-1000 mm, chips wrap; typed scale clamped 0.1 %-100x; NumberField rejects
+  NaN/Infinity/|x|>1e6 (raw NPE dialog before; stack traces logged under `OrcaStore`); "(s)" -> plurals (r203, 897a708);
+  Shape builder menu icon = compass. Not bugs: lab sliders, filmstrip digits, tune icon blue with overrides.
+- Design polish pass in landscape + phone-portrait sizes found nothing else.
+### r208-r213 Models / settings (verified parts)
+- Chromebook portrait r208: full-width bottom sheet (Slice button behind the sheet). Camera card (net/BambuCamera.kt,
+  ui/device/CameraCard.kt; TLS 6000, login packet + JPEG frames): live frames, snapshot to Downloads, stop (landscape + portrait).
+- Models edge swipes verified WSA + phone (user). r211 Chromebook portrait: toolbar layout, white site-tab line, links row
+  shade, settings tab swipe, Speed hidden in Simple. User on the phone: toolbar layout (SplitAroundCutout in
+  components/CutoutRow.kt), MakerWorld full site "Open in Bambu Studio" -> plate (`ModelsScreen` intercepts
+  `bambustudio://open?file=`), so slicer mode, its toggle, links row and trim JS were removed.
+### Preview toolpath look r219-r220 (verified by me on the phone, plate 5 box)
+- Cause of dashes/moire: each segment box overlapped the next by a quarter width, end caps poked out at joints, flat normals.
+- r219: `PlateRenderer.uploadPadded` dummy records before/after, `drawPreview` binds prev/next records as attribs 8-11;
+  `PATH_VS` mitres joints (turn < 120 deg, else quarter-width cap), shared bisector normal when turn < 40 deg; `PATH_FS` bead
+  normals faded by `fwidth`. Left hairline cracks close up.
+- r220: symmetric corner `(right+rn)/(1+c)`, own `right` via `rightOf`, exact z; bead fades in from ~8 px per layer
+  (`smoothstep(0.12, 0.25, fwidth)`, amplitude 0.8). Result: no arcs/cracks, smooth curved walls, a few isolated specks (ok).
+- r217 stage 1 studio shading (MESH_FS sky/ground ambient, key+fill, spec, rim, `uEye`): user "pretty good" on Prepare.
+### Slice crash symbolization (r213, phone)
+- SIGSEGV in orca-engine, symbolized with NDK 28.2 `llvm-addr2line` on the WSL `~/orca-build/core/liborca_jni.so` (offsets
+  matched although build ids differ): `ToolOrdering::reorder_extruders_for_minimum_flush_volume` (ToolOrdering.cpp:2812)
+  memmove from an empty `flush_volumes_matrix`. Not related to 165 Hz.

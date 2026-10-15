@@ -27,7 +27,12 @@ user uses the PC.
   pull binaries with `adb exec-out "su -c '...'"`; Delete key = `su -c 'input keyevent 112'`.
 - **MCP on a real phone:** the `localabstract` forward works over wireless adb; the socket binds only after an
   app restart with AI tools on (archive "MCP on a real phone").
-- Raw multi-touch: `~/orca-android-tools/pinch.sh` / `drag1.sh` (push with `MSYS_NO_PATHCONV=1` and a `C:/` source path).
+- Raw multi-touch: `~/orca-android-tools/pinch.sh` / `drag1.sh` / `pan2.sh` (two-finger pan) in /data/local/tmp, run via su
+  (push with `MSYS_NO_PATHCONV=1` and a `C:/` source path).
+- Shots: `sh ~/orca-android-tools/shot.sh <name.png> [width] [crop l,t,r,b]` -> `~/orca-android-tools/shots/` (screencap + crop/downscale).
+
+### SHIELD TV (USB serial in `adb devices`, the user's, rooted)
+- Only touch it when asked / for installs. Copy the phone's settings: `reinstall-with-data.ps1`-style tar via su, excluding `files/session`.
 
 ### WSA
 - adb `127.0.0.1:58526` (root via `su -c '...'`, Android 13 / API 33; `run-as` fails, release build); an Android TV box is
@@ -72,6 +77,10 @@ user uses the PC.
 - `~\orca-android-tools`: `install-build.ps1 -Run <id> [-Device <serial>]` (WSA default), `ui.ps1 [-Device] [-Shot png]`,
   `step.ps1`, `wheel.ps1` (real mouse wheel / drags), `drag.ps1`, `reinstall-with-data.ps1`.
 - Debug logs / Models WebView CDP: archive "Logs and CDP (moved 2026-10-12)".
+- `gh run watch/view` needs `-R BaIanced/OrcaStudio-Android` when the cwd is arm-build (wrong repo otherwise).
+- GLSL check: `python -I ~/orca-android-tools/extract_shaders.py <Shaders.kt> <outdir>` (.vert/.frag as 310 es), then in WSL
+  `~/Android/Sdk/ndk/28.2.13676358/shader-tools/linux-x86_64/glslc --target-env=opengl -fauto-map-locations -fauto-bind-uniforms -o /dev/null <file>`.
+- Native crash symbols: NDK 28.2 `llvm-addr2line` on the WSL `~/orca-build/core/liborca_jni.so` (offsets match across build ids).
 
 ## Environment and repos
 - Working dir `C:\Users\Vince\OrcaProjectsGithub` with `OrcaStudio` (Flatpak; holds the handoff) and `OrcaStudio-Android`
