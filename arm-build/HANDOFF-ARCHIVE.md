@@ -2006,3 +2006,9 @@ L4: beeper plate moved to Plate 1 (X=60) with filament 4 (PETG-HF) + cube on fil
 - Cause: `DesignPanel.kt` clamped the panel with the previous frame's height, so an unfold overshot then snapped back. Fix (9fe3f66): `clamped()` runs in the layout pass with the measured height. User confirmed fixed.
 - Opacity: tool buttons were secondaryContainer (almost the canvas grey) so the slider showed nothing; now `surface.copy(alpha)` like the bar (File too). Slice ignores it.
 - Opacity on tool buttons/File: user confirmed fixed on r248.
+
+## 2026-10-16 verified (moved from HANDOFF)
+- User (r249): opacity readout card works, L1 fold jump fixed, L3 status error card good, all sliders good. Haptics: only Back/forward gestures vibrate (settings tabs, Models edge swipes don't; unfixed, can't test over adb).
+- Chromebook autopilot (run 38858438386, head ca2a96d): X2D 0.4 slice OK, no crash (r215/r217 fixes VERIFIED); top-surface bead shading visible when zoomed in (flat zoomed out, by design); printer reset to A1.
+- Phone autopilot (r250): Sign out horizontal on its own row VERIFIED (b74e8ea); readout card centred / clear of the tool bar VERIFIED (a853161; opacity left at 100 %). "Remove" beside Import credentials wrapped letter by letter: fixed in 7e569a4 (own rows, untested).
+- Merge candidates verified by the user: dca0db0, 9bca6b7, 9fe3f66, 54b4ca6, ca874e4, a853161, b74e8ea.
