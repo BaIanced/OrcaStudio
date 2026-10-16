@@ -29,7 +29,7 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 - User sessions backed up: phone `/data/local/tmp/phone-session-backup.{3mf,json}` (8 plates), WSA `/data/local/tmp/session-backup.{3mf,json}`.
   Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook. LAN access code was given in chat: never write it anywhere.
 ## Next task
-Still UNTESTED on device: preview bead look, model-mismatch guard (needs a print, user's OK), German strings stub, haptics on settings tabs/Models swipes, light/shadow sliders by finger.
+Still UNTESTED on device: preview bead look, model-mismatch guard (needs a print, user's OK), haptics on settings tabs/Models swipes, light/shadow sliders by finger.
 Done: r266 (run 38930002463) part shadows as dark as the bed's, bed bias follows the light height, AA shader grid: VERIFIED by phone test,
 **unmerged** (archive "2026-10-16 r266"). Blind-test findings all closed. Phone lab back to defaults. Phone scene: plate 1 cube [172.3, 123.1] + pillar [136.3, 95.0], plate 2 table.
 Next: pick from the backlog (grep "Not done / ideas").
