@@ -2,103 +2,53 @@
 
 Read this first. Don't use any title for the user ("Supreme Master" was a joke; never use it).
 - `HANDOFF-REFERENCE.md`: devices, tools, build commands, recipes. **Read its device section before driving a device.**
+- `HANDOFF-BACKLOG.md`: pending / untested / ideas / user decisions waiting. Grep it; don't read it up front.
 - `HANDOFF-ARCHIVE.md`: history, verified features, file maps, past causes. Don't read it, `README.md` or `NOTES-*.md`
   up front; grep them when a question needs them (e.g. `grep -n "AMS mapping" HANDOFF-ARCHIVE.md`).
 
 ## Rolling handoff rules (user, 2026-10-12)
-- Keep this file **under ~12 KB**: only state, the next task, open/untested items, safety gotchas and the rules.
+- Keep this file **under ~8 KB**: only state, the 1-3 tasks in progress, safety gotchas and the rules.
   How-to material goes to `HANDOFF-REFERENCE.md`; verified work's details (runs, files, causes) go to the end of
   `HANDOFF-ARCHIVE.md` under a dated heading, leaving at most a one-line summary here.
-- **Never move pending, open or untested information out of this file**, even to meet the size target.
+- **Pending, open and untested items live in `HANDOFF-BACKLOG.md`** (one line each; never delete them there, only move them to the archive once verified). Pull an item into "Next task" when you start it.
 - At each task boundary (task done + handoff updated), give a one-line cue: "`/clear` then `/next`", or "`/clear` then
   `/next-merge`" when verified work awaits a merge (say what it merges and what stays unverified). Never mid-task.
   Merge only on "merge" / `/next-merge` (= merge the verified, unmerged work, then carry on like /next; never untested commits).
 - Update "Next task" before stopping any task.
-- **Auto-prune (user, 2026-10-15; the old rule kept lapsing):** the moment the user or a test verifies an item, in the same edit move its details to the archive (dated heading) and leave a one-liner. Check the file size at every handoff update; over ~12 KB means prune before stopping. Pending/untested text never moves.
+- **Auto-prune (user, 2026-10-15; the old rule kept lapsing):** the moment the user or a test verifies an item, in the same edit move its details to the archive (dated heading) and leave a one-liner. Check the file size at every handoff update; over ~8 KB means prune before stopping. Pending/untested text goes to the backlog, never deleted.
 
 ## State
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
-- Android main = 3048a5d (PR #25, r243, merged 2026-10-15). Work branch = main (nothing unmerged). Verified details of r204-r243 are in the archive.
-- **Installed 2026-10-15: r243 (run 38837405092, head 43aebe7) on all 4 devices** (carries r242 too; untested items are in Next task 000). Earlier install history: archive.
+- Android main = 9ce2930 (PR #26, merged 2026-10-16). Work branch's unmerged commits: see Next task. r204-r243: archive.
+- **Last full install: r245** (run 38844142457, all 4 devices); newer builds: see Next task. Earlier install history: archive.
   Install with `install-build.ps1 -Run <id> -Device <serial>` on all 4 (memory: install on all devices). Chromebook is now `.33:5555`.
 - Devices: phone = wireless `adb-...` entry; Chromebook ARC `<chromebook-ip>:5555` (reference); WSA `127.0.0.1:58526`; **USB serial = the user's
   SHIELD TV** (rooted; installs only; r210 settings/logins copied from the phone, sign-ins untested).
 - **User is gaming on the PC: phone only, not WSA** (WSA needs window focus). User wants /clear cues often.
 - User sessions backed up: phone `/data/local/tmp/phone-session-backup.{3mf,json}` (8 plates), WSA `/data/local/tmp/session-backup.{3mf,json}`.
   Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook. LAN access code was given in chat: never write it anywhere.
-- **Plan (user, 2026-10-14):** camera LAN (done) -> off-LAN camera (cloud P2P path; REA on Handy is the tool; VPN-home the
-  fallback) -> print history (capture Handy's history call, own client, Device tab) -> REA on MakerWorld. Own printer/account,
-  personal use, own code only; rule 7 holds.
-
 ## Next task
-000. **Verification session 2026-10-15 done (details: archive "2026-10-15: verification session").** Verified: all r231-r243 items (camera/handle/plate select/tap plate/per-plate tower/design fold/tower clearance), pan + drag-start, colour dots, mixed-temp text (Claude tested on Chromebook), r216, r213, layout lab limits, large multi-plate slice. **Merged to main as PR #25.** Installed r243 (run 38837405092, head 43aebe7) on all 4 devices.
-   **Logged findings (user's words, NOT acted on; the user wants the data first, then decides):**
-   - L1. Design panel fold: a very fast rubber-band/ghost image of the panel snaps above it (functionality fine).
-   - L2. Layout lab: user would like the slider kept on screen while adjusting so the range change is visible.
-   - L3. Camera card (phone, wrong access code / unreachable printer): error shown but its words are cut off (user has a picture to upload); the whole card should not error because the AMS can be read through the cloud.
-   - L4. (Claude, Chromebook) Preview summary still shows the red "nozzle temperatures incompatible" warning (without the hint) even when "Remove mixed temperature restriction" is on and the slice works.
-   - L5. Inactive-plate double tap re-frames (user: fine, no change wanted).
-0. **Still UNTESTED:** (a) German strings for the filament-choice dialog are missing (not translated); (b) floating Theme | Layout designer idea = ~half a day (+1-2 h for a collapsible icon), not started.
-2. **Phone checks waiting on the user** (all UNTESTED; they change the user's project):
-   - (User 2026-10-15: keep this item, do NOT bring up the X2D again; they can't trigger it and may hit it by accident.)
-   - r215 single-filament slice crash fix (`OrcaEngine.cpp` ~507) and r217 dual-nozzle fix (`heads = max(1, multiplier, nozzle_diameter count)`): slice with the X2D selected.
-   - r213 haptics (settings tabs TextHandleMove, Models edge swipes CLOCK_TICK; can't be checked over adb).
-   - 165 Hz: done, don't ask.
-3. **Not done / ideas:** auto-select the A1 on the MakerWorld/MakerLab page at load (look at how the site stores its printer pick;
-   CDP on the Models WebView); a slice/print-time guard comparing the sliced printer with the connected one; a line under inactive
-   settings tabs (user's idea). 3D stage 4 wishlist: real shadow map. Preview colours stay flat on purpose.
-4. **Nav proposal (awaiting user OK; analysis 2026-10-14, nothing changed):** Back = AppScaffold.kt:148; Models back + edge swipes
-   ModelsScreen.kt:464/:182; settings tab swipe SettingsEditor.kt:303. Gap: no BackHandler for the OpenSCAD editor (`state.scad`,
-   AppScaffold.kt:281 -> Back opens the quit prompt), the eye "design on plate" mode, the section panel, the design panel.
-   Proposal: Back in OpenSCAD = on-plate view -> design view -> `scad.close()`; optional horizontal swipe between main tabs (not on Prepare).
-5. Then: the plate switcher pick (lab stays until they say), the user-only items below.
-
-Still open from earlier batches: **root cause of the r197 NumberField NPE not found** (stack traces now logged under `OrcaStore`);
-"failed OpenSCAD run clears the old log" **untested** (no repro); **unexplained:** once a freshly resized portrait window on WSA drew
-the Prepare 3D background ~30 % lighter for ~15 s. Design mode known limits: hard-coded colours (delete popup #2B2C32, red bin,
-preview legend) don't follow; the Models page keeps its own colours; a dark 3D background under a light theme hides the floating
-tool icons ("Prepare: floating buttons" can be changed). User-only: retests, plate switcher pick, launcher icon colour (still teal, "decide later").
+Still UNTESTED on device: preview bead look, model-mismatch guard (needs a print, user's OK), German strings stub, haptics on settings tabs/Models swipes, 7e569a4 (Remove row). PR #26 merged 2026-10-16; r249/r250 verified (archive).
+**Real shadow map + MCP `view_set`/`view_screenshot` + light lab (r258-r263): verified on the phone** (details, tools `labset.py`/`shadowtune.py`, MCP recipe: archive "2026-10-16 Real shadow map"). Not yet merged. Untested: light/shadow sliders by finger, German strings for them (none). Preview look unaffected: checked in the blind re-test.
+Blind re-test 2026-10-16 (r263): `NOTES-blind-shader-test-2026-10-16.md`; findings in the backlog. Phone scene: plate 1 cube + pillar, plate 2 table. Don't drive the phone while the user is on it.
+Unmerged: 7e569a4 (untested), f59aed7 + ae021be (AO live, untested; merge together) and the shadow/MCP/light commits (verified). Gemini offload notes: archive 2026-10-16.
+**/next-merge 2026-10-16: Android merge blocked** (no verified prefix: the 3 untested commits are the oldest on the branch, under the shadow work). Merges once they're checked on the phone at r263+: Connection dialog (Device > Connection, Bambu signed host) shows Import credentials and Remove on own rows (look only, never press Remove); Preview AO 2 while orbiting a small toolpath: no bright corners, no ghost. User was on the phone, so not checked.
+Waiting on the user: plate switcher pick (still undecided). Launcher icon colour removed from the list.
 
 ## User decisions (2026-10-13)
-- **Changed 2026-10-14:** objects already in the project stay on their plate; each newly imported file gets a plate of its own
-  (active plate if empty, else first empty, else a new one; `FileController.useEmptyPlate`). Replaces the 2026-10-13 rule that a file lands on the active plate.
+- (2026-10-14) Each newly imported file gets its own plate (active if empty, else first empty, else new; `FileController.useEmptyPlate`).
 - Plate activation must not move the camera when zoomed out (sometimes moving is fine).
 - OpenSCAD: design view (main canvas) is the default; an **eye button** shows the design on the build plate and back, with
   the camera the user had on the plates, the project's objects hidden, and new designs on an empty plate.
-- Plate switcher (tabs/filmstrip/chips): **keep the lab until the user says otherwise** (user, 2026-10-13, 3rd ask: don't ask
-  again; mockups https://claude.ai/artifact/E3MtY8rQ1dMGHhibY2oNCX; More > Layout lab). Once picked: delete the losers and
-  the lab (keep the wide panel tuck/width). Chips layout has no picking.
+- Plate switcher: **keep the lab until the user says otherwise; don't ask again** (mockups https://claude.ai/artifact/E3MtY8rQ1dMGHhibY2oNCX).
+  Once picked: delete the losers and the lab (keep the wide panel tuck/width).
 - Modeling goal: model **without writing code**; OpenSCAD code is only a backstop. Roadmap 1-3 done (archive).
-
-## Open and untested items
-0. Element blocker + ad-block menu (e4d75ab, a7e63d2): verified phone; mouse right-click verified WSA r194. **Untested:**
-   rules in other WebViews (Device page etc.; needs a printer with a web UI). User 2026-10-13: MakerWorld, Printables and Orca sign-ins work; a Google-account Orca
-   sign-in goes through Brave (not the WebView). Bambu sign-out is Device tab > Connection > Sign out (told the user).
-1. Verified, nothing open (archive): preset re-link + syncs, section view, shape builder, .scad zips / 16 KB sniff, OpenSCAD
-   phone layout / downloads / painting, MakerWorld sign-in ticket flow.
-2. Nozzle match + filament picks per AMS tray: verified. **Untested:** newer-firmware `device.nozzle.info` path; stale status
-   after switching printer models; spool change -> printer's preset wins and the pick is dropped (only when the user swaps a
-   spool). Tray picks on WSA r194: verified. Phone plate: 1 slot "Bambu PLA Basic @BBL A1".
-6. Ad blocking (f138655, ec86442, 08bdf0b = `AdBlock.Client` in all app WebViews): verified; MakerWorld sign-in / downloads with
-   it on, Bambu sign-in WebView, Orca Cloud login verified by the user 2026-10-14. **Untested:** plugin pages, Device page on
-   the phone (needs a printer with a web UI; the phone only has the A1).
-9. **Untested:** a true EGL context loss (no repro). Badges are ~23 dp at plate zoom on the phone (under 48 dp; told the user).
-10. 325 MB slice retest: replaced by a verified 20+ plate slice (archive). MakerWorld pinch zoom works (user 2026-10-14).
-    Real keyboard Ctrl+1 (camera top view, MainActivity.kt:190) does nothing: the system takes it as a hotkey (user
-    2026-10-14). Offered: numpad 0-7 as an extra view binding (not done, untested).
-11. Orca plugin runtime: kept as a general capability (no plugin in use). Not done: audit prompts, create_window, per-preset
-    config overrides, printerAgent capability. **FilamentHub is dropped for good; never suggest, test with, or mention it.**
-12. REA MCP (github.com/morluto/rea), looked at 2026-10-12, not installed (needs the user's OK; changes MCP config): fits release
-    APK / `liborca_jni.so` inspection and HAR traces of the MakerWorld / Thingiverse flows only.
-13. Wishlist later: filament colour mixing (upstream `FilamentMixer.cpp`). Not wanted: iOS port. Flatpak r9 MakerLab tab,
-    weekly upstream bump, obn follow-ups: archive (2026-10-12 trim).
 
 ## Safety gotchas
 - **Any test print needs the user's OK.** User's AMS lite: A1 yellow, A2 matte black, A3 white, A4 PETG.
 - 3D Filament Profiles (3dfilamentprofiles.com) is built in (Models tab site + "Log print"): **never press Subtract** in tests.
-- Test on a temp Plate 2 and delete it after; don't change the user's Plate 1 (exception, user 2026-10-12: the phone's Plate 1
-  objects and shape-builder draft are test objects). When deleting objects by list position, verify the selection first.
+- **User 2026-10-15: all build plates/objects on the devices are currently throwaway test objects with no real-life significance (until the user says otherwise). Standing permission to move, reassign, delete or rearrange anything; no need to avoid or restore them.** Still verify the selection before deleting by list position. (Prints still need the user's OK.)
 - **Never `cat missing > target`** (the redirect empties the target first).
 - **Never `adb forward tcp:X tcp:Y` on WSA** (wedges adb); use `localabstract:orcastudio_mcp` (reference "WSA").
 
@@ -121,6 +71,7 @@ tool icons ("Prepare: floating buttons" can be changed). User-only: retests, pla
    - Android: `python .claude/hooks/privacy_scan.py range "HEAD --not --remotes" . ':(exclude)src-orca'`
    - OrcaStudio: `python .claude/hooks/privacy_scan.py range "HEAD --not --remotes" arm-build '.github/workflows/arm-*' .claude`
 9. Commit trailer: `Co-Authored-By` + `Claude-Session` lines as given in the session.
+11. **Model fit (user, 2026-10-16):** when a task would be better suited to Opus (hard rendering/shader/math debugging, subtle multi-file design, after 2 failed attempts), say so before starting or as soon as it shows, and tell the user to `/model` swap and `/next`. Otherwise stay on the current model.
 10. Efficiency (user, 2026-10-10): compile Kotlin locally before every push (command in the reference); batch 2-4 changes per
     build, don't dispatch builds that will be superseded; write code with Edit or python raw strings, never plain python
     heredocs (they ate backslashes 5x); write python scripts with Write, then run them.
