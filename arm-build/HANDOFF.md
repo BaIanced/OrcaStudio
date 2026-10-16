@@ -20,8 +20,8 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 ## State
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
-- Android main = 9ce2930 (PR #26, merged 2026-10-16). Work branch's unmerged commits: see Next task. r204-r243: archive.
-- **Last full install: r245** (run 38844142457, all 4 devices); newer builds: see Next task. Earlier install history: archive.
+- Android main = 8eadb0f (PR #27, r264, merged 2026-10-16); work branch has nothing unmerged. Earlier merges: archive.
+- **r264** (run 38925590755) installed on phone, SHIELD, WSA; **not on the Chromebook** (offline). Earlier install history: archive.
   Install with `install-build.ps1 -Run <id> -Device <serial>` on all 4 (memory: install on all devices). Chromebook is now `.33:5555`.
 - Devices: phone = wireless `adb-...` entry; Chromebook ARC `<chromebook-ip>:5555` (reference); WSA `127.0.0.1:58526`; **USB serial = the user's
   SHIELD TV** (rooted; installs only; r210 settings/logins copied from the phone, sign-ins untested).
@@ -30,9 +30,8 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
   Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook. LAN access code was given in chat: never write it anywhere.
 ## Next task
 Still UNTESTED on device: preview bead look, model-mismatch guard (needs a print, user's OK), German strings stub, haptics on settings tabs/Models swipes, light/shadow sliders by finger.
-Verified, unmerged: shadow map + MCP view tools + light lab (r258-r263; archive "2026-10-16 Real shadow map"), 7e569a4 Remove row (r263). Blind re-test notes: `NOTES-blind-shader-test-2026-10-16.md`. Phone scene: plate 1 cube + pillar, plate 2 table.
-**Android merge blocked** until f59aed7 + ae021be are checked (oldest unverified commits): Preview, cube engravings: `~/orca-android-tools/aopair.sh '{"target":[172.3,123.1,10],"distance":80,"yaw":-60,"pitch":45}'`; pass = AO 0 vs 2 differ and mid-orbit = rest (no glow, no ghost). Partial r263: pillar view mid = rest, but AO had nothing to darken there. Cube [172.3, 123.1], pillar [136.3, 95.0]. Scripts `aopair.sh`, `mcpao.sh 'tool:{json}'` (phone MCP, token never printed). Phone drops off wireless adb every few minutes. Phone AO now 2 (was 0).
-**New, UNTESTED (r264, run 38925590755; installed SHIELD + WSA, not phone/Chromebook):** a013cdd bed shadow clipped to each bed box (check: long shadow at the bed edge, no smear past it); dc6ef3c section cut sized by the active plate's objects, fallback all (as desktop `GLCanvas3D.cpp:11026`; check 0.5 on plate 1 cuts halfway).
+Open blind-test findings (backlog): shadow on parts subtle at 50 %, bias knob ~no effect, grid line breaks in top views. Notes: `NOTES-blind-shader-test-2026-10-16.md`. Phone scene: plate 1 cube [172.3, 123.1] + pillar [136.3, 95.0], plate 2 table.
+Phone tools: `~/orca-android-tools/mcpao.sh 'tool:{json}'` (phone MCP, token never printed), `aopair.sh '<view_set json>'` (AO off/on/mid-orbit/rest). Phone dropped wireless adb twice; re-paired 2026-10-16 (`adb pair` needs the code on the command line). Phone restored: section off, light defaults, AO 0.
 Waiting on the user: plate switcher pick (still undecided). Launcher icon colour removed from the list.
 
 ## User decisions (2026-10-13)
