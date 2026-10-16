@@ -2045,3 +2045,6 @@ context-loss delete). Lesson: Gemini 3.1 Pro is good for GL/shader design drafts
   `labset.py key=value ...` sets lab values and restarts. A "performMeasureAndLayout called during measure layout" crash dialog was on
   the phone at the r257 launch (origin unknown; watch for it).
 - Blind re-test 2026-10-16 (r263): `NOTES-blind-shader-test-2026-10-16.md`.
+
+## 2026-10-16 Remove row verified
+- 7e569a4 (Connection dialog: Import credentials and Remove on own rows): phone r263, ui dump: Remove on its own row, 180x70 px, one line. VERIFIED.

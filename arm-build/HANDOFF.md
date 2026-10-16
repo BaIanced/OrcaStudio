@@ -29,11 +29,10 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 - User sessions backed up: phone `/data/local/tmp/phone-session-backup.{3mf,json}` (8 plates), WSA `/data/local/tmp/session-backup.{3mf,json}`.
   Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook. LAN access code was given in chat: never write it anywhere.
 ## Next task
-Still UNTESTED on device: preview bead look, model-mismatch guard (needs a print, user's OK), German strings stub, haptics on settings tabs/Models swipes, 7e569a4 (Remove row). PR #26 merged 2026-10-16; r249/r250 verified (archive).
-**Real shadow map + MCP `view_set`/`view_screenshot` + light lab (r258-r263): verified on the phone** (details, tools `labset.py`/`shadowtune.py`, MCP recipe: archive "2026-10-16 Real shadow map"). Not yet merged. Untested: light/shadow sliders by finger, German strings for them (none). Preview look unaffected: checked in the blind re-test.
-Blind re-test 2026-10-16 (r263): `NOTES-blind-shader-test-2026-10-16.md`; findings in the backlog. Phone scene: plate 1 cube + pillar, plate 2 table. Don't drive the phone while the user is on it.
-Unmerged: 7e569a4 (untested), f59aed7 + ae021be (AO live, untested; merge together) and the shadow/MCP/light commits (verified). Gemini offload notes: archive 2026-10-16.
-**/next-merge 2026-10-16: Android merge blocked** (no verified prefix: the 3 untested commits are the oldest on the branch, under the shadow work). Merges once they're checked on the phone at r263+: Connection dialog (Device > Connection, Bambu signed host) shows Import credentials and Remove on own rows (look only, never press Remove); Preview AO 2 while orbiting a small toolpath: no bright corners, no ghost. User was on the phone, so not checked.
+Still UNTESTED on device: preview bead look, model-mismatch guard (needs a print, user's OK), German strings stub, haptics on settings tabs/Models swipes, light/shadow sliders by finger.
+Verified, unmerged: shadow map + MCP view tools + light lab (r258-r263; archive "2026-10-16 Real shadow map"), 7e569a4 Remove row (r263). Blind re-test notes: `NOTES-blind-shader-test-2026-10-16.md`. Phone scene: plate 1 cube + pillar, plate 2 table.
+**Android merge blocked** until f59aed7 + ae021be are checked (oldest unverified commits): Preview, AO 2 (set via MCP `view_set`), zoom onto the cube, orbit with `input swipe`, screencap mid-way + after: no bright corners, no ghost. Phone dropped off wireless adb mid-test (user must re-enable wireless debugging). Phone AO now 2 (was 0).
+**New, UNTESTED (run 38925590755 building):** a013cdd bed shadow clipped to each bed box (blind finding 1; check el 20 / az 0 with the pillar near the edge: no smear past the bed); dc6ef3c section cut sized by the active plate's objects, fallback all (blind finding 2, desktop `GLCanvas3D.cpp:11026` uses `volumes_bounding_box(true)`; check 0.5 on plate 1 cuts the cube/pillar halfway).
 Waiting on the user: plate switcher pick (still undecided). Launcher icon colour removed from the list.
 
 ## User decisions (2026-10-13)
