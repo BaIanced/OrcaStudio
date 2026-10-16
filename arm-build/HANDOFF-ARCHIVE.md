@@ -1837,3 +1837,152 @@ only the 3D view; slot reset and "Reset custom colors" (confirm) work; light pan
   launch, More, expand Appearance, Design mode, Whole app > Messages and dialogs, screenshot.
 - r194 verified on the phone (fullscreen portrait): sample dialog at the top, sample message bar just above the design
   panel. Phone r192 had installed fine; design panel closed, no custom colours left on either device.
+
+## 2026-10-14: r179 delete popup + r178 design view in landscape (Chromebook r193)
+Landscape check done on the Chromebook (ARC, 1920x1080, rail layout) instead of WSA (the PC was in use; same wide layout):
+- Tabs pick mode: Add plate, Plate 1 active, long-press Plate 2 -> 2 highlighted, add slot = X; "Delete 1 plate" popup sits
+  under the stop button reaching right (x ~241-420, y ~100-150), clear of Undo (x 150) and the File button. Tapping it
+  deleted Plate 2; back to 1 plate.
+- Add > OpenSCAD model: design view on the main canvas with the editor panel on the right (Update preview / Frame / eye
+  buttons top right of the canvas). Eye -> design as a ghost on a new empty Plate 2 with tabs, tool column, Slice plate 2;
+  eye again -> design view; Close editor -> back to 1 plate (temp plate gone). Nothing left behind.
+
+## 2026-10-14: .scad download 16 KB content sniff verified (Chromebook r193)
+- Models tab WebView (debug via `log.tag.OrcaWeb`), CDP-evaluated `<a download="" href=blob:...>` click with a 4.5 KB
+  .scad (4.4 KB `//` comment header, then `width = 20; // [10:50]`, `module box`, `cube`). The listener's name had no
+  known extension, so `ModelDownloads.sniffExtension` read past 512 bytes: saved as `<uuid>.scad`, OpenSCAD editor
+  opened, Customizer · 1. A blob link with **no** `download` attribute does nothing: `shouldOverrideUrlLoading` blocks
+  non-http schemes (ModelsScreen.kt:180), so only real downloads reach the sniff (fine).
+- Close editor removed the temp plate, but an adb force-stop right after left Plate 2 in the session (60 s auto-save;
+  normal exits save in `onStop`, MainActivity.kt:103). Deleted it, HOME + restart: 1 plate. The Chromebook's OpenSCAD
+  draft is now that test box. Debug prop cleared.
+
+## 2026-10-14: WSA r194 element blocker right-click + tray picks
+- Element blocker (item 0) with a **real mouse right-click** (new `~/orca-android-tools/mclick.ps1 x y -Right`): Thingiverse,
+  More > Block an element, right-click on the top notification text picked `p 675×18`, no browser context menu;
+  Larger x2 -> `div 834×40` (whole banner outlined); Block hid it live, rule
+  `thingiverse.com: div[class*="SiteWideNotification__notification--"]`. Blocked elements > Undo all -> rules `{}`.
+- Tray picks (item 2) on WSA (A1 connected, empty plate, no session file): sync -> Basic / Matte / Matte /
+  iSANMATE PETG-HF (engine's match for tray 4), `tray_picks` {}. Slot 2 -> "Bambu PLA Basic @BBL A1 (MOSTLY NO FAN)"
+  -> `tray_picks` = `<serial>/0/1` (loaded "GFA01 #000000"); re-sync kept it; window close + relaunch + sync kept it
+  (slots restored from `filaments:<printer>` with sources); picking the sync's own Matte -> `tray_picks` {}. Prefs end
+  equal to the start apart from the slot sources. App closed.
+
+## 2026-10-14: sign-ins + cloud sync (user-tested)
+- User reported done: MakerWorld sign-in ticket flow (item 8), MakerWorld downloads with ad blocking on, Bambu sign-in
+  WebView (sign-out + password), Orca Cloud login (item 6), and the Bambu/Orca cloud syncs after the preset re-link (item 1).
+  No problems reported.
+- Same day, user: MakerWorld pinch zoom works; real-keyboard Ctrl+1 is taken by a system hotkey (kept open in the handoff).
+
+## 2026-10-15: handoff trim (verified details moved from the hot file)
+### Design mode + colour presets (r180-r194, merged; verified WSA r182, Chromebook, phone r189)
+- User 2026-10-14: "code all three as presets, in addition to the customizer; you categorize everything".
+- Panel: drag by header, fold, close; preset chips, "Part of the app" dropdown (14 parts), colour chips (• = custom) with the
+  slot's hint, HSV sliders + hex + swatches, Reset this part / Reset all. Colours per light/dark mode; sliders save on release.
+  Design mode itself isn't kept over a restart (by design).
+- Code: `ui/theme/AppColors.kt` (Role/Slot/Region/ThemePreset; `withRoles`; `Themed(region)`; `OrcaTheme`),
+  `ui/theme/DesignPanel.kt`, `core/ThemeSpec.kt` (prefs `theme_spec` JSON). Regions wired in `AppScaffold.kt`; `Viewport.kt` +
+  `PlateBadgeAtlas.kt` read slots.
+- Chromebook portrait checks: Industrial/Minimal light, panel fits above the tab bar, tab bar slots, Device + Settings editor
+  regions, wallpaper colours + overrides, Reset all (no confirm in panel; More's "Reset custom colors" confirms); r185 More,
+  Models, OpenSCAD editor fine; Preview sheet slate grey fixed r187 (fd4361d, merged). Phone r189: dialogs, 3D selection colour.
+- r179 de39e04 delete popup + r178 design view: verified r189 portrait + Chromebook r193 landscape. Slice button = primaryContainer.
+### Away orders r196-r202 (merged, verified WSA)
+- Numpad 0-7 camera views (Num Lock on: 1 top, 3 front, 7 frame plate; off = nothing). Blind bug hunt on WSA: 3 fuzz runs,
+  ~550 random steps, malformed STL/3MF/SVG, hostile OpenSCAD, extreme numbers, lab sliders 50-130 %, portrait 430x900: no crash.
+- Fixes: Shape dialog Add off outside 0.1-1000 mm, chips wrap; typed scale clamped 0.1 %-100x; NumberField rejects
+  NaN/Infinity/|x|>1e6 (raw NPE dialog before; stack traces logged under `OrcaStore`); "(s)" -> plurals (r203, 897a708);
+  Shape builder menu icon = compass. Not bugs: lab sliders, filmstrip digits, tune icon blue with overrides.
+- Design polish pass in landscape + phone-portrait sizes found nothing else.
+### r208-r213 Models / settings (verified parts)
+- Chromebook portrait r208: full-width bottom sheet (Slice button behind the sheet). Camera card (net/BambuCamera.kt,
+  ui/device/CameraCard.kt; TLS 6000, login packet + JPEG frames): live frames, snapshot to Downloads, stop (landscape + portrait).
+- Models edge swipes verified WSA + phone (user). r211 Chromebook portrait: toolbar layout, white site-tab line, links row
+  shade, settings tab swipe, Speed hidden in Simple. User on the phone: toolbar layout (SplitAroundCutout in
+  components/CutoutRow.kt), MakerWorld full site "Open in Bambu Studio" -> plate (`ModelsScreen` intercepts
+  `bambustudio://open?file=`), so slicer mode, its toggle, links row and trim JS were removed.
+### Preview toolpath look r219-r220 (verified by me on the phone, plate 5 box)
+- Cause of dashes/moire: each segment box overlapped the next by a quarter width, end caps poked out at joints, flat normals.
+- r219: `PlateRenderer.uploadPadded` dummy records before/after, `drawPreview` binds prev/next records as attribs 8-11;
+  `PATH_VS` mitres joints (turn < 120 deg, else quarter-width cap), shared bisector normal when turn < 40 deg; `PATH_FS` bead
+  normals faded by `fwidth`. Left hairline cracks close up.
+- r220: symmetric corner `(right+rn)/(1+c)`, own `right` via `rightOf`, exact z; bead fades in from ~8 px per layer
+  (`smoothstep(0.12, 0.25, fwidth)`, amplitude 0.8). Result: no arcs/cracks, smooth curved walls, a few isolated specks (ok).
+- r217 stage 1 studio shading (MESH_FS sky/ground ambient, key+fill, spec, rim, `uEye`): user "pretty good" on Prepare.
+### Slice crash symbolization (r213, phone)
+- SIGSEGV in orca-engine, symbolized with NDK 28.2 `llvm-addr2line` on the WSL `~/orca-build/core/liborca_jni.so` (offsets
+  matched although build ids differ): `ToolOrdering::reorder_extruders_for_minimum_flush_volume` (ToolOrdering.cpp:2812)
+  memmove from an empty `flush_volumes_matrix`. Not related to 165 Hz.
+
+## 2026-10-15: r221/r224 phone takeover
+- r221 measured: contact shadow rendered as a faint ~5 mm rim (max 18/255 darker, on/off screencap diff); AO Full darkened flat
+  slanted faces with grain (cause: SSAO spiral samples read NEAREST depth at off-centre uv); AO Soft max 14/255; Preview orbit
+  26 fps AO off / 17 fps Full on plate 5's 848-layer slice (Prepare 125 fps either way). Green number top left = system
+  refresh overlay, not app FPS (`glfps.sh` = SurfaceFlinger timestats). Models site-tab line missing (fillMaxWidth 0 wide in the
+  unbounded scrolling row).
+- r224 (d9f1f7f + ca77961): SSAO samples snapped to texel centres (flat faces clean, creases kept); `PlateRenderer.previewAo`
+  skips AO while the camera moves and reuses it while view/toolpaths are unchanged (23 fps orbiting with Full, AO drawn when
+  still); shadow strength 0.8, blur 10 mm + 3rd round (max 25/255, twice the area); site tab `width(IntrinsicSize.Max)` (line visible).
+- Verified on the phone with r221: zoom toward the fingers (plate badge under the pinch stays put); r214 drag follows and stays
+  where dropped (undo restored the frame exactly); r218 pill opens from its text; r213 settings page tabs swipe repeatedly both
+  ways; r211 object settings editor opens. Preview camera on the phone sits under the bed (already so before the session).
+
+## 2026-10-15: r225-r240 verified items (moved from the hot file)
+User 2026-10-15: r231-r240 "everything confirmed working"; r226 shadow strobe confirmed fixed. Original notes, verbatim:
+- **Installed 2026-10-15: r242 (run 38834271507, head aafa5f5) on all 4 devices** (carries 2869d46 + aafa5f5; untested items are in Next task 000). Older notes: r238 was installed; r239 (cf1fe95) building. Earlier: **r238 (run 38817423594, head 7d49df9) on all 4 devices**. Before that: r231 (run 38803353110, head 1d4ee77). Before that: **r229 (run 38798417463) on phone + WSA + Chromebook + Shield** (2026-10-15; includes r225-r228 fixes).
+00. **Chromebook autopilot 2026-10-15 (landscape, r239 installed there via direct `adb install -r`; the script failed during a ChromeOS update).** Verified by me on the Chromebook: prime tower
+   box draws inside the bed (needs 2 filaments USED: paint one face with filament 1 on a filament-2 cube; a cube set to filament 2 alone shows no tower); finger-drag of the tower moves it and
+   the panel X/Y follow; Layout-lab fade preview works. **Bug found:** dragging the tower past the bed edge showed X/Y = 214/470 mm (raw, bed is 256) although the box was drawn clamped.
+   **FIXED + verified on the Chromebook upright (2026-10-15):** `OrcaScene.cpp` ~513 emits the clamped box x/y as `wipe_tower`; commit 2207858, run 38827920395 = r240, installed on all 4 devices.
+   Dragging the tower far past the bed edge now shows X 4.4 / Y 228.9. Also verified upright (portrait, forced via `settings put system user_rotation 1`, restored to auto after): toolbar, plate tab, grip-resized pane,
+   Slice button, pane resize. Chromebook test project: 2x Cube (filament 2, one face painted filament 1), 2 filaments, tower at the back-left edge; harmless test data. User has not tested r240.
+   Not yet driven: design panel clamp, `!` badge, "Both" dialog, plate switcher on the grip (lab).
+0. **2026-10-15 batch, commit 7d49df9, run 38817423594 = r238 (built OK, installed on all 4 devices 2026-10-15), ALL UNTESTED by the user (C++ and Kotlin compiled locally):**
+   (a) Prime tower "partially outside" cause: slice/3D clamped the tower with `prime_tower_width` for both axes and no user-position clamp, ignoring the
+   real depth + brim + cone. New `OrcaEngine::tower_box` (OrcaScene.cpp, uses `estimate_wipe_tower_footprint` like PartPlate.cpp) feeds both the 3D box
+   and `slice()`. (b) Finger-drag the tower: scene JSON `plates[].tower` = x,y,w,d,h; `PlateView.towerBoxes` hit test -> `onTowerMoved` ->
+   `setWipeTower`; renderer `dragTower` highlights id -2. (c) Design panel clamped on screen (`DesignPanel.kt`, measured height). (d) Lab: "plate switcher on
+   the panel grip" (portrait, `LayoutLab.platesOnHandle`, `DragHandle(header)`) + own size slider (`plateScale`). (e) More > Misc segment "Keep mine" -> "Mine"
+   (it wrapped and drew a tall box). **Estimate given to the user (no work done): live Layout-lab designer = ~half a day: the lab controls (`LayoutLabSection`,
+   MoreScreen.kt) already apply live via `setLab`, so it is moving them into a floating panel next to `ThemeDesignPanel` with a Theme | Layout tab
+   (shared drag/clamp code); collapse to a draggable floating icon ~1-2 h more. Lab items are layout, not colours, so no Region/slot model needed.**
+0b. **DONE, UNTESTED (user 2026-10-15): Layout-lab fade preview.** Commit cf1fe95, run 38822428770 = r239 (built OK; installed on phone, WSA, Shield; Chromebook was offline, install later). While More > Layout lab is
+   open, Prepare stays composed under More (`AppScaffold.kt` Screen.MORE branch, `LabPeek` in `MoreScreen.kt`); any touch inside the lab section fades More to 0 % (animated)
+   and back on release. Scale sliders now apply live; More keeps the sizes from the touch (`LabPeek.frozen`) so the slider doesn't move under the finger.
+   Limits: scrolling inside the section also fades; no canvas touch while adjusting; Prepare only. Floating Theme | Layout designer (half a day) stays an option.
+1. **r224 (run 38710373932, head ca77961) on all 4 devices.** Phone-verified 2026-10-15 (details: archive "2026-10-15: r221/r224
+   phone takeover"): zoom-at-fingers, SSAO, Preview AO caching, site-tab line, r214 drag, r218, r213 tab swipes, r211.
+   **User feedback 2026-10-15 (to investigate, nothing changed yet):** **(a) first fix 2026-10-15, pushed as b4531b7, r225 = run 38716572574, installed on all 4 devices (WSA installs are silent, so no need to skip them while the user games; only driving the UI needs focus), NOT tested by the user (user: "glow without direction" matches the diagnosis):** `SceneEffects.kt` blur 10->5 mm, shadow
+   shifted (-1.2,+1.8) mm away from the light; `PlateRenderer.kt` ~233 drag area in 20 mm steps (map area grew every frame, so the
+   texel grid swam). Needs a build + the user's eye; if still off, try a height-based directional shadow (shift in pass 3).
+   **(a) second fix 2026-10-15 (user: r225 "looks a lot better" but a strobe/stepping in the shadow when dragging, visible zoomed in):**
+   cause = the 20 mm area steps rescaled the shadow texels at each step. `PlateRenderer.kt` ~233 now widens the map by a FIXED 150 mm for
+   the whole drag (one resolution change at drag start, none after). Pushed 37c4058, r226 = run 38719508315 (built, installed on all 4 devices), UNTESTED by the user.
+   (a, original) contact shadow strength OK, but it spreads out
+   on every side and "looks off" (also while dragging; it does follow the drag). Check from under the plate. Likely cause
+   (unverified): a symmetric blurred footprint with no light direction. User may bring opinions from other AIs.
+   **(b)+(c) fixes 2026-10-15, pushed (commit after 37c4058), r227 = run 38728513573, installed on all 4 devices, UNTESTED by the user:**
+   (b) cause: `Camera.pan` used 0.8*distance/height but FOV 35 gives 0.63; now exact, and `Camera.panGrab` (plate-plane ray before/after)
+   makes the plate follow the finger at any pitch/zoom (PlateView 2-finger + mouse pans; MeshPreviewView still uses `pan`).
+   (c) cause: `hitsSelection` is an axis-aligned world bbox test; now only a pre-check, and `PlateListener.onDragCheck` ->
+   `SceneController.checkDragStart` runs the engine mesh pick async and cancels the drag when the mesh isn't under the touch
+   (the touch then orbits). Possible side effect: a drag is cancelled a few ms after DOWN on a miss.
+   NEXT: user phone-checks pan + a touch off the mesh near a selected object.
+   (b, original) Finger pinch speed is fine. Panning feels strange when zoomed far out (check whether pan scales with distance).
+   (c) At some angles and zooms, with an object selected, a touch about one grid square away still drags it: check the
+   drag hit-test (bbox vs mesh pick, touch-slop radius in world units vs pixels). Idea (not done): Preview orbits at ~26 fps on big slices even with AO off (4x MSAA at 1272x2772, instanced boxes).1b. **2026-10-15 (user OK'd both):** (i) Back in the OpenSCAD editor = on-plate -> design -> close (`AppScaffold.kt` ~150). (ii) Opened projects ask
+   whether to keep the app's filaments or take the project's (`FileController.askFilaments`, `FilamentChoiceDialog`; setting More > Misc
+   "Filaments of opened projects": ask/mine/project; `AppSettings.projectFilaments`). Only for user-opened files, not session restore. German strings missing.
+   Pushed, run 38792872155 building; install on all 4 when done; Installed on all 3 online devices 13:26 (run 38792872155). **User 2026-10-15: "Dialogue doesn't pop up"** — code path checked, wiring OK (AppScaffold:162 -> FileController:146); dialog only shows for a user-opened project (uri != null) when its filament preset/colour list differs from the app's, setting = ask, and plate empty or append=false (`openModels` line 67: a .3mf onto a non-empty plate is imported as models, no dialog). User also tried project .3mf files (swatch2, stack_8x8 etc., real differing filaments). **Cause:** the busy AlertDialog ("Opening project", `GlobalDialogs`) is composed after it and covered it, so the open awaited forever. Fix 6f6d9e7: the dialog now lives in `GlobalDialogs` and hides the busy dialog while asking. Run 38798417463 = r229, installed on all 4 devices 2026-10-15; UNTESTED by the user (needs a user-opened project with differing filaments). **User: "bug still present" (opened from Recents).** Real cause: those recents (swatch2, stack_8x8, Purge_loop...) were stored `project:false` because they were downloaded/imported onto a non-empty plate -> `openModels` imported them as models (no dialog). Fix c58af9f: `openModels` now asks "Open project / Import models" (`askOpenAsProject`, `UiState.projectOrImport`, dialog in `GlobalDialogs`; en+de strings) when a project .3mf lands on a plate with objects; Open -> `openProjectFile` -> filament dialog. r230 cancelled (superseded). **Also 1d4ee77 (user 2026-10-15 asks):** user filament presets with `default_filament_colour` recolour the slot on pick (`OrcaEngine.cpp` compatible_names "color" -> `PresetRef.color` -> `setFilamentNow`); colour dots for user presets in the filament picker (`PickerItem.color`); portrait Printer/Objects panel is now a grip-resized pane (`AppScaffold.kt` `PanelSize`, 56 dp..85 %, default 132 dp) instead of the 2-position BottomSheetScaffold. Run 38803353110 = r231, installed on all 4 devices 2026-10-15; **user: "everything works good"** (open/import dialog, preset colours, picker dots, resizable panel = verified). **1d52cf3:** additive "Both" choice in the filament dialog + More > Misc (project's slots, then mine it lacks by preset+colour; no extruder remap needed). r232 = run 38806423389, installed on all 4 devices 2026-10-15; UNTESTED. **Open bug (user):** after "Use project's" slot 1 showed "CHCKX PCTG Light Blue..." Phone state: all 4 slots = AMS-sync result, not swatch2's (PLA Basic/PLA Matte/OVERTURE PETG/PETG-CF); `tray_picks` holds tray A1 (PLA Basic yellow) -> CHCKX, which a sync reapplies. Sync is manual only (`syncFilamentsFromPrinter`), so ASKED the user whether they pressed Sync after opening. If not, find what replaced the slots. Drop of 165 Hz check: user said scratch it. **User 2026-10-15 (sync = yes; slot 1 = PCTG vs the tray's PLA, slice error):** pushed (commit after 1d52cf3), run 38809389538 = r233 (building; install on all 4 when done), UNTESTED: (1) red `!` + refresh button on a slot whose type differs from its AMS-synced preset (`PreparePanel.kt` FilamentSlots; refresh = `setFilament(i, source.synced)`; only type mismatches, not other settings of the same filament); (2) colour dots for baked-in preset colours in all filament pickers incl. system presets, Objects>Filament, and the closed field (`presetItems`, `PickerField`); (3) upstream's 'Preferences / Control / Slicing / Remove mixed temperature restriction' error now shows this app's path; new setting More > Printers & presets > "Remove mixed temperature restriction" (`SettingPath.kt` = single source for label+section; `OrcaEngine::m_allow_mixed_temp` -> `print.set_check_multi_filaments_compatibility`). Only that one libslic3r message points at desktop UI (grepped Print/GCode/PrintObject). Answered the user: Opus not needed. **User confirmed 2026-10-15: shadow strobe (r226) fixed.** **BADGE DONE 2026-10-15 (b334626, r234 = run 38811456545, built OK, installed on all 4 devices 2026-10-15 (also: prime-tower-outside-bed fix in `OrcaEngine.cpp` slice, ~line 576: unset tower position is clamped onto the bed; user report 2026-10-15, UNTESTED, C++ not compiled locally; superseded runs 38811117959, 38810195344 failed on unescaped apostrophes in strings.xml, fixed), supersedes r233 which was cancelled, so r233's items above ride in r234; install on all 4 when built; UNTESTED):** `setupProblems()` + `ProblemFocus` in `PreparePanel.kt`; red FAB `!` above the Slice button (`PrepareOverlay.kt`); tap -> `AppScaffold.kt` Workspace raises the portrait pane to >= 360 dp / untucks the wide panel, `PreparePanel` switches to the Presets tab, opens Filaments, scrolls to the slot (350 ms delay); slot row has a red border + red explanation line. Only case so far = slot type mismatch; add more by extending `setupProblems` (SetupProblem is slot-based: mixed-temp etc. would need a non-slot variant). Original idea: a red `!` badge on the main 3D view when a setup problem exists (first case: slot type mismatch; later: mixed-temp, etc.). Tap = open/slide up the Prepare drawer (portrait `PanelSize` pane in `AppScaffold.kt`), expand the Filaments section, scroll to the slot and show a red explanation line next to the problem setting; user suggested a red outline around it (they're unsure it's overkill: keep it subtle, e.g. red border + one-line text). Needs one shared 'problems' list (slot index + message) that feeds both the badge and the slot row; reuse the mismatch check in `PreparePanel.kt` FilamentSlots.
+
+## 2026-10-15: verification session (user went down the list, works/broken)
+Verified by the user (r242/r243 on phone): handle pull no longer moves the 3D view; strip/chip plate select does not re-frame
+(inactive double tap re-frames, user fine with it; active double tap re-frames); tap on empty bed of an inactive plate activates it;
+towers on other plates move independently (panel X/Y of the other plate stays); design panel folds into its title bar; tower
+slides around objects and returns; r227 pan + `checkDragStart`; colour dots for system presets in all filament pickers;
+r216 projects keep the current printer (toast); r213 import 2 files = own plate each; Layout lab scrolling/canvas-touch limits;
+large 20+ plate slice completes plate by plate (replaces the old 325 MB retest).
+Tested by Claude on the Chromebook (ARC, r243): "Remove mixed temperature restriction": PLA+ABS slice error text reads
+"turn on More > Printers & presets > Remove mixed temperature restriction" (this app's path); with the switch on it slices.
+(Setting restored to off; test project's filament 2 is now ABS, harmless.)
+Logged observations (NOT acted on, user wants data first): see HANDOFF.md "Logged findings".

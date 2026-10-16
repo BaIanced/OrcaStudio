@@ -14,51 +14,55 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
   `/next-merge`" when verified work awaits a merge (say what it merges and what stays unverified). Never mid-task.
   Merge only on "merge" / `/next-merge` (= merge the verified, unmerged work, then carry on like /next; never untested commits).
 - Update "Next task" before stopping any task.
+- **Auto-prune (user, 2026-10-15; the old rule kept lapsing):** the moment the user or a test verifies an item, in the same edit move its details to the archive (dated heading) and leave a one-liner. Check the file size at every handoff update; over ~12 KB means prune before stopping. Pending/untested text never moves.
 
 ## State
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
-- Android main = r194 (541c5c4, PR #22, 2026-10-14; r192-r194 selection colour + design mode dialog samples, verified
-  phone + Chromebook; archive "r192-r194"). Work branch = main (nothing unmerged, nothing unverified).
-- Installed: Chromebook r193 (2026-10-14; landscape now; restored to Dark + Prusa default, no
-  custom colours, wallpaper off; session = 1 cube on 1 plate). Phone r194 (Dark + Prusa default restored; fullscreen portrait
-  lab on (user's setting); session =
-  test downloads; old 8-plate session in `/data/local/tmp/phone-session-backup.{3mf,json}`). WSA r161 (AI tools on; auto-save
-  60 s; session = backup `/data/local/tmp/session-backup.{3mf,json}`; showed 1 plate on 2026-10-14). WSA now r182, restored to
-  Dark + Prusa default, no custom colours.
-- A TV box shows up in `adb devices` (USB serial, 2026-10-14): not a test device, leave it alone.
-- Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook.
+- Android main = 3048a5d (PR #25, r243, merged 2026-10-15). Work branch = main (nothing unmerged). Verified details of r204-r243 are in the archive.
+- **Installed 2026-10-15: r243 (run 38837405092, head 43aebe7) on all 4 devices** (carries r242 too; untested items are in Next task 000). Earlier install history: archive.
+  Install with `install-build.ps1 -Run <id> -Device <serial>` on all 4 (memory: install on all devices). Chromebook is now `.33:5555`.
+- Devices: phone = wireless `adb-...` entry; Chromebook ARC `<chromebook-ip>:5555` (reference); WSA `127.0.0.1:58526`; **USB serial = the user's
+  SHIELD TV** (rooted; installs only; r210 settings/logins copied from the phone, sign-ins untested).
+- **User is gaming on the PC: phone only, not WSA** (WSA needs window focus). User wants /clear cues often.
+- User sessions backed up: phone `/data/local/tmp/phone-session-backup.{3mf,json}` (8 plates), WSA `/data/local/tmp/session-backup.{3mf,json}`.
+  Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook. LAN access code was given in chat: never write it anywhere.
+- **Plan (user, 2026-10-14):** camera LAN (done) -> off-LAN camera (cloud P2P path; REA on Handy is the tool; VPN-home the
+  fallback) -> print history (capture Handy's history call, own client, Device tab) -> REA on MakerWorld. Own printer/account,
+  personal use, own code only; rule 7 holds.
 
 ## Next task
-**Design mode is done, verified on all three devices and merged (r180-r194, main r194).** Next: the WSA landscape check (r179 line below; only while the user isn't on the PC), then the open items. Background:
-**Colour presets + design mode (user, 2026-10-14: "code all three as presets, in addition to the customizer; you
-categorize everything").** **Verified on WSA r182** (presets, live design mode, per-part overrides, resets, restart; details: archive
-"2026-10-14: design mode r182-r187").
-- Panel: drag by header, fold, close; preset chips, "Part of the app" dropdown (14 parts), a row of colour chips (• = custom)
-  with the slot's hint, HSV sliders + hex + swatches, Reset this part / Reset all. Colours per light/dark mode; sliders save
-  on release. Design mode itself isn't kept over a restart (by design).
-- Code: `ui/theme/AppColors.kt` (schemes moved from MainActivity; Role/Slot/Region/ThemePreset; `withRoles` derives Material
-  slots; `Themed(region)` = nested MaterialTheme; `OrcaTheme`), `ui/theme/DesignPanel.kt`, `core/ThemeSpec.kt` (prefs
-  `theme_spec` JSON). Regions wired in `AppScaffold.kt`; 3D view `Viewport.kt` + badges `PlateBadgeAtlas.kt` read slots.
-- **Verified on the Chromebook (portrait) 2026-10-14:** Industrial/Minimal light by eye, floating panel fits above the tab bar,
-  tab bar slots, Device + Settings editor regions (dark background in light mode, r184+), wallpaper colours + overrides,
-  panel Reset all (no confirm in the panel; More's "Reset custom colors" confirms). Also on r185 (light, Background
-  #1E293B per region): More, Models (toolbar/chips), OpenSCAD editor read fine; Preview sheet came out slate grey (fixed r187).
-- r187 fd4361d (dark-Background sheets, contrast warning, drag strip): verified + merged (archive "2026-10-14: r187"); its
-  snackbar shading verified with r189.
-- Phone r189 checks, dialogs (sample + real error dialog; busy/AI-confirm share `GlobalDialogs`), 3D selection colour:
-  all verified (archive "r189 + r190", "r192-r194"). Nothing open in design mode except the known limits below.
-- Known limits: hard-coded colours (delete popup #2B2C32, red bin, preview legend) don't follow; the Models web page keeps
-  its own colours. A dark 3D background under a light theme hides the floating tool icons (user's choice; "Prepare: floating
-  buttons" can be changed to match).
+000. **Verification session 2026-10-15 done (details: archive "2026-10-15: verification session").** Verified: all r231-r243 items (camera/handle/plate select/tap plate/per-plate tower/design fold/tower clearance), pan + drag-start, colour dots, mixed-temp text (Claude tested on Chromebook), r216, r213, layout lab limits, large multi-plate slice. **Merged to main as PR #25.** Installed r243 (run 38837405092, head 43aebe7) on all 4 devices.
+   **Logged findings (user's words, NOT acted on; the user wants the data first, then decides):**
+   - L1. Design panel fold: a very fast rubber-band/ghost image of the panel snaps above it (functionality fine).
+   - L2. Layout lab: user would like the slider kept on screen while adjusting so the range change is visible.
+   - L3. Camera card (phone, wrong access code / unreachable printer): error shown but its words are cut off (user has a picture to upload); the whole card should not error because the AMS can be read through the cloud.
+   - L4. (Claude, Chromebook) Preview summary still shows the red "nozzle temperatures incompatible" warning (without the hint) even when "Remove mixed temperature restriction" is on and the slice works.
+   - L5. Inactive-plate double tap re-frames (user: fine, no change wanted).
+0. **Still UNTESTED:** (a) German strings for the filament-choice dialog are missing (not translated); (b) floating Theme | Layout designer idea = ~half a day (+1-2 h for a collapsible icon), not started.
+2. **Phone checks waiting on the user** (all UNTESTED; they change the user's project):
+   - (User 2026-10-15: keep this item, do NOT bring up the X2D again; they can't trigger it and may hit it by accident.)
+   - r215 single-filament slice crash fix (`OrcaEngine.cpp` ~507) and r217 dual-nozzle fix (`heads = max(1, multiplier, nozzle_diameter count)`): slice with the X2D selected.
+   - r213 haptics (settings tabs TextHandleMove, Models edge swipes CLOCK_TICK; can't be checked over adb).
+   - 165 Hz: done, don't ask.
+3. **Not done / ideas:** auto-select the A1 on the MakerWorld/MakerLab page at load (look at how the site stores its printer pick;
+   CDP on the Models WebView); a slice/print-time guard comparing the sliced printer with the connected one; a line under inactive
+   settings tabs (user's idea). 3D stage 4 wishlist: real shadow map. Preview colours stay flat on purpose.
+4. **Nav proposal (awaiting user OK; analysis 2026-10-14, nothing changed):** Back = AppScaffold.kt:148; Models back + edge swipes
+   ModelsScreen.kt:464/:182; settings tab swipe SettingsEditor.kt:303. Gap: no BackHandler for the OpenSCAD editor (`state.scad`,
+   AppScaffold.kt:281 -> Back opens the quit prompt), the eye "design on plate" mode, the section panel, the design panel.
+   Proposal: Back in OpenSCAD = on-plate view -> design view -> `scad.close()`; optional horizontal swipe between main tabs (not on Prepare).
+5. Then: the plate switcher pick (lab stays until they say), the user-only items below.
 
-**r179 de39e04** delete popup + r178 design view: verified r189. **Still untested:** WSA landscape.
-Slice button = primaryContainer; the user can set "Soft accent" in design mode. Launcher icon still teal (asked the user).
-
-Then: the plate switcher pick (lab stays until they say), the user-only items below.
+Still open from earlier batches: **root cause of the r197 NumberField NPE not found** (stack traces now logged under `OrcaStore`);
+"failed OpenSCAD run clears the old log" **untested** (no repro); **unexplained:** once a freshly resized portrait window on WSA drew
+the Prepare 3D background ~30 % lighter for ~15 s. Design mode known limits: hard-coded colours (delete popup #2B2C32, red bin,
+preview legend) don't follow; the Models page keeps its own colours; a dark 3D background under a light theme hides the floating
+tool icons ("Prepare: floating buttons" can be changed). User-only: retests, plate switcher pick, launcher icon colour (still teal, "decide later").
 
 ## User decisions (2026-10-13)
-- A 3mf landing on the active plate over existing objects stays as is (arranging could move precisely placed objects).
+- **Changed 2026-10-14:** objects already in the project stay on their plate; each newly imported file gets a plate of its own
+  (active plate if empty, else first empty, else a new one; `FileController.useEmptyPlate`). Replaces the 2026-10-13 rule that a file lands on the active plate.
 - Plate activation must not move the camera when zoomed out (sometimes moving is fine).
 - OpenSCAD: design view (main canvas) is the default; an **eye button** shows the design on the build plate and back, with
   the camera the user had on the plates, the project's objects hidden, and new designs on an empty plate.
@@ -68,25 +72,21 @@ Then: the plate switcher pick (lab stays until they say), the user-only items be
 - Modeling goal: model **without writing code**; OpenSCAD code is only a backstop. Roadmap 1-3 done (archive).
 
 ## Open and untested items
-0. Element blocker + ad-block menu (e4d75ab, a7e63d2): verified phone. **Untested:** mouse right-click (WSA), rules in other
-   WebViews (Device page etc.). User 2026-10-13: MakerWorld, Printables and Orca sign-ins work; a Google-account Orca
+0. Element blocker + ad-block menu (e4d75ab, a7e63d2): verified phone; mouse right-click verified WSA r194. **Untested:**
+   rules in other WebViews (Device page etc.; needs a printer with a web UI). User 2026-10-13: MakerWorld, Printables and Orca sign-ins work; a Google-account Orca
    sign-in goes through Brave (not the WebView). Bambu sign-out is Device tab > Connection > Sign out (told the user).
-1. Preset re-link: verified. **Untested:** a Bambu/Orca cloud sync afterwards (cloud copy still detached; same updated_time,
-   so the pull shouldn't replace it); the Chromebook desktop still has it detached.
+1. Verified, nothing open (archive): preset re-link + syncs, section view, shape builder, .scad zips / 16 KB sniff, OpenSCAD
+   phone layout / downloads / painting, MakerWorld sign-in ticket flow.
 2. Nozzle match + filament picks per AMS tray: verified. **Untested:** newer-firmware `device.nozzle.info` path; stale status
    after switching printer models; spool change -> printer's preset wins and the pick is dropped (only when the user swaps a
-   spool); tray picks on WSA. Phone plate: 1 slot "Bambu PLA Basic @BBL A1".
-3. Section view (r170/r172/r173): all verified (archive). Nothing open.
-4. Shape builder: verified by touch + phone layout on the phone r134 (archive). Handles by touch on WSA: n/a (no touch).
-5. .scad zips + Thingiverse downloads: verified. **Untested:** the 16 KB content sniff itself (r143 gets the real name first).
-6. Ad blocking (f138655, ec86442, 08bdf0b = `AdBlock.Client` in all app WebViews): verified. **Untested:** MakerWorld sign-in /
-   downloads with it on; Bambu sign-in WebView (needs Sign out + the user's password: leave to the user), Orca Cloud login,
-   plugin pages, Device page on the phone (needs a printer with a web UI; the phone only has the A1).
-7. OpenSCAD: phone layout r166/r168, real .scad download r142/r143, painting through a mesh boolean r175: all verified (archive).
-8. Models tab **untested:** MakerWorld sign-in ticket flow.
+   spool). Tray picks on WSA r194: verified. Phone plate: 1 slot "Bambu PLA Basic @BBL A1".
+6. Ad blocking (f138655, ec86442, 08bdf0b = `AdBlock.Client` in all app WebViews): verified; MakerWorld sign-in / downloads with
+   it on, Bambu sign-in WebView, Orca Cloud login verified by the user 2026-10-14. **Untested:** plugin pages, Device page on
+   the phone (needs a printer with a web UI; the phone only has the A1).
 9. **Untested:** a true EGL context loss (no repro). Badges are ~23 dp at plate zoom on the phone (under 48 dp; told the user).
-10. User to retest: the 325 MB slice that crashed before the r59 OOM fix; pinch zoom on MakerWorld; whether a real keyboard's
-    Ctrl+1 works (WSA drops synthetic Ctrl+1..9).
+10. 325 MB slice retest: replaced by a verified 20+ plate slice (archive). MakerWorld pinch zoom works (user 2026-10-14).
+    Real keyboard Ctrl+1 (camera top view, MainActivity.kt:190) does nothing: the system takes it as a hotkey (user
+    2026-10-14). Offered: numpad 0-7 as an extra view binding (not done, untested).
 11. Orca plugin runtime: kept as a general capability (no plugin in use). Not done: audit prompts, create_window, per-preset
     config overrides, printerAgent capability. **FilamentHub is dropped for good; never suggest, test with, or mention it.**
 12. REA MCP (github.com/morluto/rea), looked at 2026-10-12, not installed (needs the user's OK; changes MCP config): fits release
