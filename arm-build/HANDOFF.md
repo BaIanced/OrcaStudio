@@ -20,7 +20,7 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 ## State
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
-- Android main = 3048a5d (PR #25, r243, merged 2026-10-15). Work branch = main (nothing unmerged). Verified details of r204-r243 are in the archive.
+- Android main = 9ce2930 (PR #26, merged 2026-10-16: layout lab fixes, Sign out row, bead shading, z-lift e7e73f1 = work branch's 3299fcc). Work branch is ahead by 7e569a4 (Remove row), f59aed7 (AO fade), ae021be (AO live), all UNTESTED/unmerged. Details of r204-r243 are in the archive.
 - **Built 2026-10-15: r245 (run 38844142457, head 8506c3c), installed on all 4 devices (phone done 2026-10-15 after wireless adb returned).** Carries the German strings, L2 and L4 (all UNTESTED). Earlier install history: archive.
   Install with `install-build.ps1 -Run <id> -Device <serial>` on all 4 (memory: install on all devices). Chromebook is now `.33:5555`.
 - Devices: phone = wireless `adb-...` entry; Chromebook ARC `<chromebook-ip>:5555` (reference); WSA `127.0.0.1:58526`; **USB serial = the user's
@@ -30,8 +30,8 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
   Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook. LAN access code was given in chat: never write it anywhere.
 ## Next task
 Verified items of r249/r250 are in the archive (2026-10-16). Still UNTESTED on device: preview bead look on phone, 7e569a4 (Remove row, not built before run 38861960917), model-mismatch guard (needs a print, user's OK), German strings stub.
-Merge plan: verified commits dca0db0, 9bca6b7, 9fe3f66, 54b4ca6, ca874e4, a853161, b74e8ea; ask for "merge".
-**Shader strobe (user, 2026-10-16):** user says the top surface is no longer messed up (3299fcc per-role z lift, took effect; verified by the user). Glow in the corner hole + ghost shadows were the Preview AO: f59aed7's fade left a stale AO ghost, and no AO while moving made deep corners bright. Fix ae021be (UNTESTED): Preview recomputes AO every frame up to `LIVE_AO_MAX_SEGMENTS` (250k), bigger toolpaths keep the fade. Build run 38864792521 installed on all 4 devices 2026-10-16. User: phone does 120 fps in both views. Unmerged: 7e569a4, f59aed7, 3299fcc, ae021be. Merge the shader commits after the user checks ae021be; user wants to work on the shader first.
+Merged 2026-10-16 (PR #26); still unverified: model-mismatch guard (needs a print), German strings stub, haptics on settings tabs/Models swipes.
+**Shader strobe (user, 2026-10-16):** user says the top surface is no longer messed up (3299fcc per-role z lift, took effect; verified by the user). Glow in the corner hole + ghost shadows were the Preview AO: f59aed7's fade left a stale AO ghost, and no AO while moving made deep corners bright. Fix ae021be (UNTESTED): Preview recomputes AO every frame up to `LIVE_AO_MAX_SEGMENTS` (250k), bigger toolpaths keep the fade. Build run 38864792521 installed on all 4 devices 2026-10-16. User: phone does 120 fps in both views. Unmerged: 7e569a4, f59aed7, ae021be (f59aed7 alone has the AO ghost; merge only with ae021be). Next: user checks ae021be on the phone, then offer a merge.
 Waiting on the user: plate switcher pick (still undecided). Launcher icon colour removed from the list.
 
 ## User decisions (2026-10-13)
