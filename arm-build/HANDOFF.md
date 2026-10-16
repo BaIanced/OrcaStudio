@@ -31,7 +31,10 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 ## Next task
 Still UNTESTED on device: preview bead look, model-mismatch guard (needs a print, user's OK), haptics on settings tabs/Models swipes, light/shadow sliders by finger.
 Done: r266 (shadows/bias/AA grid) verified and merged (PR #28; archive "2026-10-16 r266"). Blind-test findings all closed. Phone lab back to defaults. Phone scene: plate 1 cube [172.3, 123.1] + pillar [136.3, 95.0], plate 2 table.
-Next: pick from the backlog (grep "Not done / ideas").
+In progress: **r267** (run 38934298949, commit "Settings: a faint line under the inactive tabs"; `Modifier.inactiveTabLine`
+in Widgets.kt, used on both settings tab rows): built, installed on WSA + SHIELD; **untested**. Phone and Chromebook were
+off adb (phone needs wireless debugging re-enabled); install there, then check the settings tabs on the phone.
+Then: pick from the backlog (grep "Not done / ideas").
 Phone tools: `~/orca-android-tools/mcpao.sh 'tool:{json}'` (phone MCP, token never printed), `aopair.sh '<view_set json>'` (AO off/on/mid-orbit/rest). Phone dropped wireless adb twice; re-paired 2026-10-16 (`adb pair` needs the code on the command line). Phone restored: section off, light defaults, AO 0.
 Waiting on the user: plate switcher pick (still undecided). Launcher icon colour removed from the list.
 
