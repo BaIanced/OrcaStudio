@@ -20,8 +20,8 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 ## State
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
-- Android main = 9ce2930 (PR #26, merged 2026-10-16). Work branch's unmerged commits: see Next task. r204-r243: archive.
-- **Last full install: r245** (run 38844142457, all 4 devices); newer builds: see Next task. Earlier install history: archive.
+- Android main = 8eadb0f (PR #27, r264, merged 2026-10-16); work branch has nothing unmerged. Earlier merges: archive.
+- **r264** (run 38925590755) installed on phone, SHIELD, WSA; **not on the Chromebook** (offline). Earlier install history: archive.
   Install with `install-build.ps1 -Run <id> -Device <serial>` on all 4 (memory: install on all devices). Chromebook is now `.33:5555`.
 - Devices: phone = wireless `adb-...` entry; Chromebook ARC `<chromebook-ip>:5555` (reference); WSA `127.0.0.1:58526`; **USB serial = the user's
   SHIELD TV** (rooted; installs only; r210 settings/logins copied from the phone, sign-ins untested).
@@ -29,11 +29,9 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 - User sessions backed up: phone `/data/local/tmp/phone-session-backup.{3mf,json}` (8 plates), WSA `/data/local/tmp/session-backup.{3mf,json}`.
   Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook. LAN access code was given in chat: never write it anywhere.
 ## Next task
-Still UNTESTED on device: preview bead look, model-mismatch guard (needs a print, user's OK), German strings stub, haptics on settings tabs/Models swipes, 7e569a4 (Remove row). PR #26 merged 2026-10-16; r249/r250 verified (archive).
-**Real shadow map + MCP `view_set`/`view_screenshot` + light lab (r258-r263): verified on the phone** (details, tools `labset.py`/`shadowtune.py`, MCP recipe: archive "2026-10-16 Real shadow map"). Not yet merged. Untested: light/shadow sliders by finger, German strings for them (none). Preview look unaffected: checked in the blind re-test.
-Blind re-test 2026-10-16 (r263): `NOTES-blind-shader-test-2026-10-16.md`; findings in the backlog. Phone scene: plate 1 cube + pillar, plate 2 table. Don't drive the phone while the user is on it.
-Unmerged: 7e569a4 (untested), f59aed7 + ae021be (AO live, untested; merge together) and the shadow/MCP/light commits (verified). Gemini offload notes: archive 2026-10-16.
-**/next-merge 2026-10-16: Android merge blocked** (no verified prefix: the 3 untested commits are the oldest on the branch, under the shadow work). Merges once they're checked on the phone at r263+: Connection dialog (Device > Connection, Bambu signed host) shows Import credentials and Remove on own rows (look only, never press Remove); Preview AO 2 while orbiting a small toolpath: no bright corners, no ghost. User was on the phone, so not checked.
+Still UNTESTED on device: preview bead look, model-mismatch guard (needs a print, user's OK), German strings stub, haptics on settings tabs/Models swipes, light/shadow sliders by finger.
+Open blind-test findings (backlog): shadow on parts subtle at 50 %, bias knob ~no effect, grid line breaks in top views. Notes: `NOTES-blind-shader-test-2026-10-16.md`. Phone scene: plate 1 cube [172.3, 123.1] + pillar [136.3, 95.0], plate 2 table.
+Phone tools: `~/orca-android-tools/mcpao.sh 'tool:{json}'` (phone MCP, token never printed), `aopair.sh '<view_set json>'` (AO off/on/mid-orbit/rest). Phone dropped wireless adb twice; re-paired 2026-10-16 (`adb pair` needs the code on the command line). Phone restored: section off, light defaults, AO 0.
 Waiting on the user: plate switcher pick (still undecided). Launcher icon colour removed from the list.
 
 ## User decisions (2026-10-13)

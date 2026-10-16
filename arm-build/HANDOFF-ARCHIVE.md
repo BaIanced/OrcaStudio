@@ -2045,3 +2045,12 @@ context-loss delete). Lesson: Gemini 3.1 Pro is good for GL/shader design drafts
   `labset.py key=value ...` sets lab values and restarts. A "performMeasureAndLayout called during measure layout" crash dialog was on
   the phone at the r257 launch (origin unknown; watch for it).
 - Blind re-test 2026-10-16 (r263): `NOTES-blind-shader-test-2026-10-16.md`.
+
+## 2026-10-16 Remove row verified
+- 7e569a4 (Connection dialog: Import credentials and Remove on own rows): phone r263, ui dump: Remove on its own row, 180x70 px, one line. VERIFIED.
+
+## 2026-10-16 Merge PR #27 (r264): Preview AO, bed shadow clip, section cut verified
+- f59aed7 + ae021be (Preview AO live/fade): phone r264, cube engravings (`aopair.sh`): AO off bright, AO 2 shaded, mid-orbit = rest (no bright corners, no ghost). VERIFIED.
+- a013cdd (bed shadow clipped to each bed box): light az 90 / el 20, pillar shadow runs to the bed's orange edge and stops there (top view). VERIFIED.
+- dc6ef3c (section cut by the active plate's objects): plate 1 at 0.5 cuts pillar and cube halfway, 0.8 removes all, 0.2 nothing yet. VERIFIED.
+- Merged the whole work branch (14 commits) as PR #27 -> main 8eadb0f. Phone dropped wireless adb twice; re-paired with `adb pair <ip:port> <code>`.

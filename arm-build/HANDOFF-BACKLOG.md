@@ -25,8 +25,8 @@ Rules: never delete an item; when one is verified, move its details to HANDOFF-A
 3. **Not done / ideas:** auto-select the A1 on the MakerWorld/MakerLab page at load (look at how the site stores its printer pick;
    CDP on the Models WebView); a slice/print-time guard comparing the sliced printer with the connected one; a line under inactive
    settings tabs (user's idea). 3D stage 4 wishlist: real shadow map. Preview colours stay flat on purpose.
-   - Blind shader/light re-test findings (2026-10-16, `NOTES-blind-shader-test-2026-10-16.md`), all open, none fixed: shadow spills
-     off the bed into the background; section ratio spans all plates' objects (0.5 cuts nothing on plate 1, 0.8 everything);
+   - Blind shader/light re-test findings (2026-10-16, `NOTES-blind-shader-test-2026-10-16.md`), open: shadow spills
+     off the bed into the background (fix a013cdd, VERIFIED r264); section ratio spans all plates' objects (0.5 cuts nothing on plate 1, 0.8 everything; fix dc6ef3c, VERIFIED r264);
      shadow on parts subtle at 50 %; bias knob shows ~no effect; grid line breaks/shimmer in top views.
 4. **Nav proposal: DONE (user answered: Back goes to plate view; built in 16aa31d, steps plate view > design view > close; device check not recorded).** Old analysis: Back = AppScaffold.kt:148; Models back + edge swipes
    ModelsScreen.kt:464/:182; settings tab swipe SettingsEditor.kt:303. Gap: no BackHandler for the OpenSCAD editor (`state.scad`,
