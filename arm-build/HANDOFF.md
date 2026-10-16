@@ -21,7 +21,7 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
 - Android main = 3048a5d (PR #25, r243, merged 2026-10-15). Work branch = main (nothing unmerged). Verified details of r204-r243 are in the archive.
-- **Installed 2026-10-15: r243 (run 38837405092, head 43aebe7) on all 4 devices** (carries r242 too; untested items are in Next task 000). Earlier install history: archive.
+- **Built 2026-10-15: r245 (run 38844142457, head 8506c3c), installed on all 4 devices (phone done 2026-10-15 after wireless adb returned).** Carries the German strings, L2 and L4 (all UNTESTED). Earlier install history: archive.
   Install with `install-build.ps1 -Run <id> -Device <serial>` on all 4 (memory: install on all devices). Chromebook is now `.33:5555`.
 - Devices: phone = wireless `adb-...` entry; Chromebook ARC `<chromebook-ip>:5555` (reference); WSA `127.0.0.1:58526`; **USB serial = the user's
   SHIELD TV** (rooted; installs only; r210 settings/logins copied from the phone, sign-ins untested).
@@ -29,8 +29,9 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 - User sessions backed up: phone `/data/local/tmp/phone-session-backup.{3mf,json}` (8 plates), WSA `/data/local/tmp/session-backup.{3mf,json}`.
   Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook. LAN access code was given in chat: never write it anywhere.
 ## Next task
-Nothing in progress. Pick the next item from `HANDOFF-BACKLOG.md` (grep it; don't read it whole), move it here while working on it, and archive it once verified.
-Waiting on the user: findings L1-L4, nav proposal, plate switcher pick, phone checks (all in the backlog). Last round: verification session 2026-10-15 (archive); merged as PR #25.
+User verified 2026-10-15 (r249): opacity readout card works (but overlapped the tool bar: fixed in a853161, centred; build run 38857868372, UNTESTED), L1 fold jump fixed, L3 status error card good, all sliders good. Haptics: only Back/forward gestures vibrate (settings tabs, Models edge swipes don't; unfixed, can't test over adb). Details to archive when pruning.
+Todo: (1) install a853161 build on all 4 devices when run 38857868372 is done; (2) autopilot on the phone (user OK'd, 2026-10-15): slice with the X2D selected (r215/r217 crash fixes) and the model-mismatch guard; phone was NOT on wireless adb at the time (only SHIELD USB + WSA + Chromebook), so wait for it; (3) merge: user-verified commits dca0db0, 9bca6b7, 9fe3f66, 54b4ca6 (L1/L3 now verified), ca874e4 + a853161 after test; German strings stub; ask for "merge".
+Waiting on the user: plate switcher pick (still undecided). Launcher icon colour removed from the list.
 
 ## User decisions (2026-10-13)
 - **Changed 2026-10-14:** objects already in the project stay on their plate; each newly imported file gets a plate of its own
@@ -46,8 +47,7 @@ Waiting on the user: findings L1-L4, nav proposal, plate switcher pick, phone ch
 ## Safety gotchas
 - **Any test print needs the user's OK.** User's AMS lite: A1 yellow, A2 matte black, A3 white, A4 PETG.
 - 3D Filament Profiles (3dfilamentprofiles.com) is built in (Models tab site + "Log print"): **never press Subtract** in tests.
-- Test on a temp Plate 2 and delete it after; don't change the user's Plate 1 (exception, user 2026-10-12: the phone's Plate 1
-  objects and shape-builder draft are test objects). When deleting objects by list position, verify the selection first.
+- **User 2026-10-15: all build plates/objects on the devices are currently throwaway test objects with no real-life significance (until the user says otherwise). Standing permission to move, reassign, delete or rearrange anything; no need to avoid or restore them.** Still verify the selection before deleting by list position. (Prints still need the user's OK.)
 - **Never `cat missing > target`** (the redirect empties the target first).
 - **Never `adb forward tcp:X tcp:Y` on WSA** (wedges adb); use `localabstract:orcastudio_mcp` (reference "WSA").
 

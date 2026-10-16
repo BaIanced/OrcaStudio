@@ -10,12 +10,13 @@ Rules: never delete an item; when one is verified, move its details to HANDOFF-A
 ## Former "Next task" list
 000. **Verification session 2026-10-15 done (details: archive "2026-10-15: verification session").** Verified: all r231-r243 items (camera/handle/plate select/tap plate/per-plate tower/design fold/tower clearance), pan + drag-start, colour dots, mixed-temp text (Claude tested on Chromebook), r216, r213, layout lab limits, large multi-plate slice. **Merged to main as PR #25.** Installed r243 (run 38837405092, head 43aebe7) on all 4 devices.
    **Logged findings (user's words, NOT acted on; the user wants the data first, then decides):**
+   - L1/L3 + printer-model guard: DONE in 54b4ca6 2026-10-15, UNTESTED (see HANDOFF Next task).
    - L1. Design panel fold: a very fast rubber-band/ghost image of the panel snaps above it (functionality fine).
-   - L2. Layout lab: user would like the slider kept on screen while adjusting so the range change is visible.
+   - L2. VERIFIED on phone r245 2026-10-15 by Claude (readout card shows 'Text size: 95 %' + bar mid-drag; Reset restored 100 %; archive when next pruning): while a lab slider is dragged, a readout card (label, value, bar) stays at the top of the screen as More fades (`MoreScreen.kt` ScaleSlider + `LabPeek.readout`, `AppScaffold.kt` Screen.MORE).
    - L3. Camera card (phone, wrong access code / unreachable printer): error shown but its words are cut off (user has a picture to upload); the whole card should not error because the AMS can be read through the cloud.
-   - L4. (Claude, Chromebook) Preview summary still shows the red "nozzle temperatures incompatible" warning (without the hint) even when "Remove mixed temperature restriction" is on and the slice works.
+   - L4. (Claude, Chromebook) Preview summary still shows the red "nozzle temperatures incompatible" warning (without the hint) even when "Remove mixed temperature restriction" is on and the slice works. **Source check 2026-10-15:** upstream design, `Print.cpp:1226-1228` and `:1264-1266` emit the same text with `is_warning=true` (no hint) when mixing is allowed. So the warning is correct; only its red styling might be softened to a warning colour **VERIFIED on phone r245 2026-10-15 (archive). Decided by Claude (user 2026-10-15 "you decide"):** when "Remove mixed temperature restriction" is on, that line uses the tertiary colour instead of red (`PreviewPanel.kt` ~133). UNTESTED on device.
    - L5. Inactive-plate double tap re-frames (user: fine, no change wanted).
-0. **Still UNTESTED:** (a) German strings for the filament-choice dialog are missing (not translated); (b) floating Theme | Layout designer idea = ~half a day (+1-2 h for a collapsible icon), not started.
+0. **Still UNTESTED:** (a) German strings (user 2026-10-15: doesn't speak German, STUB: no more effort or testing, shipped as is) for the filament-choice dialog: added 2026-10-15 (commit 16251c4, pushed, not in a build yet, UNTESTED on device); (b) floating Theme | Layout designer idea = ~half a day (+1-2 h for a collapsible icon), not started.
 2. **Phone checks waiting on the user** (all UNTESTED; they change the user's project):
    - (User 2026-10-15: keep this item, do NOT bring up the X2D again; they can't trigger it and may hit it by accident.)
    - r215 single-filament slice crash fix (`OrcaEngine.cpp` ~507) and r217 dual-nozzle fix (`heads = max(1, multiplier, nozzle_diameter count)`): slice with the X2D selected.
@@ -24,7 +25,7 @@ Rules: never delete an item; when one is verified, move its details to HANDOFF-A
 3. **Not done / ideas:** auto-select the A1 on the MakerWorld/MakerLab page at load (look at how the site stores its printer pick;
    CDP on the Models WebView); a slice/print-time guard comparing the sliced printer with the connected one; a line under inactive
    settings tabs (user's idea). 3D stage 4 wishlist: real shadow map. Preview colours stay flat on purpose.
-4. **Nav proposal (awaiting user OK; analysis 2026-10-14, nothing changed):** Back = AppScaffold.kt:148; Models back + edge swipes
+4. **Nav proposal: DONE (user answered: Back goes to plate view; built in 16aa31d, steps plate view > design view > close; device check not recorded).** Old analysis: Back = AppScaffold.kt:148; Models back + edge swipes
    ModelsScreen.kt:464/:182; settings tab swipe SettingsEditor.kt:303. Gap: no BackHandler for the OpenSCAD editor (`state.scad`,
    AppScaffold.kt:281 -> Back opens the quit prompt), the eye "design on plate" mode, the section panel, the design panel.
    Proposal: Back in OpenSCAD = on-plate view -> design view -> `scad.close()`; optional horizontal swipe between main tabs (not on Prepare).

@@ -1994,3 +1994,15 @@ Logged observations (NOT acted on, user wants data first): see HANDOFF.md "Logge
 6. Ad blocking (f138655, ec86442, 08bdf0b = `AdBlock.Client` in all app WebViews): verified; MakerWorld sign-in / downloads with
    it on, Bambu sign-in WebView, Orca Cloud login verified by the user 2026-10-14. **Untested:** plugin pages, Device page on
    the phone (needs a printer with a web UI; the phone only has the A1).
+
+## 2026-10-15: r245 phone tests (Claude)
+L2: dragging More > Layout lab 'Text size' slider keeps a readout card ('Text size: 95 %' + bar) at the top while More fades; Reset restored 100 %.
+L4: beeper plate moved to Plate 1 (X=60) with filament 4 (PETG-HF) + cube on filament 1 (PLA Basic): slice gives the mixed-temp error naming More > Printers & presets > Remove mixed temperature restriction; with it on the slice completes (40 min 51 s) and the summary line shows in the tertiary (blue) colour, not red. Setting turned back off.
+
+## 2026-10-15: slider touch bug (r247) verified
+- Cause: Layout lab Column faded/froze More on ANY touch. Fix: fade/freeze only while a slider is pressed (`MoreScreen.kt` LabSlider). Verified on Chromebook by Claude: press-and-hold on Filmstrip and Reset leaves More unfaded; slider drag still fades/scales; Reset restores 100 %.
+
+## 2026-10-15: design panel unfold (r248) verified by user
+- Cause: `DesignPanel.kt` clamped the panel with the previous frame's height, so an unfold overshot then snapped back. Fix (9fe3f66): `clamped()` runs in the layout pass with the measured height. User confirmed fixed.
+- Opacity: tool buttons were secondaryContainer (almost the canvas grey) so the slider showed nothing; now `surface.copy(alpha)` like the bar (File too). Slice ignores it.
+- Opacity on tool buttons/File: user confirmed fixed on r248.
