@@ -2054,3 +2054,14 @@ context-loss delete). Lesson: Gemini 3.1 Pro is good for GL/shader design drafts
 - a013cdd (bed shadow clipped to each bed box): light az 90 / el 20, pillar shadow runs to the bed's orange edge and stops there (top view). VERIFIED.
 - dc6ef3c (section cut by the active plate's objects): plate 1 at 0.5 cuts pillar and cube halfway, 0.8 removes all, 0.2 nothing yet. VERIFIED.
 - Merged the whole work branch (14 commits) as PR #27 -> main 8eadb0f. Phone dropped wireless adb twice; re-paired with `adb pair <ip:port> <code>`.
+
+## 2026-10-16 r266 (run 38930002463, 9badabd): blind-test findings 3-5 fixed, verified on the phone
+- Part shadows: lit faces now x (1 - darkness * occlusion * smoothstep(0, 0.2, n.l)) like the bed's shadow (only the key term was dropped
+  before, so 50 % looked faint); faces turned from the key light are left alone. Light az -142 / el 20 / soft 6 (pillar's shadow on the
+  cube), view yaw -120 pitch 30 dist 200 target [165,118,10]: cube top in full shadow / unshadowed = 0.52 (r264: 0.86), bed 0.70 (same as
+  r264). Default light from two sides: no acne, banding or terminator line on the pillar. VERIFIED (test; the user hasn't seen the look yet).
+- Bed shadow bias used a fixed n.l of 0.75; now the light's height (`uBedNdl`). Bias knob ~no effect is expected: the 0.4 mm normal
+  offset and the receiver-slope taps already stop acne; bias only adds a ~1 mm gap at contact.
+- Grid: one AA shader quad per bed (`GRID_VS/FS`, `PlateRenderer.drawBeds`), outline stays GL_LINES. Top, grazing (pitch 8) and wide
+  near-top (pitch 86, 420 mm) shots: same line positions as r264, continuous smooth 1 px lines, no breaks. VERIFIED (test).
+- Shots: `~/orca-android-tools/shots/{base,new}_*.png`, `cube_compare.png`. Installed on phone, SHIELD, WSA (Chromebook offline).

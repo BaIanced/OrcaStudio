@@ -20,8 +20,8 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 ## State
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
-- Android main = 8eadb0f (PR #27, r264, merged 2026-10-16); work branch has nothing unmerged. Earlier merges: archive.
-- **r264** (run 38925590755) installed on phone, SHIELD, WSA; **not on the Chromebook** (offline). Earlier install history: archive.
+- Android main = 8eadb0f (PR #27, r264, merged 2026-10-16); work branch has 1 verified unmerged commit (r266). Earlier merges: archive.
+- **r266** (run 38930002463) installed on phone, SHIELD, WSA; **not on the Chromebook** (offline). Earlier install history: archive.
   Install with `install-build.ps1 -Run <id> -Device <serial>` on all 4 (memory: install on all devices). Chromebook is now `.33:5555`.
 - Devices: phone = wireless `adb-...` entry; Chromebook ARC `<chromebook-ip>:5555` (reference); WSA `127.0.0.1:58526`; **USB serial = the user's
   SHIELD TV** (rooted; installs only; r210 settings/logins copied from the phone, sign-ins untested).
@@ -30,7 +30,9 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
   Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook. LAN access code was given in chat: never write it anywhere.
 ## Next task
 Still UNTESTED on device: preview bead look, model-mismatch guard (needs a print, user's OK), German strings stub, haptics on settings tabs/Models swipes, light/shadow sliders by finger.
-Open blind-test findings (backlog): shadow on parts subtle at 50 %, bias knob ~no effect, grid line breaks in top views. Notes: `NOTES-blind-shader-test-2026-10-16.md`. Phone scene: plate 1 cube [172.3, 123.1] + pillar [136.3, 95.0], plate 2 table.
+Done: r266 (run 38930002463) part shadows as dark as the bed's, bed bias follows the light height, AA shader grid: VERIFIED by phone test,
+**unmerged** (archive "2026-10-16 r266"). Blind-test findings all closed. Phone lab back to defaults. Phone scene: plate 1 cube [172.3, 123.1] + pillar [136.3, 95.0], plate 2 table.
+Next: pick from the backlog (grep "Not done / ideas").
 Phone tools: `~/orca-android-tools/mcpao.sh 'tool:{json}'` (phone MCP, token never printed), `aopair.sh '<view_set json>'` (AO off/on/mid-orbit/rest). Phone dropped wireless adb twice; re-paired 2026-10-16 (`adb pair` needs the code on the command line). Phone restored: section off, light defaults, AO 0.
 Waiting on the user: plate switcher pick (still undecided). Launcher icon colour removed from the list.
 
