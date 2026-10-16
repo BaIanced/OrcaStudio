@@ -16,7 +16,7 @@ Rules: never delete an item; when one is verified, move its details to HANDOFF-A
    - L3. Camera card (phone, wrong access code / unreachable printer): error shown but its words are cut off (user has a picture to upload); the whole card should not error because the AMS can be read through the cloud.
    - L4. (Claude, Chromebook) Preview summary still shows the red "nozzle temperatures incompatible" warning (without the hint) even when "Remove mixed temperature restriction" is on and the slice works. **Source check 2026-10-15:** upstream design, `Print.cpp:1226-1228` and `:1264-1266` emit the same text with `is_warning=true` (no hint) when mixing is allowed. So the warning is correct; only its red styling might be softened to a warning colour **VERIFIED on phone r245 2026-10-15 (archive). Decided by Claude (user 2026-10-15 "you decide"):** when "Remove mixed temperature restriction" is on, that line uses the tertiary colour instead of red (`PreviewPanel.kt` ~133). UNTESTED on device.
    - L5. Inactive-plate double tap re-frames (user: fine, no change wanted).
-0. **Still UNTESTED:** (a) German strings (user 2026-10-15: doesn't speak German, STUB: no more effort or testing, shipped as is) for the filament-choice dialog: added 2026-10-15 (commit 16251c4, pushed, not in a build yet, UNTESTED on device); (b) floating Theme | Layout designer idea = ~half a day (+1-2 h for a collapsible icon), not started.
+0. (a) German strings: CLOSED (user 2026-10-16 again: English only, stub `values-de` stays as is, never test, list or maintain it); (b) floating Theme | Layout designer idea = ~half a day (+1-2 h for a collapsible icon), not started.
 2. **Phone checks waiting on the user** (all UNTESTED; they change the user's project):
    - (User 2026-10-15: keep this item, do NOT bring up the X2D again; they can't trigger it and may hit it by accident.)
    - r215 single-filament slice crash fix (`OrcaEngine.cpp` ~507) and r217 dual-nozzle fix (`heads = max(1, multiplier, nozzle_diameter count)`): slice with the X2D selected.
@@ -27,7 +27,7 @@ Rules: never delete an item; when one is verified, move its details to HANDOFF-A
    settings tabs (user's idea). 3D stage 4 wishlist: real shadow map. Preview colours stay flat on purpose.
    - Blind shader/light re-test findings (2026-10-16, `NOTES-blind-shader-test-2026-10-16.md`), open: shadow spills
      off the bed into the background (fix a013cdd, VERIFIED r264); section ratio spans all plates' objects (0.5 cuts nothing on plate 1, 0.8 everything; fix dc6ef3c, VERIFIED r264);
-     shadow on parts subtle at 50 %; bias knob shows ~no effect; grid line breaks/shimmer in top views.
+     shadow on parts subtle at 50 %, bias knob, grid breaks: fixed + VERIFIED r266 (archive 2026-10-16 r266).
 4. **Nav proposal: DONE (user answered: Back goes to plate view; built in 16aa31d, steps plate view > design view > close; device check not recorded).** Old analysis: Back = AppScaffold.kt:148; Models back + edge swipes
    ModelsScreen.kt:464/:182; settings tab swipe SettingsEditor.kt:303. Gap: no BackHandler for the OpenSCAD editor (`state.scad`,
    AppScaffold.kt:281 -> Back opens the quit prompt), the eye "design on plate" mode, the section panel, the design panel.
