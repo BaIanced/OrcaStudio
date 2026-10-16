@@ -20,8 +20,8 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 ## State
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
-- Android main = 9ce2930 (PR #26, merged 2026-10-16: layout lab fixes, Sign out row, bead shading, z-lift e7e73f1 = work branch's 3299fcc). Work branch is ahead by 7e569a4 (Remove row), f59aed7 (AO fade), ae021be (AO live), all UNTESTED/unmerged. Details of r204-r243 are in the archive.
-- **Built 2026-10-15: r245 (run 38844142457, head 8506c3c), installed on all 4 devices (phone done 2026-10-15 after wireless adb returned).** Carries the German strings, L2 and L4 (all UNTESTED). Earlier install history: archive.
+- Android main = 9ce2930 (PR #26, merged 2026-10-16). Work branch's unmerged commits: see Next task. r204-r243: archive.
+- **Last full install: r245** (run 38844142457, all 4 devices); newer builds: see Next task. Earlier install history: archive.
   Install with `install-build.ps1 -Run <id> -Device <serial>` on all 4 (memory: install on all devices). Chromebook is now `.33:5555`.
 - Devices: phone = wireless `adb-...` entry; Chromebook ARC `<chromebook-ip>:5555` (reference); WSA `127.0.0.1:58526`; **USB serial = the user's
   SHIELD TV** (rooted; installs only; r210 settings/logins copied from the phone, sign-ins untested).
@@ -29,20 +29,20 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 - User sessions backed up: phone `/data/local/tmp/phone-session-backup.{3mf,json}` (8 plates), WSA `/data/local/tmp/session-backup.{3mf,json}`.
   Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook. LAN access code was given in chat: never write it anywhere.
 ## Next task
-Verified items of r249/r250 are in the archive (2026-10-16). Still UNTESTED on device: preview bead look on phone, 7e569a4 (Remove row, not built before run 38861960917), model-mismatch guard (needs a print, user's OK), German strings stub.
-Merged 2026-10-16 (PR #26); still unverified: model-mismatch guard (needs a print), German strings stub, haptics on settings tabs/Models swipes.
-**Shader strobe (user, 2026-10-16):** user says the top surface is no longer messed up (3299fcc per-role z lift, took effect; verified by the user). Glow in the corner hole + ghost shadows were the Preview AO: f59aed7's fade left a stale AO ghost, and no AO while moving made deep corners bright. Fix ae021be (UNTESTED): Preview recomputes AO every frame up to `LIVE_AO_MAX_SEGMENTS` (250k), bigger toolpaths keep the fade. Build run 38864792521 installed on all 4 devices 2026-10-16. User: phone does 120 fps in both views. Unmerged: 7e569a4, f59aed7, ae021be (f59aed7 alone has the AO ghost; merge only with ae021be). Next: user checks ae021be on the phone, then offer a merge.
+Still UNTESTED on device: preview bead look, model-mismatch guard (needs a print, user's OK), German strings stub, haptics on settings tabs/Models swipes, 7e569a4 (Remove row). PR #26 merged 2026-10-16; r249/r250 verified (archive).
+**Real shadow map + MCP `view_set`/`view_screenshot` + light lab (r258-r263): verified on the phone** (details, tools `labset.py`/`shadowtune.py`, MCP recipe: archive "2026-10-16 Real shadow map"). Not yet merged. Untested: light/shadow sliders by finger, German strings for them (none). Preview look unaffected: checked in the blind re-test.
+**Blind re-test done 2026-10-16 (r263, phone):** notes in `NOTES-blind-shader-test-2026-10-16.md` (the user compares them with the earlier run); open findings in the backlog (shadow spills off the bed, section ratio spans all plates). Phone left as before (lab softness 12, shadows on, AO 0). Test scene: plate 1 cube + 60 mm pillar, plate 2 table. Don't drive the phone while its screen shows the chat.
+Unmerged: 7e569a4 (untested), f59aed7 + ae021be (AO live, untested; merge together) and the shadow/MCP/light commits (verified). Gemini offload notes: archive 2026-10-16.
+**/next-merge 2026-10-16: Android merge blocked** (no verified prefix: the 3 untested commits are the oldest on the branch, under the shadow work). Merges once they're checked on the phone at r263+: Connection dialog (Device > Connection, Bambu signed host) shows Import credentials and Remove on own rows (look only, never press Remove); Preview AO 2 while orbiting a small toolpath: no bright corners, no ghost. User was on the phone, so not checked.
 Waiting on the user: plate switcher pick (still undecided). Launcher icon colour removed from the list.
 
 ## User decisions (2026-10-13)
-- **Changed 2026-10-14:** objects already in the project stay on their plate; each newly imported file gets a plate of its own
-  (active plate if empty, else first empty, else a new one; `FileController.useEmptyPlate`). Replaces the 2026-10-13 rule that a file lands on the active plate.
+- (2026-10-14) Each newly imported file gets its own plate (active if empty, else first empty, else new; `FileController.useEmptyPlate`).
 - Plate activation must not move the camera when zoomed out (sometimes moving is fine).
 - OpenSCAD: design view (main canvas) is the default; an **eye button** shows the design on the build plate and back, with
   the camera the user had on the plates, the project's objects hidden, and new designs on an empty plate.
-- Plate switcher (tabs/filmstrip/chips): **keep the lab until the user says otherwise** (user, 2026-10-13, 3rd ask: don't ask
-  again; mockups https://claude.ai/artifact/E3MtY8rQ1dMGHhibY2oNCX; More > Layout lab). Once picked: delete the losers and
-  the lab (keep the wide panel tuck/width). Chips layout has no picking.
+- Plate switcher: **keep the lab until the user says otherwise; don't ask again** (mockups https://claude.ai/artifact/E3MtY8rQ1dMGHhibY2oNCX).
+  Once picked: delete the losers and the lab (keep the wide panel tuck/width).
 - Modeling goal: model **without writing code**; OpenSCAD code is only a backstop. Roadmap 1-3 done (archive).
 
 ## Safety gotchas
@@ -71,6 +71,7 @@ Waiting on the user: plate switcher pick (still undecided). Launcher icon colour
    - Android: `python .claude/hooks/privacy_scan.py range "HEAD --not --remotes" . ':(exclude)src-orca'`
    - OrcaStudio: `python .claude/hooks/privacy_scan.py range "HEAD --not --remotes" arm-build '.github/workflows/arm-*' .claude`
 9. Commit trailer: `Co-Authored-By` + `Claude-Session` lines as given in the session.
+11. **Model fit (user, 2026-10-16):** when a task would be better suited to Opus (hard rendering/shader/math debugging, subtle multi-file design, after 2 failed attempts), say so before starting or as soon as it shows, and tell the user to `/model` swap and `/next`. Otherwise stay on the current model.
 10. Efficiency (user, 2026-10-10): compile Kotlin locally before every push (command in the reference); batch 2-4 changes per
     build, don't dispatch builds that will be superseded; write code with Edit or python raw strings, never plain python
     heredocs (they ate backslashes 5x); write python scripts with Write, then run them.

@@ -2012,3 +2012,36 @@ L4: beeper plate moved to Plate 1 (X=60) with filament 4 (PETG-HF) + cube on fil
 - Chromebook autopilot (run 38858438386, head ca2a96d): X2D 0.4 slice OK, no crash (r215/r217 fixes VERIFIED); top-surface bead shading visible when zoomed in (flat zoomed out, by design); printer reset to A1.
 - Phone autopilot (r250): Sign out horizontal on its own row VERIFIED (b74e8ea); readout card centred / clear of the tool bar VERIFIED (a853161; opacity left at 100 %). "Remove" beside Import credentials wrapped letter by letter: fixed in 7e569a4 (own rows, untested).
 - Merge candidates verified by the user: dca0db0, 9bca6b7, 9fe3f66, 54b4ca6, ca874e4, a853161, b74e8ea.
+
+## 2026-10-16 Shader strobe / Preview AO ghost (details moved from HANDOFF.md)
+User: top surface no longer messed up (3299fcc per-role z lift, verified). The glow in the corner hole and ghost shadows were the Preview AO:
+f59aed7's fade left a stale AO ghost, and no AO while moving made deep corners bright. Fix ae021be (UNTESTED): Preview recomputes AO every
+frame up to `LIVE_AO_MAX_SEGMENTS` (250k); bigger toolpaths keep the fade. Build run 38864792521 installed on all 4 devices. User: phone does
+120 fps in both views. Unmerged then: 7e569a4 (Remove row), f59aed7 (AO fade; alone it has the ghost, merge only with ae021be), ae021be.
+
+## 2026-10-16 Gemini offload test (user wants to save usage)
+Test 1 (design panel tabs, bundle `gemini-designer-bundle.txt`): 7/10, compiled against the excerpt but my File 2 excerpt was stale (ScaleSlider has a `lab`
+param, LabSlider/LabPeek.readout). Not applied. Test 2 (real shadow map, task file in the session scratchpad): 6.5/10; Gemini's draft had 6 runtime bugs
+(sampler2D + sampler2DShadow on one unit in the bed shader, mediump depth compare, stale map when shadows off, feedback-loop binding, wrong delete ids,
+context-loss delete). Lesson: Gemini 3.1 Pro is good for GL/shader design drafts; always review GL-spec traps; give it current source.
+
+## 2026-10-16 Real shadow map, MCP view tools, light lab: verified parts (moved from HANDOFF.md)
+- Real shadow map (wishlist "3D stage 4"), Gemini draft + my fixes: commits b7afd30, 0ffb7ae (sliders), then the receiver-plane PCF commit;
+  build r258 (run 38874388859) installed on all 4. Phone-checked with the cube: shadow falls on the bed, soft, no grain (defaults darkness 50 %,
+  softness 6 mm, bias 2 mm). Knobs: More > Layout lab > Shadow darkness / softness / bias (the plate shows through while a slider is held).
+  Phone-checked (r258): tall pillar next to a box (long soft shadow, fine), "shadows under objects" switch off/on (More > Appearance).
+  Top-down: pillar near the bed corner (long shadow fades, no artifacts), Section view at 0.2/0.5 (shadows follow the clipped height).
+  Overhang: a table (44 mm slab on stem+cone, built through MCP `shape_add` + `design_to_plate`, plate 2) shows its shadow soft and
+  attached from the top view; the iso view hides it behind the slab.
+- MCP on the phone: `adb forward tcp:8765 localabstract:orcastudio_mcp`, token read as root from app_settings.xml into a temp file,
+  `sh mcptest.sh @file 'shape_add:{...}' design_to_plate`. New tools `view_set` (view/plate/yaw/pitch/distance/target/section/ao/shadows)
+  and `view_screenshot` (PixelCopy of the plate view, 256..1280): commits "MCP: view_set..." + "angles given with view fit apply after the
+  fit". Verified on the phone with run 38882091450 (installed on phone, SHIELD, WSA; Chromebook offline): `fit` + angles works; the
+  screenshot is laid on black (the shadow pass lowers the surface alpha; a plain PixelCopy PNG showed a light halo).
+- Light lab (run 38883491004 = r263, installed on phone/SHIELD/WSA): More > Layout lab Light direction (-180..180), height (20..85),
+  strength (20..200 %); defaults = the old fixed light. Verified with `labset.py lightAzimuth=120 lightElevation=35 lightStrength=1` +
+  `view_screenshot`: shadow moves with the direction, strength brightens.
+- Tools: `python -I ~/orca-android-tools/shadowtune.py <strength> <soft_mm> <bias_mm> <out.png>` (env ORBIT=600 turns the view);
+  `labset.py key=value ...` sets lab values and restarts. A "performMeasureAndLayout called during measure layout" crash dialog was on
+  the phone at the r257 launch (origin unknown; watch for it).
+- Blind re-test 2026-10-16 (r263): `NOTES-blind-shader-test-2026-10-16.md`.
