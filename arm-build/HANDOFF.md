@@ -14,14 +14,14 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
   `/next-merge`" when verified work awaits a merge (say what it merges and what stays unverified). Never mid-task.
   Merge only on "merge" / `/next-merge` (= merge the verified, unmerged work, then carry on like /next; never untested commits).
 - Update "Next task" before stopping any task.
+- **Auto-prune (user, 2026-10-15; the old rule kept lapsing):** the moment the user or a test verifies an item, in the same edit move its details to the archive (dated heading) and leave a one-liner. Check the file size at every handoff update; over ~12 KB means prune before stopping. Pending/untested text never moves.
 
 ## State
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
-- Android main = d231870 (PR #24, r203). Work branch = main + many commits since r204 (**not merged**; head 382eb15 = r221).
-  Verified details of r204-r220 are in the archive ("2026-10-15: handoff trim"). Mergeable once the phone checks below pass.
-- Installed: **r220 on phone + WSA + Chromebook + Shield** (2026-10-15). **r221 = run 38705941780 building** (started 2026-10-15).
-  Install with `install-build.ps1 -Run <id> -Device <serial>` on all 4 (memory: install on all devices).
+- Android main = 3048a5d (PR #25, r243, merged 2026-10-15). Work branch = main (nothing unmerged). Verified details of r204-r243 are in the archive.
+- **Installed 2026-10-15: r243 (run 38837405092, head 43aebe7) on all 4 devices** (carries r242 too; untested items are in Next task 000). Earlier install history: archive.
+  Install with `install-build.ps1 -Run <id> -Device <serial>` on all 4 (memory: install on all devices). Chromebook is now `.33:5555`.
 - Devices: phone = wireless `adb-...` entry; Chromebook ARC `<chromebook-ip>:5555` (reference); WSA `127.0.0.1:58526`; **USB serial = the user's
   SHIELD TV** (rooted; installs only; r210 settings/logins copied from the phone, sign-ins untested).
 - **User is gaming on the PC: phone only, not WSA** (WSA needs window focus). User wants /clear cues often.
@@ -32,24 +32,19 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
   personal use, own code only; rule 7 holds.
 
 ## Next task
-1. **When r221 is green: install on all 4 devices, then test on the phone** (all r221 UNTESTED): zoom toward the fingers / wheel
-   cursor (`Camera.zoomAt`); stage 2 contact shadow (`render/SceneEffects.kt`: top-down R8 map, max blend, MESH_FS pass 3 fades
-   over 12 mm, 2 blur rounds, quad under the grid, Prepare only, strength 0.55) - look + follows a drag; stage 3 SSAO (half-res
-   depth pre-pass, `SSAO_FS` 12 samples radius 3/6 mm, bilateral blur, multiplied after opaque geometry incl. toolpaths) Soft/Full
-   on Prepare + Preview; FPS (counter top left). Settings: More > Appearance "3D view: ambient occlusion" Off/Soft/Full (default
-   Off) + "shadows under objects" (default on). Also recheck close up on a box wall in Preview (zoom limit ~2.5 px per layer).
-2. **Phone checks waiting on the user** (ask; all UNTESTED on the phone):
-   - r214 object-drag jump-back fix (`PlateView.kt` release branch, `Viewport.kt` `dragPending`, `SceneController.moveSelected` -> Job): drag an object.
-   - r215 single-filament slice crash fix (`OrcaEngine.cpp` ~507: rebuild `flush_volumes_matrix` for `>= 1` filaments) and r217
-     dual-nozzle fix (one n*n block per nozzle: `heads = max(1, multiplier, nozzle_diameter count)`): slice with the X2D selected.
-   - r216 projects keep the current printer (`FileController.openProjectFile`, toast `project_printer_kept`; session restore still restores its printer).
-   - r218 Preview colour-scheme pill opens from its text too (`Surface(onClick)`).
-   - r213: settings tabs swipe repeatedly (stale `current` fix, `SettingsEditor.kt`), haptics (settings tabs TextHandleMove, Models
-     edge swipes CLOCK_TICK), import 2 files onto a plate with objects (own-plate rule), site-tab line visible (pinned to tab bottom).
-   - r211: object settings editor on the phone.
-   - Camera card: wrong access code, unreachable printer, on the phone.
-   - 165 Hz: added the app (`7-0-0-7`) to `/data/system/refresh_rate_config_user_override.xml` (backup
-     `/data/local/tmp/refresh_override.bak`); ask whether the refresh-rate setting now lists it.
+000. **Verification session 2026-10-15 done (details: archive "2026-10-15: verification session").** Verified: all r231-r243 items (camera/handle/plate select/tap plate/per-plate tower/design fold/tower clearance), pan + drag-start, colour dots, mixed-temp text (Claude tested on Chromebook), r216, r213, layout lab limits, large multi-plate slice. **Merged to main as PR #25.** Installed r243 (run 38837405092, head 43aebe7) on all 4 devices.
+   **Logged findings (user's words, NOT acted on; the user wants the data first, then decides):**
+   - L1. Design panel fold: a very fast rubber-band/ghost image of the panel snaps above it (functionality fine).
+   - L2. Layout lab: user would like the slider kept on screen while adjusting so the range change is visible.
+   - L3. Camera card (phone, wrong access code / unreachable printer): error shown but its words are cut off (user has a picture to upload); the whole card should not error because the AMS can be read through the cloud.
+   - L4. (Claude, Chromebook) Preview summary still shows the red "nozzle temperatures incompatible" warning (without the hint) even when "Remove mixed temperature restriction" is on and the slice works.
+   - L5. Inactive-plate double tap re-frames (user: fine, no change wanted).
+0. **Still UNTESTED:** (a) German strings for the filament-choice dialog are missing (not translated); (b) floating Theme | Layout designer idea = ~half a day (+1-2 h for a collapsible icon), not started.
+2. **Phone checks waiting on the user** (all UNTESTED; they change the user's project):
+   - (User 2026-10-15: keep this item, do NOT bring up the X2D again; they can't trigger it and may hit it by accident.)
+   - r215 single-filament slice crash fix (`OrcaEngine.cpp` ~507) and r217 dual-nozzle fix (`heads = max(1, multiplier, nozzle_diameter count)`): slice with the X2D selected.
+   - r213 haptics (settings tabs TextHandleMove, Models edge swipes CLOCK_TICK; can't be checked over adb).
+   - 165 Hz: done, don't ask.
 3. **Not done / ideas:** auto-select the A1 on the MakerWorld/MakerLab page at load (look at how the site stores its printer pick;
    CDP on the Models WebView); a slice/print-time guard comparing the sliced printer with the connected one; a line under inactive
    settings tabs (user's idea). 3D stage 4 wishlist: real shadow map. Preview colours stay flat on purpose.
@@ -89,7 +84,7 @@ tool icons ("Prepare: floating buttons" can be changed). User-only: retests, pla
    it on, Bambu sign-in WebView, Orca Cloud login verified by the user 2026-10-14. **Untested:** plugin pages, Device page on
    the phone (needs a printer with a web UI; the phone only has the A1).
 9. **Untested:** a true EGL context loss (no repro). Badges are ~23 dp at plate zoom on the phone (under 48 dp; told the user).
-10. User to retest: the 325 MB slice that crashed before the r59 OOM fix. MakerWorld pinch zoom works (user 2026-10-14).
+10. 325 MB slice retest: replaced by a verified 20+ plate slice (archive). MakerWorld pinch zoom works (user 2026-10-14).
     Real keyboard Ctrl+1 (camera top view, MainActivity.kt:190) does nothing: the system takes it as a hotkey (user
     2026-10-14). Offered: numpad 0-7 as an extra view binding (not done, untested).
 11. Orca plugin runtime: kept as a general capability (no plugin in use). Not done: audit prompts, create_window, per-preset

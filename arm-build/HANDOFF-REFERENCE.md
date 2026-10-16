@@ -30,6 +30,10 @@ user uses the PC.
 - Raw multi-touch: `~/orca-android-tools/pinch.sh` / `drag1.sh` / `pan2.sh` (two-finger pan) in /data/local/tmp, run via su
   (push with `MSYS_NO_PATHCONV=1` and a `C:/` source path).
 - Shots: `sh ~/orca-android-tools/shot.sh <name.png> [width] [crop l,t,r,b]` -> `~/orca-android-tools/shots/` (screencap + crop/downscale).
+- **GL frame rate:** the green number top left is the system refresh-rate overlay, not app FPS. Measure with
+  `sh ~/orca-android-tools/glfps.sh [x0 y0 x1 y1]` (3 s orbit swipe, SurfaceFlinger timestats of the GL SurfaceView).
+- Raw `sendevent` gestures are slow (a one-finger drag turns into a long press): use `input swipe x0 y0 x1 y1 <ms>`
+  in the background and screencap mid-way. Pinch fingers must start off any button/badge (they eat the touch).
 
 ### SHIELD TV (USB serial in `adb devices`, the user's, rooted)
 - Only touch it when asked / for installs. Copy the phone's settings: `reinstall-with-data.ps1`-style tar via su, excluding `files/session`.
