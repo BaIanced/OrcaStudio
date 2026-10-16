@@ -1986,3 +1986,11 @@ Tested by Claude on the Chromebook (ARC, r243): "Remove mixed temperature restri
 "turn on More > Printers & presets > Remove mixed temperature restriction" (this app's path); with the switch on it slices.
 (Setting restored to off; test project's filament 2 is now ABS, harmless.)
 Logged observations (NOT acted on, user wants data first): see HANDOFF.md "Logged findings".
+
+## 2026-10-15: pruned verified details
+0. Element blocker + ad-block menu (e4d75ab, a7e63d2): verified phone; mouse right-click verified WSA r194. **Untested:**
+   rules in other WebViews (Device page etc.; needs a printer with a web UI). User 2026-10-13: MakerWorld, Printables and Orca sign-ins work; a Google-account Orca
+   sign-in goes through Brave (not the WebView). Bambu sign-out is Device tab > Connection > Sign out (told the user).
+6. Ad blocking (f138655, ec86442, 08bdf0b = `AdBlock.Client` in all app WebViews): verified; MakerWorld sign-in / downloads with
+   it on, Bambu sign-in WebView, Orca Cloud login verified by the user 2026-10-14. **Untested:** plugin pages, Device page on
+   the phone (needs a printer with a web UI; the phone only has the A1).
