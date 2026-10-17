@@ -34,17 +34,17 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
   Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook. LAN access code was given in chat: never write it anywhere.
 ## Next task
 **Grep the archive before re-testing anything.** User hasn't seen: bead look, part shadows, light sliders. Haptics verified (archive 2026-10-16).
-Done 2026-10-16 (archive): r266 merged; r267-r272 (AO removed); numpad views verified. Chromebook lacks r271+. Phone: plate 1 cube + pillar, 2 table.
+Done 2026-10-16 (archive): r266 merged; r267-r272; numpad views + MakerWorld chip toast verified. Chromebook lacks r271+.
 **Gemini test pending:** user pastes `~/orca-android-tools/gemini-test/gemini-toolrow-prompt.txt` into Gemini; grade the reply with `GRADING.md` there.
-Android 6ad69ef (r197 NPE root cause fix, archive) pushed, **unbuilt**: batch it into the next build. Remaining "Untested" items all need the user or special setup; ideas: designer = ask first; Plan items need REA.
+Android 6ad69ef (r197 NPE fix) pushed, **unbuilt**: batch into the next build. **No autonomous item left**: rest of the backlog
+needs the user, REA (Plan) or an ask (designer idea).
 Phone tools: `~/orca-android-tools/mcpao.sh 'tool:{json}'` (phone MCP, token never printed). `adb pair` needs the code on the command line.
 Waiting on the user: plate switcher pick.
 
 ## User decisions (2026-10-13)
 - (2026-10-14) Each newly imported file gets its own plate (active if empty, else first empty, else new; `FileController.useEmptyPlate`).
 - Plate activation must not move the camera when zoomed out (sometimes moving is fine).
-- OpenSCAD: design view (main canvas) is the default; an **eye button** shows the design on the build plate and back, with
-  the camera the user had on the plates, the project's objects hidden, and new designs on an empty plate.
+- OpenSCAD eye-button decision (2026-10-13): built + verified r166, details in the archive.
 - Plate switcher: **keep the lab until the user says otherwise; don't ask again** (mockups https://claude.ai/artifact/E3MtY8rQ1dMGHhibY2oNCX).
   Once picked: delete the losers and the lab (keep the wide panel tuck/width).
 - Modeling goal: model **without writing code**; OpenSCAD code is only a backstop. Roadmap 1-3 done (archive).

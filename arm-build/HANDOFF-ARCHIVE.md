@@ -2120,3 +2120,15 @@ User: "you just tested something we already confirmed worked". Cross-checked eac
 - Scripts: `~/orca-android-tools/numpadsheet.sh` (contact sheet), `numpadtest.sh` (hash compare vs Ctrl+N; Ctrl+1..9 from
   keybd_event still never reach WSA, only Ctrl+0, as noted 2026-10-1x). Num Lock off path (arrows nudge) not re-checked.
 - r272 = run 38998000561 (6b8e5e4, AO removed): on phone, SHIELD, WSA.
+
+## 2026-10-16 MakerWorld printer-chip "missing" toast verified (WSA r272, by test)
+- Backlog "Untested" item closed (da41ad3, r271+). Found a no-A1 model by scanning home-page ids with the in-page
+  `/api/v1/design-service/design/<id>` (`instances[].extention.modelInfo.compatibility` + `otherCompatibility[].devProductName`).
+- Model with 0 print files: toast "Couldn't pick A1 on this page. Choose your printer in the Print Files row." shown at ~11 s.
+  Model with an A1 file: A1 chip selected, no toast. Wording on a 0-file page is slightly off (no row to choose from); left as is.
+- CDP eval helper now lives at `~/orca-android-tools/cdp.mjs '<js>'` (needs `log.tag.OrcaWeb DEBUG` + restart, then
+  `adb forward tcp:9222 localabstract:webview_devtools_remote_<pid>`). Cloudflare box after restart: `mclick.ps1 471 603` on WSA.
+
+## 2026-10-16 Moved from HANDOFF.md "User decisions" (implemented, see r166 entry)
+- OpenSCAD: design view (main canvas) is the default; an **eye button** shows the design on the build plate and back, with
+  the camera the user had on the plates, the project's objects hidden, and new designs on an empty plate.

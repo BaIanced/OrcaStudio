@@ -81,6 +81,7 @@ user uses the PC.
 - `~\orca-android-tools`: `install-build.ps1 -Run <id> [-Device <serial>]` (WSA default), `ui.ps1 [-Device] [-Shot png]`,
   `step.ps1`, `wheel.ps1` (real mouse wheel / drags), `drag.ps1`, `reinstall-with-data.ps1`.
 - Debug logs / Models WebView CDP: archive "Logs and CDP (moved 2026-10-12)".
+  CDP eval: `node ~/orca-android-tools/cdp.mjs '<js>'` (first page on localhost:9222; awaits promises).
 - `gh run watch/view` needs `-R BaIanced/OrcaStudio-Android` when the cwd is arm-build (wrong repo otherwise).
 - GLSL check: `python -I ~/orca-android-tools/extract_shaders.py <Shaders.kt> <outdir>` (.vert/.frag as 310 es), then in WSL
   `~/Android/Sdk/ndk/28.2.13676358/shader-tools/linux-x86_64/glslc --target-env=opengl -fauto-map-locations -fauto-bind-uniforms -o /dev/null <file>`.

@@ -13,7 +13,6 @@ Each line says who last checked it, on which build, when (e.g. "user r249 2026-1
 
 ## Untested (needs the user or a special setup)
 - User hasn't seen yet (Claude-verified by test): preview bead look (Chromebook, zoomed in), part shadows r266, light/shadow lab sliders (r263, via `labset.py`).
-- Failure toast for the MakerWorld A1 chip (r271): needs a model page with no file for the user's printer.
 - "Failed OpenSCAD run clears the old log": no repro.
 - Element blocker / ad-block rules in other WebViews: plugin pages, Device page (needs a printer with a web UI).
 - Nozzle match: newer-firmware `device.nozzle.info` path; stale status after switching printer models; spool change -> printer's
