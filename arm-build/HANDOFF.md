@@ -25,7 +25,7 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
 - Android main = fcb4b26 (PR #28, r266, merged 2026-10-16); work branch = main + 6ad69ef (unbuilt).
-- **r266** (run 38930002463) installed on phone, SHIELD, WSA; **not on the Chromebook** (offline).
+- **r272** (run 38998000561, 6b8e5e4) installed on phone, SHIELD, WSA; **not on the Chromebook** (offline).
   Install with `install-build.ps1 -Run <id> -Device <serial>` on all 4.
 - Devices: phone = wireless `adb-...` entry; Chromebook ARC `<chromebook-ip>:5555` (reference); WSA `127.0.0.1:58526`; **USB serial = the user's
   SHIELD TV** (rooted; installs only).
@@ -34,9 +34,9 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
   Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook. LAN access code was given in chat: never write it anywhere.
 ## Next task
 **Grep the archive before re-testing anything.** User hasn't seen: bead look, part shadows, light sliders. Haptics verified (archive 2026-10-16).
-Done 2026-10-16 (archive): r266 merged, r267/r271, AO removed. Chromebook lacks r271+. Phone: plate 1 cube + pillar, 2 table.
+Done 2026-10-16 (archive): r266 merged; r267-r272 (AO removed); numpad views verified. Chromebook lacks r271+. Phone: plate 1 cube + pillar, 2 table.
 **Gemini test pending:** user pastes `~/orca-android-tools/gemini-test/gemini-toolrow-prompt.txt` into Gemini; grade the reply with `GRADING.md` there.
-Android 6ad69ef (r197 NPE root cause fix, archive) pushed, **unbuilt**: batch it into the next build. Next: backlog "Untested" / ideas; designer idea = ask first; Plan items need REA.
+Android 6ad69ef (r197 NPE root cause fix, archive) pushed, **unbuilt**: batch it into the next build. Remaining "Untested" items all need the user or special setup; ideas: designer = ask first; Plan items need REA.
 Phone tools: `~/orca-android-tools/mcpao.sh 'tool:{json}'` (phone MCP, token never printed). `adb pair` needs the code on the command line.
 Waiting on the user: plate switcher pick.
 

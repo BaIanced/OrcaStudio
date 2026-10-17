@@ -2113,3 +2113,10 @@ User: "you just tested something we already confirmed worked". Cross-checked eac
   (`app_process`, scratch `JsonNan.java`). Kotlin's platform-type null check at `Engine.call` then threw the NPE (Vec3 args).
 - Fix 6ad69ef (Android work branch): `Engine.call` throws `OrcaException("<method>: a number is not finite ...")` instead.
   Unbuilt; NumberField guard 776f261 already blocks the known UI path.
+
+## 2026-10-16 Numpad 0-7 camera views verified (WSA r272, by test)
+- Backlog "Untested" item closed. `MainActivity.kt:236` (Num Lock on): real Windows key presses (`keys.ps1`, VK 0x60-0x67)
+  on WSA r272 gave 0 iso, 1 top, 2 bottom, 3 front, 4 rear, 5 left, 6 right, 7 frame plate (contact sheet, all distinct, correct).
+- Scripts: `~/orca-android-tools/numpadsheet.sh` (contact sheet), `numpadtest.sh` (hash compare vs Ctrl+N; Ctrl+1..9 from
+  keybd_event still never reach WSA, only Ctrl+0, as noted 2026-10-1x). Num Lock off path (arrows nudge) not re-checked.
+- r272 = run 38998000561 (6b8e5e4, AO removed): on phone, SHIELD, WSA.

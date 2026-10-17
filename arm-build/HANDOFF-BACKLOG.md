@@ -19,7 +19,6 @@ Each line says who last checked it, on which build, when (e.g. "user r249 2026-1
 - Nozzle match: newer-firmware `device.nozzle.info` path; stale status after switching printer models; spool change -> printer's
   preset wins and the pick is dropped (only when the user swaps a spool). Phone plate: 1 slot "Bambu PLA Basic @BBL A1".
 - A true EGL context loss (no repro). Badges are ~23 dp at plate zoom on the phone (under 48 dp; told the user).
-- Numpad 0-7 view keys (`MainActivity.kt:236`, NumLock on): exist, not device-checked.
 - Model-mismatch guard (54b4ca6): built, can't be tested (user has one printer).
 - SHIELD TV: r210 settings/logins copied from the phone; sign-ins untested.
 
