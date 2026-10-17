@@ -2144,3 +2144,15 @@ User: "you just tested something we already confirmed worked". Cross-checked eac
 ## 2026-10-16 Android main merged at r273 (PR #29)
 - PR #29 (merge commit e5d6173): r267 tab lines, MakerWorld printer chip + toast, AO removed, 6ad69ef NPE guard (no UI repro;
   normal engine path exercised on r273), MCP `models_human_check`. Work branch = main afterwards.
+- 2026-10-16 Gemini tool-row test, try 1 (user): stopped with "The model made too many consecutive tool calls. Narrow your
+  prompt or use system instructions to limit tool use." No reply to grade. Added a no-tools first line to the prompt.
+
+## Movable / collapsible portrait tool row (verified WSA 2026-10-16, run 39007273736, Android 24fe798)
+- Origin: Gemini test (reply + grading in `~/orca-android-tools/gemini-test/`): 0 hallucinated OLD blocks, 1 compile error
+  (non-local return out of `withTimeoutOrNull`), drag-delta bug (prevPos in the moving button's old coordinates; fixed with
+  `positionChange()`). Cost more tokens than writing it directly (memory `no-external-llm-code-tests`).
+- `detectTapDragOrLongPress` on the + (PrepareOverlay.kt); LayoutLab `toolsCollapsed`, `toolsRowX/Y` (dp, -1 = default).
+  Clamped in `Modifier.offset` every layout. The + has no tooltip (`ToolButton(tip = false)`; Tip = TooltipBox long-press).
+- WSA checks: tap = Add menu; drag follows finger, no menu; clamped at edge; selection widens row -> shifts left, returns on
+  deselect; long-press collapses/expands, no tooltip; position survives restart.
+- WSA portrait now: display 1920x1080 @200dpi, `am task resize <task> 690 40 1230 1040` (phone-view.sh numbers are stale).
