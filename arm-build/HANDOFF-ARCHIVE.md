@@ -2141,3 +2141,6 @@ User: "you just tested something we already confirmed worked". Cross-checked eac
   Touch taps pass the check (checked first with `adb input tap` on WSA).
 - WSA r273: fresh check -> "Passed after 1 tap(s), 12s: now on MakerWorld (makerworld.com/en)"; no check -> "No human check on ...".
 - Helper: `~/orca-android-tools/cfcheck.sh [phone|wsa|<serial>]`. Not run on the phone yet (needs the Models tab on screen there).
+## 2026-10-16 Android main merged at r273 (PR #29)
+- PR #29 (merge commit e5d6173): r267 tab lines, MakerWorld printer chip + toast, AO removed, 6ad69ef NPE guard (no UI repro;
+  normal engine path exercised on r273), MCP `models_human_check`. Work branch = main afterwards.

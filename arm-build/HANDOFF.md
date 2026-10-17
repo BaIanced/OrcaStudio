@@ -24,7 +24,7 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 ## State
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
-- Android main = fcb4b26 (PR #28, r266, merged 2026-10-16); work branch = main + r267-r273 (bd90c44).
+- Android main = e5d6173 (PR #29, r273, merged 2026-10-16); work branch = main (nothing unmerged).
 - Installed: r273 on phone, SHIELD, WSA; Chromebook offline (lacks r271+). `install-build.ps1 -Run <id> -Device <serial>`.
 - Devices: phone = wireless `adb-...` entry; Chromebook ARC `<chromebook-ip>:5555` (reference); WSA `127.0.0.1:58526`; **USB serial = the user's
   SHIELD TV** (rooted; installs only).
@@ -33,7 +33,7 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
   Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook. LAN access code was given in chat: never write it anywhere.
 ## Next task
 **Grep the archive before re-testing anything.** User hasn't seen: bead look, part shadows, light sliders. Haptics verified (archive 2026-10-16).
-Done 2026-10-16 (archive): r266 merged; r267-r272; numpad views + MakerWorld chip toast verified.
+Done 2026-10-16 (archive): r273 merged (PR #29); numpad views + MakerWorld chip toast verified.
 **Gemini test pending:** user pastes `~/orca-android-tools/gemini-test/gemini-toolrow-prompt.txt` into Gemini; grade the reply with `GRADING.md` there.
 r273 (run 39003921743): NPE fix + MCP `models_human_check` (Cloudflare box; `cfcheck.sh [phone|wsa]`, verified WSA, archive).
 No autonomous item left.
