@@ -15,12 +15,16 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
   `/next-merge`" when verified work awaits a merge (say what it merges and what stays unverified). Never mid-task.
   Merge only on "merge" / `/next-merge` (= merge the verified, unmerged work, then carry on like /next; never untested commits).
 - Update "Next task" before stopping any task.
-- **Auto-prune (user, 2026-10-15; the old rule kept lapsing):** the moment the user or a test verifies an item, in the same edit move its details to the archive (dated heading) and leave a one-liner. Check the file size at every handoff update; over ~8 KB means prune before stopping. Pending/untested text goes to the backlog, never deleted.
+- **Log user verdicts first (2026-10-16; lost ones caused re-test loops):** when the user says an item works / is fixed /
+  is still broken, before any other step: archive line (date, build, their words), fix/remove its backlog line, one-liner here.
+- **User-only items:** before working on an item only the user can check (feel, look, real print), grep the archive; if its
+  last verdict predates the latest build, ask the user one line ("still broken on rNNN?") instead of fixing or testing it.
+- Over ~8 KB (`wc -c` at every update) means prune before stopping. Pending/untested text goes to the backlog, never deleted.
 
 ## State
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
-- Android main = fcb4b26 (PR #28, r266, merged 2026-10-16); work branch = main (nothing unmerged).
+- Android main = fcb4b26 (PR #28, r266, merged 2026-10-16); work branch = main + 6ad69ef (unbuilt).
 - **r266** (run 38930002463) installed on phone, SHIELD, WSA; **not on the Chromebook** (offline).
   Install with `install-build.ps1 -Run <id> -Device <serial>` on all 4.
 - Devices: phone = wireless `adb-...` entry; Chromebook ARC `<chromebook-ip>:5555` (reference); WSA `127.0.0.1:58526`; **USB serial = the user's
@@ -29,12 +33,10 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 - User sessions backed up: phone `/data/local/tmp/phone-session-backup.{3mf,json}` (8 plates), WSA `/data/local/tmp/session-backup.{3mf,json}`.
   Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook. LAN access code was given in chat: never write it anywhere.
 ## Next task
-Still UNTESTED on device (user's finger): preview bead look, haptics on settings tabs/Models swipes, light/shadow sliders.
-Done 2026-10-16: r266 merged (PR #28); r267/r271 tab line + MakerWorld chip (failure toast untested); AO removed; OpenSCAD
-Back steps verified on WSA (archive). Chromebook still lacks r271+. Phone scene: plate 1 cube + pillar, plate 2 table.
+**Grep the archive before re-testing anything.** User hasn't seen: bead look, part shadows, light sliders. Haptics verified (archive 2026-10-16).
+Done 2026-10-16 (archive): r266 merged, r267/r271, AO removed. Chromebook lacks r271+. Phone: plate 1 cube + pillar, 2 table.
 **Gemini test pending:** user pastes `~/orca-android-tools/gemini-test/gemini-toolrow-prompt.txt` into Gemini; grade the reply with `GRADING.md` there.
-Then: backlog "Not done / ideas" is nearly empty of autonomous work (rest = user-only); candidates: r197 NumberField NPE
-root cause (grep device logs for `OrcaStore`), floating Theme|Layout designer idea (backlog 0b, ask first), Plan items need REA (user enables).
+Android 6ad69ef (r197 NPE root cause fix, archive) pushed, **unbuilt**: batch it into the next build. Next: backlog "Untested" / ideas; designer idea = ask first; Plan items need REA.
 Phone tools: `~/orca-android-tools/mcpao.sh 'tool:{json}'` (phone MCP, token never printed). `adb pair` needs the code on the command line.
 Waiting on the user: plate switcher pick.
 

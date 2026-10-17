@@ -2082,3 +2082,34 @@ Add > OpenSCAD model > Box > eye ("Show the design on the plate", temp Plate 3) 
 view shown > Back = editor closed, temp plate removed (Plate 2 of 2). `AppScaffold.kt` BackHandler ~151. Also found: numpad 0-7 view
 keys (backlog item 10 "offered") already exist (`MainActivity.kt:236`, NumLock on); not device-checked. Delete-plates popup colours
 are hard-coded on purpose (user 2026-10-14, `OverlayParts.kt:253`), so that "design mode known limit" stays.
+
+## 2026-10-16 Backlog stale-item prune (verified entries moved out of HANDOFF-BACKLOG.md)
+User: "you just tested something we already confirmed worked". Cross-checked each backlog line with this archive + git log.
+- Former item 000 (2026-10-15 verification session, merged PR #25, r243 on all 4): L1 fold ghost fixed (user r249); L1/L3 + printer-model
+  guard 54b4ca6 merged, L3 status card "good" (user r249); L2 readout card verified r245; L4 tertiary colour verified r245; L5 no change wanted.
+- Former item 2: r215/r217 X2D slice fixes VERIFIED (Chromebook autopilot, run 38858438386). 165 Hz done.
+- r213 haptics: NOT untested any more. User r249 (after fcf1e39 "haptics on swipes"): settings tabs + Models edge swipes don't vibrate,
+  only Back/forward gestures do. Open bug, unfixed; kept in the backlog as such.
+- Former item 3: A1 chip auto-select done + verified (WSA r270/r271); inactive-tab line done r267 (verified WSA); blind shader findings
+  (bed shadow spill a013cdd, section ratio dc6ef3c, part shadow/bias/grid r266) all verified.
+- Former item 4: OpenSCAD Back steps done 16aa31d, verified WSA r266 (old analysis: Back = AppScaffold.kt:148; Models back + edge swipes
+  ModelsScreen.kt:464/:182; settings tab swipe SettingsEditor.kt:303; optional horizontal swipe between main tabs was never asked for).
+- Closed: WSA lighter-background glitch (user: their other PC activity). Former open item 1 ("verified, nothing open": preset re-link,
+  section view, shape builder, .scad zips / 16 KB sniff, OpenSCAD phone layout / downloads / painting, MakerWorld ticket flow).
+- Former item 10: 325 MB retest replaced by the verified 20+ plate slice; MakerWorld pinch zoom works (user 2026-10-14);
+  Ctrl+1 = system hotkey (user 2026-10-14, nothing to do).
+- Element blocker / ad blocking verified parts: see "2026-10-15: pruned verified details".
+- Closed item 0(a) (strings stub, user 2026-10-16: never test, list or maintain) dropped from the backlog.
+
+## 2026-10-16 Haptics verified (backlog "Open bugs" item closed)
+- User: haptics on settings tab swipes / Models edge swipes were already confirmed working; an earlier session didn't log it.
+- Phone `dumpsys vibrator_manager` backs this up: the app's `performHapticFeedback(constant=9)` (TEXT_HANDLE_MOVE, settings
+  tab swipe, SettingsEditor.kt:313) and `constant=0` (LONG_PRESS, PlatePicks) played on 2026-10-16 21:08 (OnePlus waveforms 1/2).
+- Tip: `adb shell dumpsys vibrator_manager` lists recent haptics per app, so haptics can be checked over adb after the user's taps.
+
+## 2026-10-16 r197 NumberField NPE root cause
+- Android `JSONObject.toString()` returns null when a nested `JSONArray` holds NaN/Infinity (`JSONArray(Collection)` skips the
+  check that `put(name, value)` does; top-level NaN throws "Forbidden numeric value"). Proven with a dex test on WSA
+  (`app_process`, scratch `JsonNan.java`). Kotlin's platform-type null check at `Engine.call` then threw the NPE (Vec3 args).
+- Fix 6ad69ef (Android work branch): `Engine.call` throws `OrcaException("<method>: a number is not finite ...")` instead.
+  Unbuilt; NumberField guard 776f261 already blocks the known UI path.
