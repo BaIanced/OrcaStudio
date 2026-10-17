@@ -2156,3 +2156,47 @@ User: "you just tested something we already confirmed worked". Cross-checked eac
 - WSA checks: tap = Add menu; drag follows finger, no menu; clamped at edge; selection widens row -> shifts left, returns on
   deselect; long-press collapses/expands, no tooltip; position survives restart.
 - WSA portrait now: display 1920x1080 @200dpi, `am task resize <task> 690 40 1230 1040` (phone-view.sh numbers are stale).
+
+## 2026-10-17 Rotation crash fixed (r280)
+- User (phone r278): rotating portrait -> landscape crashed. Cause: AppScaffold's BoxWithConstraints swaps the portrait Column for the
+  wide Row in a measure pass; the focused PlateView is removed, Android hands focus to Compose mid-measure ->
+  "performMeasureAndLayout called during measure layout". Fix: `ui/FocusGuardLayout.kt` around the ComposeView refuses focus while
+  measuring / laying out. Repro: tap the 3D view (`input tap 636 900`), `settings put system accelerometer_rotation 0`, `user_rotation 1`.
+- Claude-verified: r278 crashed on the repro (crash_report.txt); r280 (run 39011426374) survived 4 rotation cycles with taps, app alive. VERIFIED.
+- CI now uploads `OrcaStudio-Android-mapping-r<N>` (R8 mapping.txt, 90 days); present on r280.
+
+## 2026-10-17 r281 checks (Claude, phone)
+- Slice button on the right end of the portrait grip row (plate switcher left), no floating copy: verified by screenshot.
+- Grip/edge flicks failed on phone + SHIELD: draggable's onDragStopped speed is relative to the grip, which follows the
+  finger. Injected `input touchscreen swipe ... 50` flings a static verticalScroll list, so injection is fine. Fixed in r283
+  (`FingerSpeed`, root coordinates). The Slice ExtendedFAB had no text in the a11y tree (floating one too): label in r283.
+
+### 2026-10-17 r283 fling crash (user)
+- User, r283 phone: "crash came from 'fling', it's repeatable every time". Crash report: IllegalStateException "A MonotonicFrameClock
+  is not available in this CoroutineContext" on main (Dispatchers.Main scope). Fix pending.
+- r284 (run 39014187416, 72aa18b, Claude on the phone): portrait grip flick up (swipe 636 1950->1500, 40 ms) glides to
+  full height, flick down (350->800) collapses; no crash. Slow 210 px drag only moves ~45 dp (by design). Wide PanelEdge
+  and OpenSCAD grip flicks not tested; feel is the user's call.
+
+### 2026-10-17 User reports on r284 (phone)
+- "New crash when trying to open layout editor, instacrash." (Layout lab.) Fix pending.
+- "object in 'preview' mode is selectable and moveable (this shouldn't be the case)". Fix pending.
+- "shaders seem to have disapeared from preview section (post slicing) that may be desired i dont know the convention."
+- "zfighting glitch ... internal to the object post slice, visible when you scrub the layer slider down to see inside the
+  object at for instance half way, only visible when you scrub the slider and pan/move camera".
+- "zoom feels too slow (when zoomed out) might want to add a variable acceleration curve dependent on zoom factor? I haven't
+  attempted to adjust zoom sensitivity yet".
+
+### 2026-10-17 r285 fixes (run 39017596686, Android dff57e4; Claude on the phone; installed phone + SHIELD)
+- Layout lab crash: logcat UnknownFormatConversionException '=' from `getString` = "100 %" in `lab_pinch_speed`; now `%%`.
+  r285: lab opens, label reads "Pinch zoom speed (100 % = ...): 60%". VERIFIED.
+- Preview locked: `InteractionMode.VIEW` (PlateView: no tap pick, drag, rectangle, long-press/right-click menu; double tap
+  re-frames). r285 Preview, before and after slicing: tap on the object selects nothing, a drag on it orbits (yaw changed),
+  view_state "Mode view". VERIFIED.
+- Preview cracks: r284 at layer 85 (view_set distance 45 pitch 55 yaw -60 target [138,132,17]) showed single dark pixels
+  (T-junction cracks between layers) and a striped / notched seam corner. Path VS: bottom extends 0.15 h into the layer
+  below (not under the bed), clip-space depth order (role lift * 2 + segment parity) * 5e-7 w, bottom corners pushed back
+  6e-6 w. r285 4 frames at yaw steps: dots and seam glitch gone; left a +-2..6 grey-level regular grid only visible at 8x
+  zoom with contrast stretch (GPU dither?). Full-height view normal. Claude-verified; the user's moving-camera look pending.
+- Answered in chat: shadows are Prepare-only by design (desktop has none; AO removed r27x), asked if wanted in Preview;
+  zoom: user to try the lab's pinch speed slider before a zoom-dependent curve.

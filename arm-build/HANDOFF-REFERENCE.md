@@ -85,6 +85,9 @@ user uses the PC.
 - Cloudflare "Verify you are human" (r273+): `~/orca-android-tools/cfcheck.sh [phone|wsa|<serial>]` = MCP
   `models_human_check` via curl (taps the box, waits up to 25 s, prints the result). Models tab must be on screen.
   `mcpao.sh` takes `MCP_DEV=<serial>` for rooted devices other than the phone.
+- MCP `view_state` (94bb1e6): camera, mode/tool, selection, screen-px boxes of plates/copies/towers (tap a box centre to select). Phone MCP: `~/orca-android-tools/mcpao.sh 'tool:{json}'` (token never printed). `adb pair` needs the code on the command line.
+- Cost (measured 2026-10-17, WSA Prepare tab): `view_state` ~600 B (~150 tokens, 3D view only); `phone-ui.py layout`
+  ~4.5 KB (~1.1k tokens, 2D UI only, cut it with a regex); a screenshot ~1.5-2k tokens. They cover different things.
 - `gh run watch/view` needs `-R BaIanced/OrcaStudio-Android` when the cwd is arm-build (wrong repo otherwise).
 - GLSL check: `python -I ~/orca-android-tools/extract_shaders.py <Shaders.kt> <outdir>` (.vert/.frag as 310 es), then in WSL
   `~/Android/Sdk/ndk/28.2.13676358/shader-tools/linux-x86_64/glslc --target-env=opengl -fauto-map-locations -fauto-bind-uniforms -o /dev/null <file>`.
