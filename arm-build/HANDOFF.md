@@ -15,31 +15,35 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
   `/next-merge`" when verified work awaits a merge (say what it merges and what stays unverified). Never mid-task.
   Merge only on "merge" / `/next-merge` (= merge the verified, unmerged work, then carry on like /next; never untested commits).
 - Update "Next task" before stopping any task.
-- **Auto-prune (user, 2026-10-15; the old rule kept lapsing):** the moment the user or a test verifies an item, in the same edit move its details to the archive (dated heading) and leave a one-liner. Check the file size at every handoff update; over ~8 KB means prune before stopping. Pending/untested text goes to the backlog, never deleted.
+- **Log user verdicts first (2026-10-16; lost ones caused re-test loops):** when the user says an item works / is fixed /
+  is still broken, before any other step: archive line (date, build, their words), fix/remove its backlog line, one-liner here.
+- **User-only items:** before working on an item only the user can check (feel, look, real print), grep the archive; if its
+  last verdict predates the latest build, ask the user one line ("still broken on rNNN?") instead of fixing or testing it.
+- Over ~8 KB (`wc -c` at every update) means prune before stopping. Pending/untested text goes to the backlog, never deleted.
 
 ## State
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
-- Android main = fcb4b26 (PR #28, r266, merged 2026-10-16); work branch = main (nothing unmerged). Earlier merges: archive.
-- **r266** (run 38930002463) installed on phone, SHIELD, WSA; **not on the Chromebook** (offline). Earlier install history: archive.
-  Install with `install-build.ps1 -Run <id> -Device <serial>` on all 4 (memory: install on all devices). Chromebook is now `.33:5555`.
+- Android main = e5d6173 (PR #29, r273, merged 2026-10-16); work branch = main (nothing unmerged).
+- Installed: r273 on phone, SHIELD, WSA; Chromebook offline (lacks r271+). `install-build.ps1 -Run <id> -Device <serial>`.
 - Devices: phone = wireless `adb-...` entry; Chromebook ARC `<chromebook-ip>:5555` (reference); WSA `127.0.0.1:58526`; **USB serial = the user's
-  SHIELD TV** (rooted; installs only; r210 settings/logins copied from the phone, sign-ins untested).
-- **User is gaming on the PC: phone only, not WSA** (WSA needs window focus). User wants /clear cues often.
+  SHIELD TV** (rooted; installs only).
+- **User is at work (2026-10-16): free rein, WSA usable** (needs window focus). User wants /clear cues often.
 - User sessions backed up: phone `/data/local/tmp/phone-session-backup.{3mf,json}` (8 plates), WSA `/data/local/tmp/session-backup.{3mf,json}`.
   Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook. LAN access code was given in chat: never write it anywhere.
 ## Next task
-Still UNTESTED on device: preview bead look, model-mismatch guard (needs a print, user's OK), haptics on settings tabs/Models swipes, light/shadow sliders by finger.
-Done: r266 (shadows/bias/AA grid) verified and merged (PR #28; archive "2026-10-16 r266"). Blind-test findings all closed. Phone lab back to defaults. Phone scene: plate 1 cube [172.3, 123.1] + pillar [136.3, 95.0], plate 2 table.
-Next: pick from the backlog (grep "Not done / ideas").
-Phone tools: `~/orca-android-tools/mcpao.sh 'tool:{json}'` (phone MCP, token never printed), `aopair.sh '<view_set json>'` (AO off/on/mid-orbit/rest). Phone dropped wireless adb twice; re-paired 2026-10-16 (`adb pair` needs the code on the command line). Phone restored: section off, light defaults, AO 0.
-Waiting on the user: plate switcher pick (still undecided). Launcher icon colour removed from the list.
+**Grep the archive before re-testing anything.** User hasn't seen: bead look, part shadows, light sliders. Haptics verified (archive 2026-10-16).
+Done 2026-10-16 (archive): r273 merged (PR #29); numpad views + MakerWorld chip toast verified.
+**Gemini test pending:** user pastes `~/orca-android-tools/gemini-test/gemini-toolrow-prompt.txt` into Gemini; grade the reply with `GRADING.md` there.
+r273 (run 39003921743): NPE fix + MCP `models_human_check` (Cloudflare box; `cfcheck.sh [phone|wsa]`, verified WSA, archive).
+No autonomous item left.
+Phone tools: `~/orca-android-tools/mcpao.sh 'tool:{json}'` (phone MCP, token never printed). `adb pair` needs the code on the command line.
+Waiting on the user: plate switcher pick.
 
 ## User decisions (2026-10-13)
 - (2026-10-14) Each newly imported file gets its own plate (active if empty, else first empty, else new; `FileController.useEmptyPlate`).
 - Plate activation must not move the camera when zoomed out (sometimes moving is fine).
-- OpenSCAD: design view (main canvas) is the default; an **eye button** shows the design on the build plate and back, with
-  the camera the user had on the plates, the project's objects hidden, and new designs on an empty plate.
+- OpenSCAD eye-button decision (2026-10-13): built + verified r166, details in the archive.
 - Plate switcher: **keep the lab until the user says otherwise; don't ask again** (mockups https://claude.ai/artifact/E3MtY8rQ1dMGHhibY2oNCX).
   Once picked: delete the losers and the lab (keep the wide panel tuck/width).
 - Modeling goal: model **without writing code**; OpenSCAD code is only a backstop. Roadmap 1-3 done (archive).
