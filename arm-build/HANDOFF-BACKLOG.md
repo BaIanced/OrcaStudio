@@ -22,20 +22,19 @@ Rules: never delete an item; when one is verified, move its details to HANDOFF-A
    - r215 single-filament slice crash fix (`OrcaEngine.cpp` ~507) and r217 dual-nozzle fix (`heads = max(1, multiplier, nozzle_diameter count)`): slice with the X2D selected.
    - r213 haptics (settings tabs TextHandleMove, Models edge swipes CLOCK_TICK; can't be checked over adb).
    - 165 Hz: done, don't ask.
-3. **Not done / ideas:** auto-select the A1 on the MakerWorld/MakerLab page at load (look at how the site stores its printer pick;
-   CDP on the Models WebView); a slice/print-time guard comparing the sliced printer with the connected one; a line under inactive
-   settings tabs (user's idea). 3D stage 4 wishlist: real shadow map. Preview colours stay flat on purpose.
+3. **Not done / ideas:** (A1 chip auto-select on MakerWorld: DONE + verified on WSA, archive "MakerWorld printer chip"; maybe study Bambu Handy's MakerWorld integration when the phone is back); (model-mismatch guard is built but can't be tested: user has only one printer); a line under inactive
+   settings tabs (user's idea, done r267). 3D stage 4 wishlist: real shadow map. Preview colours stay flat on purpose.
    - Blind shader/light re-test findings (2026-10-16, `NOTES-blind-shader-test-2026-10-16.md`), open: shadow spills
      off the bed into the background (fix a013cdd, VERIFIED r264); section ratio spans all plates' objects (0.5 cuts nothing on plate 1, 0.8 everything; fix dc6ef3c, VERIFIED r264);
      shadow on parts subtle at 50 %, bias knob, grid breaks: fixed + VERIFIED r266 (archive 2026-10-16 r266).
-4. **Nav proposal: DONE (user answered: Back goes to plate view; built in 16aa31d, steps plate view > design view > close; device check not recorded).** Old analysis: Back = AppScaffold.kt:148; Models back + edge swipes
+4. **Nav proposal: DONE (user answered: Back goes to plate view; built in 16aa31d; VERIFIED on WSA 2026-10-16, archive "OpenSCAD Back steps").** Old analysis: Back = AppScaffold.kt:148; Models back + edge swipes
    ModelsScreen.kt:464/:182; settings tab swipe SettingsEditor.kt:303. Gap: no BackHandler for the OpenSCAD editor (`state.scad`,
    AppScaffold.kt:281 -> Back opens the quit prompt), the eye "design on plate" mode, the section panel, the design panel.
    Proposal: Back in OpenSCAD = on-plate view -> design view -> `scad.close()`; optional horizontal swipe between main tabs (not on Prepare).
 5. Then: the plate switcher pick (lab stays until they say), the user-only items below.
 
 Still open from earlier batches: **root cause of the r197 NumberField NPE not found** (stack traces now logged under `OrcaStore`);
-"failed OpenSCAD run clears the old log" **untested** (no repro); the WSA lighter-background glitch is closed (user: caused by their other PC activity at the same time). Design mode known limits: hard-coded colours (delete popup #2B2C32, red bin,
+"failed OpenSCAD run clears the old log" **untested** (no repro); the WSA lighter-background glitch is closed (user: caused by their other PC activity at the same time). Design mode known limits: hard-coded colours (delete popup #2B2C32 + red bin = user's pick 2026-10-14, keep;
 preview legend) don't follow; the Models page keeps its own colours; a dark 3D background under a light theme hides the floating
 tool icons ("Prepare: floating buttons" can be changed). User-only: retests, plate switcher pick, launcher icon colour (still teal, "decide later").
 
@@ -52,7 +51,7 @@ tool icons ("Prepare: floating buttons" can be changed). User-only: retests, pla
 9. **Untested:** a true EGL context loss (no repro). Badges are ~23 dp at plate zoom on the phone (under 48 dp; told the user).
 10. 325 MB slice retest: replaced by a verified 20+ plate slice (archive). MakerWorld pinch zoom works (user 2026-10-14).
     Real keyboard Ctrl+1 (camera top view, MainActivity.kt:190) does nothing: the system takes it as a hotkey (user
-    2026-10-14). Offered: numpad 0-7 as an extra view binding (not done, untested).
+    2026-10-14). Numpad 0-7 view keys exist (`MainActivity.kt:236`, NumLock on; untested on device).
 11. Orca plugin runtime: kept as a general capability (no plugin in use). Not done: audit prompts, create_window, per-preset
     config overrides, printerAgent capability. **FilamentHub is dropped for good; never suggest, test with, or mention it.**
 12. REA MCP (github.com/morluto/rea), looked at 2026-10-12, already installed by the user (2026-10-15), just not enabled (the user enables it): fits release
@@ -60,3 +59,5 @@ tool icons ("Prepare: floating buttons" can be changed). User-only: retests, pla
 13. Wishlist later: filament colour mixing (upstream `FilamentMixer.cpp`). Not wanted: iOS port. Flatpak r9 MakerLab tab,
     weekly upstream bump, obn follow-ups: archive (2026-10-12 trim).
 
+- Failure toast for the MakerWorld A1 chip (r271): untested; needs a model page with no file for the user's printer.
+- SHIELD TV: r210 settings/logins copied from the phone; sign-ins untested (moved from HANDOFF.md 2026-10-16).

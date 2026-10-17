@@ -2065,3 +2065,20 @@ context-loss delete). Lesson: Gemini 3.1 Pro is good for GL/shader design drafts
 - Grid: one AA shader quad per bed (`GRID_VS/FS`, `PlateRenderer.drawBeds`), outline stays GL_LINES. Top, grazing (pitch 8) and wide
   near-top (pitch 86, 420 mm) shots: same line positions as r264, continuous smooth 1 px lines, no breaks. VERIFIED (test).
 - Shots: `~/orca-android-tools/shots/{base,new}_*.png`, `cube_compare.png`. Installed on phone, SHIELD, WSA (Chromebook offline).
+
+## 2026-10-16 r267 (verified on WSA)
+Run 38934298949, "Settings: a faint line under the inactive tabs" (`Modifier.inactiveTabLine`, Widgets.kt; used on the Process/Filament/Printer tab row and the page-tab row in SettingsEditor.kt). WSA screenshot: grey inset line under the unselected tabs, orange indicator on the selected one. Page-tab row (line 299) not seen: tablet layout shows a left list instead. Installed WSA + SHIELD; phone and Chromebook were offline (install there when back).
+
+## 2026-10-16 MakerWorld printer chip auto-select (verified on WSA)
+Runs 38969511771 (first try, chip row not found) then 38975729124 (fix: look up to 4 ancestors for the row starting "All"). `PRINTER_JS` + `ModelBrowser.chipLabel()` in ModelsScreen.kt: on makerworld model pages (`/models/<n>`), clicks the "Print Files" chip matching the current printer preset (PrinterModel.ofPreset; X1C -> "X1 Carbon") once per page. WSA r270 (signed in): A1 chip highlighted on load, list filtered to A1 files. The label is baked in at first injection per page load, so changing printer preset needs a Models reload. Site chip row resets to All on every load (not stored); fragile if MakerWorld changes its DOM. Cloudflare check reappears after each app restart: user gave standing OK to click it (memory).
+Follow-up (run 38991526428, r271): if the chip isn't found within 8 s of a model page loading, the page posts `orca_printer_chip_missing` and the app toasts `models_printer_chip_missing` ("Couldn't pick A1 ..."). WSA: success path re-verified (A1 selected on a fresh model page). **Failure toast untested** (needs a model with no file for the printer, or a changed site). Installed WSA + SHIELD.
+
+## 2026-10-16 AO removed (run 38998000561, verified on phone)
+Screen-space ambient occlusion removed entirely (setting, More row, SSAO/blur/composite shaders, preview fade, MCP `ao` arg). It caused the jack-o-lantern look and the double-exposure ghost fading out on rotation; only appeared with soft/full, never when off. Shadow map/toggle untouched. `aopair.sh` helper's AO step no longer applies. Installed on phone, SHIELD, WSA (Chromebook offline).
+Re-review (Opus, 2026-10-16): the user had been asked "remove or keep" and answered that AO caused the jack-o-lantern look and the ghost, which was taken as a yes. Commit 6b8e5e4 checked: no AO references left (`git grep`), the EGL-comment slip was fixed, shadow path unchanged. MCP: only `view_set`'s `ao` argument and the "ambient occlusion" part of its reply went; `viewSet` reads args with `has()`, so a client still sending `ao` gets it ignored, no error. Only consumer was the local `aopair.sh` test helper (now obsolete). Undo if ever wanted: `git revert 6b8e5e4`.
+
+## 2026-10-16 OpenSCAD Back steps (16aa31d, verified on WSA r266)
+Add > OpenSCAD model > Box > eye ("Show the design on the plate", temp Plate 3) > Back = "Back to the design view" state gone, design
+view shown > Back = editor closed, temp plate removed (Plate 2 of 2). `AppScaffold.kt` BackHandler ~151. Also found: numpad 0-7 view
+keys (backlog item 10 "offered") already exist (`MainActivity.kt:236`, NumLock on); not device-checked. Delete-plates popup colours
+are hard-coded on purpose (user 2026-10-14, `OverlayParts.kt:253`), so that "design mode known limit" stays.

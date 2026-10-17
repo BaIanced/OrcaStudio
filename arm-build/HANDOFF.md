@@ -20,23 +20,23 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 ## State
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
-- Android main = fcb4b26 (PR #28, r266, merged 2026-10-16); work branch = main (nothing unmerged). Earlier merges: archive.
-- **r266** (run 38930002463) installed on phone, SHIELD, WSA; **not on the Chromebook** (offline). Earlier install history: archive.
-  Install with `install-build.ps1 -Run <id> -Device <serial>` on all 4 (memory: install on all devices). Chromebook is now `.33:5555`.
+- Android main = fcb4b26 (PR #28, r266, merged 2026-10-16); work branch = main (nothing unmerged).
+- **r266** (run 38930002463) installed on phone, SHIELD, WSA; **not on the Chromebook** (offline).
+  Install with `install-build.ps1 -Run <id> -Device <serial>` on all 4.
 - Devices: phone = wireless `adb-...` entry; Chromebook ARC `<chromebook-ip>:5555` (reference); WSA `127.0.0.1:58526`; **USB serial = the user's
-  SHIELD TV** (rooted; installs only; r210 settings/logins copied from the phone, sign-ins untested).
-- **User is gaming on the PC: phone only, not WSA** (WSA needs window focus). User wants /clear cues often.
+  SHIELD TV** (rooted; installs only).
+- **User is at work (2026-10-16): free rein, WSA usable** (needs window focus). User wants /clear cues often.
 - User sessions backed up: phone `/data/local/tmp/phone-session-backup.{3mf,json}` (8 plates), WSA `/data/local/tmp/session-backup.{3mf,json}`.
   Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook. LAN access code was given in chat: never write it anywhere.
 ## Next task
-Still UNTESTED on device: preview bead look, model-mismatch guard (needs a print, user's OK), haptics on settings tabs/Models swipes, light/shadow sliders by finger.
-Done: r266 (shadows/bias/AA grid) verified and merged (PR #28; archive "2026-10-16 r266"). Blind-test findings all closed. Phone lab back to defaults. Phone scene: plate 1 cube [172.3, 123.1] + pillar [136.3, 95.0], plate 2 table.
-In progress: **r267** (run 38934298949, commit "Settings: a faint line under the inactive tabs"; `Modifier.inactiveTabLine`
-in Widgets.kt, used on both settings tab rows): built, installed on WSA + SHIELD; **untested**. Phone and Chromebook were
-off adb (phone needs wireless debugging re-enabled); install there, then check the settings tabs on the phone.
-Then: pick from the backlog (grep "Not done / ideas").
-Phone tools: `~/orca-android-tools/mcpao.sh 'tool:{json}'` (phone MCP, token never printed), `aopair.sh '<view_set json>'` (AO off/on/mid-orbit/rest). Phone dropped wireless adb twice; re-paired 2026-10-16 (`adb pair` needs the code on the command line). Phone restored: section off, light defaults, AO 0.
-Waiting on the user: plate switcher pick (still undecided). Launcher icon colour removed from the list.
+Still UNTESTED on device (user's finger): preview bead look, haptics on settings tabs/Models swipes, light/shadow sliders.
+Done 2026-10-16: r266 merged (PR #28); r267/r271 tab line + MakerWorld chip (failure toast untested); AO removed; OpenSCAD
+Back steps verified on WSA (archive). Chromebook still lacks r271+. Phone scene: plate 1 cube + pillar, plate 2 table.
+**Gemini test pending:** user pastes `~/orca-android-tools/gemini-test/gemini-toolrow-prompt.txt` into Gemini; grade the reply with `GRADING.md` there.
+Then: backlog "Not done / ideas" is nearly empty of autonomous work (rest = user-only); candidates: r197 NumberField NPE
+root cause (grep device logs for `OrcaStore`), floating Theme|Layout designer idea (backlog 0b, ask first), Plan items need REA (user enables).
+Phone tools: `~/orca-android-tools/mcpao.sh 'tool:{json}'` (phone MCP, token never printed). `adb pair` needs the code on the command line.
+Waiting on the user: plate switcher pick.
 
 ## User decisions (2026-10-13)
 - (2026-10-14) Each newly imported file gets its own plate (active if empty, else first empty, else new; `FileController.useEmptyPlate`).
