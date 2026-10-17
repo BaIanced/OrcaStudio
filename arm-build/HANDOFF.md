@@ -24,8 +24,8 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 ## State
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
-- Android main = e5d6173 (PR #29, r273, merged 2026-10-16); work branch = main (nothing unmerged).
-- Installed: r273 on phone, SHIELD, WSA; Chromebook offline (lacks r271+). `install-build.ps1 -Run <id> -Device <serial>`.
+- Android main = ab790b9 (PR #30, r276, merged 2026-10-16); work branch = main (nothing unmerged).
+- Installed: r276 on phone, SHIELD, WSA; Chromebook offline (lacks r271+). `install-build.ps1 -Run <id> -Device <serial>`.
 - Devices: phone = wireless `adb-...` entry; Chromebook ARC `<chromebook-ip>:5555` (reference); WSA `127.0.0.1:58526`; **USB serial = the user's
   SHIELD TV** (rooted; installs only).
 - **User is at work (2026-10-16): free rein, WSA usable** (needs window focus). User wants /clear cues often.
@@ -34,7 +34,7 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 ## Next task
 **Grep the archive before re-testing anything.** User hasn't seen: bead look, part shadows, light sliders. Haptics verified (archive 2026-10-16).
 Done 2026-10-16 (archive): r273 merged (PR #29); numpad views + MakerWorld chip toast verified.
-**Tool row move/collapse** verified WSA (run 39007273736, 24fe798, archive); installed on phone, SHIELD, WSA. User hasn't tried it (portrait, Layout lab "tools in a column" off). Unmerged: ready for `/next-merge`.
+**Tool row move/collapse** r276 merged (PR #30, archive). User hasn't tried it (portrait, Layout lab "tools in a column" off).
 r273 (run 39003921743): NPE fix + MCP `models_human_check` (Cloudflare box; `cfcheck.sh [phone|wsa]`, verified WSA, archive).
 No autonomous item left.
 Phone tools: `~/orca-android-tools/mcpao.sh 'tool:{json}'` (phone MCP, token never printed). `adb pair` needs the code on the command line.
