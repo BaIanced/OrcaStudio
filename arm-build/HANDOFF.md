@@ -24,8 +24,8 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 ## State
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
-- Android main = ab790b9 (PR #30, r276, merged 2026-10-16); work branch = main (nothing unmerged).
-- Installed: r276 on phone, SHIELD, WSA; Chromebook offline (lacks r271+). `install-build.ps1 -Run <id> -Device <serial>`.
+- Android main = ab790b9 (PR #30, r276, merged 2026-10-16); work branch +94bb1e6 (MCP `view_state`, unmerged).
+- Installed: r278 on phone, SHIELD, WSA; Chromebook offline (lacks r271+). `install-build.ps1 -Run <id> -Device <serial>`.
 - Devices: phone = wireless `adb-...` entry; Chromebook ARC `<chromebook-ip>:5555` (reference); WSA `127.0.0.1:58526`; **USB serial = the user's
   SHIELD TV** (rooted; installs only).
 - **User is at work (2026-10-16): free rein, WSA usable** (needs window focus). User wants /clear cues often.
@@ -33,10 +33,15 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
   Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook. LAN access code was given in chat: never write it anywhere.
 ## Next task
 **Grep the archive before re-testing anything.** User hasn't seen: bead look, part shadows, light sliders. Haptics verified (archive 2026-10-16).
-Done 2026-10-16 (archive): r273 merged (PR #29); numpad views + MakerWorld chip toast verified.
 **Tool row move/collapse** r276 merged (PR #30, archive). User hasn't tried it (portrait, Layout lab "tools in a column" off).
-r273 (run 39003921743): NPE fix + MCP `models_human_check` (Cloudflare box; `cfcheck.sh [phone|wsa]`, verified WSA, archive).
-No autonomous item left.
+**NEXT (user, 2026-10-17): pinch zoom too sensitive in the plate 3D view; fingers close together also register a drag
+(pan/move) during the pinch.** Look at the pinch handling in `render/PlateView.kt` (scale factor per event, drag vs
+pinch switch on pointer count / finger gap). Tune or "calibrate" it, but **keep the very deep zoom-in** (user wants it).
+If the sensitivity can't be separated from the deep zoom, the user accepts it as is: say so.
+**Token-saving test tools (2026-10-17):** MCP `view_state` (94bb1e6, r278, run 39010234734; Claude-verified on WSA:
+tapping a copy's box centre selected it) = 3D view as text: camera, mode/tool, selection, screen-px boxes of
+plates/copies/towers. Use `mcpao.sh 'view_state:{}'` instead of screenshots. Other UI: `phone-ui.py <serial> layout [regex]`.
+Next candidates (asked by the user): `slice` + `slice_result` (all users), then debug-only `app_state`, `log_tail`, `perf`.
 Phone tools: `~/orca-android-tools/mcpao.sh 'tool:{json}'` (phone MCP, token never printed). `adb pair` needs the code on the command line.
 Waiting on the user: plate switcher pick.
 
