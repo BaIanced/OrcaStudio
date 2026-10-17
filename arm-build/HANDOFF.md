@@ -34,7 +34,14 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 ## Next task
 **Grep the archive before re-testing anything.** User hasn't seen: bead look, part shadows, light sliders. Haptics verified (archive 2026-10-16).
 **Tool row move/collapse** r276 merged (PR #30, archive). User hasn't tried it (portrait, Layout lab "tools in a column" off).
-**NEXT (user, 2026-10-17): pinch zoom too sensitive in the plate 3D view; fingers close together also register a drag
+**NEXT 1 (user, 2026-10-17): rotating portrait -> landscape crashes the app (phone, r278).** Trace saved:
+`~/orca-android-tools/crash-2026-10-17-rotate.txt`: `IllegalArgumentException: performMeasureAndLayout called during
+measure layout` (Compose re-entrant measure), but R8-obfuscated, and CI keeps no `mapping.txt`. First upload
+`app/build/outputs/mapping/release/mapping.txt` as an artifact in `android-apk.yml` (makes every crash dump readable).
+Suspects: r276's movable tool row (kept-on-screen clamp on resize, 16e1960/24fe798) and anything that measures or lays out
+synchronously from a size or layout callback (the PlateView AndroidView). Repro on the phone (`content rotation` via
+`settings put system user_rotation`) or WSA, then check with `phone-ui.py layout` / `view_state`.
+**NEXT 2 (user, 2026-10-17): pinch zoom too sensitive in the plate 3D view; fingers close together also register a drag
 (pan/move) during the pinch.** Look at the pinch handling in `render/PlateView.kt` (scale factor per event, drag vs
 pinch switch on pointer count / finger gap). Tune or "calibrate" it, but **keep the very deep zoom-in** (user wants it).
 If the sensitivity can't be separated from the deep zoom, the user accepts it as is: say so.
