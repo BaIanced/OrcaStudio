@@ -2132,3 +2132,12 @@ User: "you just tested something we already confirmed worked". Cross-checked eac
 ## 2026-10-16 Moved from HANDOFF.md "User decisions" (implemented, see r166 entry)
 - OpenSCAD: design view (main canvas) is the default; an **eye button** shows the design on the build plate and back, with
   the camera the user had on the plates, the project's objects hidden, and new designs on an empty plate.
+
+## 2026-10-16 r273: MCP models_human_check (Cloudflare box) verified on WSA
+- r273 = run 39003921743 (bd90c44: 6ad69ef r197 NPE fix + `models_human_check`), installed on WSA, SHIELD, phone (Chromebook offline).
+- `ModelBrowser.humanCheck()` (ModelsScreen.kt) + `HUMAN_CHECK_JS`: finds the Turnstile iframe / `.cf-turnstile`, or on the
+  full-page check ("Just a moment...", `.ray-id`) the empty closed-shadow host div; waits 2 polls for the spinner, taps
+  (left + 21, top + 32) CSS px as a dispatched touch (view px = CSS * web.width / innerWidth), re-taps after 6 s (max 3), 25 s cap.
+  Touch taps pass the check (checked first with `adb input tap` on WSA).
+- WSA r273: fresh check -> "Passed after 1 tap(s), 12s: now on MakerWorld (makerworld.com/en)"; no check -> "No human check on ...".
+- Helper: `~/orca-android-tools/cfcheck.sh [phone|wsa|<serial>]`. Not run on the phone yet (needs the Models tab on screen there).

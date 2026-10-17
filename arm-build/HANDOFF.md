@@ -24,9 +24,8 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 ## State
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
-- Android main = fcb4b26 (PR #28, r266, merged 2026-10-16); work branch = main + 6ad69ef (unbuilt).
-- **r272** (run 38998000561, 6b8e5e4) installed on phone, SHIELD, WSA; **not on the Chromebook** (offline).
-  Install with `install-build.ps1 -Run <id> -Device <serial>` on all 4.
+- Android main = fcb4b26 (PR #28, r266, merged 2026-10-16); work branch = main + r267-r273 (bd90c44).
+- Installed: r273 on phone, SHIELD, WSA; Chromebook offline (lacks r271+). `install-build.ps1 -Run <id> -Device <serial>`.
 - Devices: phone = wireless `adb-...` entry; Chromebook ARC `<chromebook-ip>:5555` (reference); WSA `127.0.0.1:58526`; **USB serial = the user's
   SHIELD TV** (rooted; installs only).
 - **User is at work (2026-10-16): free rein, WSA usable** (needs window focus). User wants /clear cues often.
@@ -34,10 +33,10 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
   Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook. LAN access code was given in chat: never write it anywhere.
 ## Next task
 **Grep the archive before re-testing anything.** User hasn't seen: bead look, part shadows, light sliders. Haptics verified (archive 2026-10-16).
-Done 2026-10-16 (archive): r266 merged; r267-r272; numpad views + MakerWorld chip toast verified. Chromebook lacks r271+.
+Done 2026-10-16 (archive): r266 merged; r267-r272; numpad views + MakerWorld chip toast verified.
 **Gemini test pending:** user pastes `~/orca-android-tools/gemini-test/gemini-toolrow-prompt.txt` into Gemini; grade the reply with `GRADING.md` there.
-Android 6ad69ef (r197 NPE fix) pushed, **unbuilt**: batch into the next build. **No autonomous item left**: rest of the backlog
-needs the user, REA (Plan) or an ask (designer idea).
+r273 (run 39003921743): NPE fix + MCP `models_human_check` (Cloudflare box; `cfcheck.sh [phone|wsa]`, verified WSA, archive).
+No autonomous item left.
 Phone tools: `~/orca-android-tools/mcpao.sh 'tool:{json}'` (phone MCP, token never printed). `adb pair` needs the code on the command line.
 Waiting on the user: plate switcher pick.
 

@@ -82,6 +82,9 @@ user uses the PC.
   `step.ps1`, `wheel.ps1` (real mouse wheel / drags), `drag.ps1`, `reinstall-with-data.ps1`.
 - Debug logs / Models WebView CDP: archive "Logs and CDP (moved 2026-10-12)".
   CDP eval: `node ~/orca-android-tools/cdp.mjs '<js>'` (first page on localhost:9222; awaits promises).
+- Cloudflare "Verify you are human" (r273+): `~/orca-android-tools/cfcheck.sh [phone|wsa|<serial>]` = MCP
+  `models_human_check` via curl (taps the box, waits up to 25 s, prints the result). Models tab must be on screen.
+  `mcpao.sh` takes `MCP_DEV=<serial>` for rooted devices other than the phone.
 - `gh run watch/view` needs `-R BaIanced/OrcaStudio-Android` when the cwd is arm-build (wrong repo otherwise).
 - GLSL check: `python -I ~/orca-android-tools/extract_shaders.py <Shaders.kt> <outdir>` (.vert/.frag as 310 es), then in WSL
   `~/Android/Sdk/ndk/28.2.13676358/shader-tools/linux-x86_64/glslc --target-env=opengl -fauto-map-locations -fauto-bind-uniforms -o /dev/null <file>`.

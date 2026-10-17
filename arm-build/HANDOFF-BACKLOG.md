@@ -9,7 +9,7 @@ Each line says who last checked it, on which build, when (e.g. "user r249 2026-1
   personal use, own code only; rule 7 holds.
 
 ## Open bugs
-- r197 NPE root cause found + fixed in 6ad69ef (unbuilt, untested in app; no UI path still sends NaN since 776f261).
+- r197 NPE root cause fixed in 6ad69ef, built in r273 (Claude 2026-10-16); no UI path sends NaN since 776f261, so no in-app repro.
 
 ## Untested (needs the user or a special setup)
 - User hasn't seen yet (Claude-verified by test): preview bead look (Chromebook, zoomed in), part shadows r266, light/shadow lab sliders (r263, via `labset.py`).
