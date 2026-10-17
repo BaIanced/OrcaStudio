@@ -2144,3 +2144,5 @@ User: "you just tested something we already confirmed worked". Cross-checked eac
 ## 2026-10-16 Android main merged at r273 (PR #29)
 - PR #29 (merge commit e5d6173): r267 tab lines, MakerWorld printer chip + toast, AO removed, 6ad69ef NPE guard (no UI repro;
   normal engine path exercised on r273), MCP `models_human_check`. Work branch = main afterwards.
+- 2026-10-16 Gemini tool-row test, try 1 (user): stopped with "The model made too many consecutive tool calls. Narrow your
+  prompt or use system instructions to limit tool use." No reply to grade. Added a no-tools first line to the prompt.

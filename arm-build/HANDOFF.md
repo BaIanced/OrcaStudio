@@ -34,7 +34,7 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 ## Next task
 **Grep the archive before re-testing anything.** User hasn't seen: bead look, part shadows, light sliders. Haptics verified (archive 2026-10-16).
 Done 2026-10-16 (archive): r273 merged (PR #29); numpad views + MakerWorld chip toast verified.
-**Gemini test pending:** user pastes `~/orca-android-tools/gemini-test/gemini-toolrow-prompt.txt` into Gemini; grade the reply with `GRADING.md` there.
+**Gemini test:** 1st try failed (user 2026-10-16: "too many consecutive tool calls", no code); prompt now starts with a no-tools line. Retry pending: user pastes `~/orca-android-tools/gemini-test/gemini-toolrow-prompt.txt` with tools/Canvas off; grade with `GRADING.md` there.
 r273 (run 39003921743): NPE fix + MCP `models_human_check` (Cloudflare box; `cfcheck.sh [phone|wsa]`, verified WSA, archive).
 No autonomous item left.
 Phone tools: `~/orca-android-tools/mcpao.sh 'tool:{json}'` (phone MCP, token never printed). `adb pair` needs the code on the command line.
