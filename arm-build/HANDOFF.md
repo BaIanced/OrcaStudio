@@ -18,16 +18,17 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 ## State
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
-- Android main = ab790b9 (PR #30, r276, merged 2026-10-16); work branch up to 3bad1db (r281-r297 + unbuilt extrude fix: UI fixes, printer controls, MCP slice/view, pen, settings labels/greying), unmerged.
-- Installed: r297 (z-fight fix; r296 jello VERIFIED, r295 fan hold + Retract/Extrude) on phone, SHIELD, WSA; Chromebook offline (lacks r271+). `install-build.ps1 -Run <id> -Device <serial>`.
+- Android main = ab790b9 (PR #30, r276, merged 2026-10-16); work branch up to d08415a (r281-r298: UI fixes, printer controls, MCP slice/view, pen, settings labels/greying), unmerged.
+- Installed: r298 (seams fix, extrude F150; r297 z-fight, r295 fan hold) on phone, SHIELD, WSA; Chromebook offline (lacks r271+). `install-build.ps1 -Run <id> -Device <serial>`.
 - Devices: phone = wireless `adb-...` entry; Chromebook ARC `<chromebook-ip>:5555` (reference); WSA `127.0.0.1:58526`; **USB serial = the user's
   SHIELD TV** (rooted; installs only).
-- User done gaming (2026-10-17) but away from the printer: no printer tests. Phone = test device (SHIELD installs only); WSA ok again. User wants /clear cues often.
+- User done gaming (2026-10-17) but away from the printer: no printer tests. **User 2026-10-18: use WSA for the rest of the night** (not the phone); SHIELD installs only. User wants /clear cues often.
 - User sessions backed up: phone `/data/local/tmp/phone-session-backup.{3mf,json}` (8 plates), WSA `/data/local/tmp/session-backup.{3mf,json}`.
   Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook. LAN access code was given in chat: never write it anywhere.
 ## Next task
+- **Seams toggle** (user r297): fixed r298, Claude-verified on WSA (archive); user look pending.
 - r294 verdicts VERIFIED (archive); jello flick VERIFIED by the user on r296 (2026-10-18). Open: **fan slider jumps** (r295 hold-until-within-4 %,
-  needs the printer; Studio's sync logic is in the backlog line), Retract/Extrude buttons (r295; e13bebb+3bad1db = F150 in push/pop_ref_mode, unbuilt, rides the next build; needs the printer), **preview z-fight**: r297 (c1c9c1f) Claude-verified
+  needs the printer; Studio's sync logic is in the backlog line), Retract/Extrude buttons (r295; e13bebb+3bad1db = F150 in push/pop_ref_mode, in r298; needs the printer), **preview z-fight**: r297 (c1c9c1f) Claude-verified
   on the phone (archive); installed phone, SHIELD, WSA; user's moving-camera look pending.
 - r285 preview look: user says the overlap flicker remains (backlog). Printer controls: extrude/jog motion, speed chips mid-print
   unanswered (user away from the printer).
@@ -35,7 +36,7 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
   portrait tool row). User-only: r283/r284 top bar + flick (explained to the user 2026-10-17), r280 pinch lock (preview locked mode).
 - Pen input r290 (7d3a263): More > Pen; user to test with an S Pen. Sketch mode idea: backlog.
 - MCP: `mcpao.sh view_state` (3D), `phone-ui.py <serial> layout` (2D). Rin demo gaps all done (archive, DEMO-rin.md).
-- Handy decomp run (user, 2026-10-18), own project `C:\Users\Vince\HandyAppExtractDecomp`: worker told to wrap up (2026-10-18, no blutter); the fan answer came from Studio's source.
+- Handy decomp (`C:\Users\Vince\HandyAppExtractDecomp`): wrapped up 2026-10-18.
 - Quest port skipped (backlog). Waiting on the user: plate switcher pick; verdicts above.
 
 ## User decisions (2026-10-13)

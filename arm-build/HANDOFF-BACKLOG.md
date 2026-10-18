@@ -16,6 +16,7 @@ Each line says who last checked it, on which build, when (e.g. "user r249 2026-1
   Kotlin side: `android/.../ui/device/DeviceScreen.kt`. The user said they may use REA for other parts. Not started (Claude 2026-10-17).
 
 ## Open bugs
+- **Preview seams toggle shows nothing** (user r297 2026-10-18: "'seams' don't show in preview section when toggled"). Fixed r298, Claude-verified on WSA 2026-10-18 (archive "r298 preview seams"); user look pending.
 - Preview: shading gone after slice? (user unsure of convention, r284, 2026-10-17). Inner z-fighting when the layer slider
   is scrubbed down and the camera moves (user, r284, 2026-10-17): cracks + seam fights fixed r285 (Claude-verified
   2026-10-17, archive); user's look pending.
