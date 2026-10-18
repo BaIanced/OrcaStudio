@@ -7,7 +7,7 @@ Each line says who last checked it, on which build, when (e.g. "user r249 2026-1
 - **Plan (user, 2026-10-14):** camera LAN (done) -> off-LAN camera (cloud P2P path; REA on Handy is the tool; VPN-home the
   fallback) -> print history (capture Handy's history call, own client, Device tab) -> REA on MakerWorld. Own printer/account,
   personal use, own code only; rule 7 holds.
-- Settings audit, bed temp "First layer"/"Other layers" duplicates (user 2026-10-17, safety): fixed 1bfe89f, Claude-verified on WSA r293 2026-10-17 (archive "settings audit"). User to look on the phone (r293 installed).
+- Settings audit, bed temp "First layer"/"Other layers" duplicates (user 2026-10-17, safety): fixed 1bfe89f, Claude-verified on WSA r293 2026-10-17 (archive "settings audit"). User to look on the phone (r293 installed). USER VERIFIED r294 2026-10-17 (archive "User verdicts on r294").
 - **HIGH PRIORITY (user 2026-10-17, queued after r283): printer controls on the Device tab**, like Handy's Control page
   (user screenshot): tabs Control | XYZ. Control = nozzle temp cur/target + extrude up/down arrows + "More"; Speed level
   (Standard 100 %); Heatbed temp cur/target; Light toggle; Part Fan %. XYZ = jog + home. Orca's source already has every
@@ -55,9 +55,9 @@ Each line says who last checked it, on which build, when (e.g. "user r249 2026-1
   ("Prepare: floating buttons" can be changed).
 - Real keyboard Ctrl+1 does nothing (system hotkey). Inactive-plate double tap re-frames (user: fine).
 - Flatpak r9 MakerLab tab, weekly upstream bump, obn follow-ups: archive (2026-10-12 trim).
-- (user, 2026-10-17, queued) Drag handles: a fast downward fling should collapse the panel (now it stops right where the finger lets go). DragHandle in AppScaffold (portrait sheet, OpenSCAD panel; wide PanelEdge flung sideways). r283 (user 2026-10-17): every fling crashed; fixed in r284 (Claude 2026-10-17, phone: portrait sheet flick up expands, down collapses, no crash). Open: user feel, wide PanelEdge + OpenSCAD grips untested.
+- (user, 2026-10-17, queued) Drag handles: a fast downward fling should collapse the panel (now it stops right where the finger lets go). DragHandle in AppScaffold (portrait sheet, OpenSCAD panel; wide PanelEdge flung sideways). r283 (user 2026-10-17): every fling crashed; fixed in r284 (Claude 2026-10-17, phone: portrait sheet flick up expands, down collapses, no crash). User r294 2026-10-17: portrait flick docks fine. Open: wide PanelEdge + OpenSCAD grips untested.
 - (user, 2026-10-17, queued, low priority "put makeup on it") Explore free open-source colour icon sets (licence must allow use in a public app, e.g. MIT/Apache/CC-BY) to give some icons colour, not all; the app is "beautiful as is". Deliver: shortlist + mockup of which icons get colour, user picks. Open, not started.
-- (user, 2026-10-17, TOP) Slice button in the drag handle's right side (where the plates are); own size slider, follows only main UI scale. Built r281, untested (handoff Next).
+- (user, 2026-10-17, TOP) Slice button in the drag handle's right side (where the plates are); own size slider, follows only main UI scale. Built r281; USER VERIFIED r294 2026-10-17 (archive), incl. size slider.
 - (user, 2026-10-17, queued) Stylus support: Samsung S Pen (check whether one API covers old and new: plain Android MotionEvent
   TOOL_TYPE_STYLUS / BUTTON_STYLUS_PRIMARY / pressure / hover vs Samsung's SDKs, e.g. Air actions only on newer pens).
   User's devices: Note 10.1 2014 tablet, Note 10+, S24 Ultra (screen broken now), a newer 13" Galaxy Tab S. Also a head start
@@ -79,4 +79,7 @@ Each line says who last checked it, on which build, when (e.g. "user r249 2026-1
   + `view_state`, vs. on-device; Claude can read the image and write OpenSCAD/primitives, no on-device model). Not started.
 - (2026-10-17, user, open) Portrait Undo/Redo used to sit in the top-left corner (status bar area, fullscreen); moved at some point; File belongs in the status bar area right of the camera cutout. r283 (Claude, phone, 2026-10-17): Undo/Redo at top left y 58, File at top right x 1141; the user hasn't judged the look yet.
 - (2026-10-17, user idea, open) Next MCP tool candidates: debug `app_state`, `log_tail`, `perf` (`slice` + `slice_result` done r289, archive). Last checked: Claude, r289.
-- Object settings: support options stayed greyed after enabling support (user 2026-10-17, r291): fixed 44f68d9, Claude-verified on WSA r293 2026-10-17 (archive "settings audit"). User to confirm on the phone.
+- Object settings: support options stayed greyed after enabling support (user 2026-10-17, r291): fixed 44f68d9, Claude-verified on WSA r293 2026-10-17 (archive "settings audit"). User to confirm on the phone. USER VERIFIED r294 2026-10-17.
+- (user, 2026-10-17, r294) Portrait Prepare: after a handle flick the build plate jiggles "jello" right after the resize, then snaps back. Cause (likely, untested): the GL view resized every glide frame (stale stretched buffers). Fix afdba1a (run 39111304211 = r296): the view keeps its largest size through the glide (`steadyThroughGlide`, AppScaffold.kt), resizes once. Claude, 2026-10-18: UNTESTED on device.
+- (user, 2026-10-17, r294) Preview z-fight: overlapping filament paths flicker fast in the overlap, only inside the object (layer scrubber) and only while the camera moves; r285 fix did not remove it. Open. Lead (Claude, 2026-10-18, not tried): order bias is role lift + segment parity only (Shaders.kt:392), so two overlapping paths of one role with the same parity still tie; near plane max(0.5, distance/200) (Camera.kt:161).
+- (user, 2026-10-17, r294) Fan slider jumps (random value ~5 s after a set, then correct); plan: hold until the report matches, ignore stale reports. When decompiling Handy / Bambu Studio check how they sync. Open.
