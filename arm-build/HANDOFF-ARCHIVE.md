@@ -2243,3 +2243,28 @@ User: "you just tested something we already confirmed worked". Cross-checked eac
 - User report (r291, "Object setting"): support options stay greyed after enabling support. Cause: object/part/range
   editors used the process's option states. 44f68d9: `optionStates` takes the editor's settings and applies them over
   the process (GUI_ObjectSettings.cpp update_config_values). WSA r293: object support off -> rows `off`; on -> editable.
+
+## 2026-10-18 d290fd1 verified on phone r293; Rin gaps #3 #6 #7 (f743435, r294)
+- Phone r293 (MCP, user said use phone for adb): view_set {view fit, object 1} -> "Give view fit or object, not both"; {object 9} -> "No object 9 (there are 2)"; {view front, object 2} frames that object. (Arg is `view:"fit"`, not `fit:true`.)
+- f743435: design_describe ends with a "Fit check:" line (top-level solids' bounding boxes; holes ignored): separate pieces with the closest gap, lowest point above/below the bed. Boxes of rotated shapes are bigger than the shape, so "touching" can be a false positive, "apart" never. Docs in the tool texts: mirror is about the shape's own pos, repeat angle rules, slice already returns the result (#6 #7). Compiled; build run 39095229019; untested on a device.
+- r294 (run 39095229019) Claude-verified on phone: sphere at x 60 z 25 -> "2 separate pieces ... #1, #2; #3; closest gap 39 mm"; moved onto the boxes -> "one connected piece on the bed"; all lifted 5 mm -> "lowest point is 5 mm above the bed". Installed phone, SHIELD, WSA. App force-stopped.
+- 2026-10-17 Rin replay (Sonnet 5.5, WSA r294): rin.json replays cleanly via MCP, 2h54m/28.6g/668 layers, no warnings; details DEMO-rin.md "Replay".
+
+## 2026-10-17 User verdicts on r294 (phone)
+- Slice button in the drag handle: "confirmed working", resize slider "also works". VERIFIED (user, r294).
+- Object editor support greying (44f68d9): "confirmed fixed". VERIFIED (user, r294).
+- Settings row labels ("Cool Plate · First layer", 1bfe89f): "confirmed fixed". VERIFIED (user, r294).
+- Flicking the handle docks/nests it closed: works (user, r294). Wide PanelEdge + OpenSCAD grip flicks still untested.
+- NEW minor bug (user, r294): flicking the portrait Prepare sheet makes the build plate "jello jiggle" right after the resize, then snap back to normal. Backlog.
+- Preview zfighting remains (user, r294): two intersecting filament paths show a very fast stroke/flicker where they overlap; only when looking at internals with the layer scrubber and only while the camera moves.
+- Light switch: "confirmed fix", near-instant on and off in UI and on the light (user, r294). VERIFIED. Not always low latency but it doesn't need to be.
+- Fan slider still laggy (user, r294): rapid up/down sets follow the values but the UI jumps randomly (probably the printer's reports); set 0 -> 100: fan starts after a few s, ~5 s later the slider slides to a random number (hardware unchanged), 1 s after it jumps to the right spot. Handy has the same (user believes). Cause (source, ControlCard.kt): the 5 s hold is a timer from release, then the slider follows whatever the printer reports mid-ramp/stale.
+- Extruder controls not found in the printer tab (user, r294): they are the two arrow buttons right of the Nozzle tile on the Control tab, disabled below 170 C / while printing (ControlCard.kt:85), easy to miss.
+
+## 2026-10-18 User verdict on r296 (phone)
+- Plate "jello" after a portrait handle flick (fix afdba1a, `steadyThroughGlide` in AppScaffold.kt): "flinging jello bug fixed". VERIFIED (user, r296). Cause: the GL view resized every glide frame; fix keeps its largest size through the glide, resizes once.
+
+## 2026-10-18 r297 preview z-fight fix (run 39113308619, Android c1c9c1f; Claude on the phone)
+- Cause: the depth order was role lift + segment parity only (Shaders.kt ~392), so two crossing lines of one role with the same parity tied; the shared top face tore as the camera moved. Fix: order = lift * 6 + direction bin (3 bins of 60 degrees, edges at 7.5 + 60k degrees) * 2 + parity; bottom push 6e-6 -> 1.6e-5 w.
+- Check: plate 1 "Shape design" (0.20mm Standard, crosshatch), layer 90 / 170, view_set yaw -60/-59.7/-59.4, pitch 60, distance 40, target [168,102.6,18], then the Preview tab. r296: torn stripes at the sparse-infill X crossing, different each angle. r297: steep line wins cleanly in all three. Claude-VERIFIED; the user's moving-camera look pending. Shot: orca-android-tools/shots/zfight_r296_vs_r297.png.
+- Not covered: adjacent parallel lines of one role that overlap (same bin, parity only) could still tie.

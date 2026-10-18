@@ -39,3 +39,11 @@ Keep the design JSON in `~/orca-android-tools/rin.json` so Sonnet can replay it 
   extra.revolve (design_set accepts it). 5. design_set ignores the name (stays "Shape design"). 6. Document: design_set
   {design:{...}} wrapper, mirror flips about the shape's own pos (mirror a group at the origin), repeat angle rules.
   7. slice already returns the result; say so so agents skip slice_result.
+
+## Replay (2026-10-17, Sonnet 5.5, done)
+- rin.json -> `design_set {design:<json>}` (rin_arg.json wrapper) -> design_to_plate -> view_set iso/front + 600 px shots ->
+  settings_edit (process: layer_height 0.12, enable_support 1; args `type` + `values`) -> slice. Result matches the Opus run:
+  2 h 54 m, 28.6 g, 668 layers, no warnings. About 10 tool calls, no fix rounds, no adb taps (gaps #1/#2 fixes held).
+- Cost (whole session incl. reading handoff): 14 requests, 453 K cache read, 25 K cache write, 3 K output, vs 44 requests,
+  2.41 M read, 64 K write, 27 K output for the Opus build: about 5x fewer requests, ~9x less output.
+- Note: setting_find needs `type`; settings_edit takes `values` (not `changes`).
