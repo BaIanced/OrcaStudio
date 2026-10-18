@@ -7,7 +7,7 @@ Each line says who last checked it, on which build, when (e.g. "user r249 2026-1
 - **Plan (user, 2026-10-14):** camera LAN (done) -> off-LAN camera (cloud P2P path; REA on Handy is the tool; VPN-home the
   fallback) -> print history (capture Handy's history call, own client, Device tab) -> REA on MakerWorld. Own printer/account,
   personal use, own code only; rule 7 holds.
-- **HIGH PRIORITY / SAFETY (user 2026-10-17, r291 era, unchecked):** right-panel settings editors (process "0.2mm Standard @BBL" and filament settings opened from there): under bed temperature "First layer" / "Other layers" appear several times. Audit every row of those editors against upstream Orca / Bambu Studio (PrintConfig.cpp keys, Tab.cpp page/group layout): each label must map to the real config key, no duplicates, no row writing the wrong key. User: "critical that we verify validity of settings... so I don't damage anything". Report the mapping table; fix; no test prints.
+- Settings audit, bed temp "First layer"/"Other layers" duplicates (user 2026-10-17, safety): fixed 1bfe89f, Claude-verified on WSA r293 2026-10-17 (archive "settings audit"). User to look on the phone (r293 installed).
 - **HIGH PRIORITY (user 2026-10-17, queued after r283): printer controls on the Device tab**, like Handy's Control page
   (user screenshot): tabs Control | XYZ. Control = nozzle temp cur/target + extrude up/down arrows + "More"; Speed level
   (Standard 100 %); Heatbed temp cur/target; Light toggle; Part Fan %. XYZ = jog + home. Orca's source already has every
@@ -79,3 +79,4 @@ Each line says who last checked it, on which build, when (e.g. "user r249 2026-1
   + `view_state`, vs. on-device; Claude can read the image and write OpenSCAD/primitives, no on-device model). Not started.
 - (2026-10-17, user, open) Portrait Undo/Redo used to sit in the top-left corner (status bar area, fullscreen); moved at some point; File belongs in the status bar area right of the camera cutout. r283 (Claude, phone, 2026-10-17): Undo/Redo at top left y 58, File at top right x 1141; the user hasn't judged the look yet.
 - (2026-10-17, user idea, open) Next MCP tool candidates: debug `app_state`, `log_tail`, `perf` (`slice` + `slice_result` done r289, archive). Last checked: Claude, r289.
+- Object settings: support options stayed greyed after enabling support (user 2026-10-17, r291): fixed 44f68d9, Claude-verified on WSA r293 2026-10-17 (archive "settings audit"). User to confirm on the phone.

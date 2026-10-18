@@ -2229,3 +2229,17 @@ User: "you just tested something we already confirmed worked". Cross-checked eac
   -> "No object 9", fit + object -> error (d290fd1, pushed, unbuilt: checks before the camera moves).
 - design_set name "Rin figure" shows in design_describe. shape_update extra.revolve on a sketch refits (20x20x10 -> 20x20x20);
   revolve 0 keeps the height (same fitSketch as sketch_set); on a cylinder -> "only for sketch shapes". Test sketch deleted.
+
+## 2026-10-17: settings audit + object support greying (r293, Claude-verified on WSA)
+- User report (r291): filament/process editors showed bed temp "First layer"/"Other layers" several times; "critical that
+  we verify validity of settings... so I don't damage anything". Cause: `extract_settings_layout.py` dropped Tab.cpp's
+  multi-option Line labels. Keys were always right (rows bind def.key). 1bfe89f: layout JSON carries `lines` (key -> row
+  label); editor, search, tooltip, Compare show "Cool Plate · First layer". 40 shared-row options (overhang speeds,
+  bridge, nozzle range, chamber, nozzle, 6 plates, fan thresholds, exhaust, fan speed-up, resonance, input shaping).
+  Script audit of all 552 rows (print 367, filament 94, printer 91): every key in PrintConfig.cpp, no key twice; only
+  same-label pairs left = tree support normal/organic (toggle_line shows one set, Android uses ConfigManipulation).
+  WSA r293: filament editor reads Nozzle / Cool Plate (SuperTack) / Cool Plate / Engineering / Smooth PEI / Textured PEI
+  · First/Other layers.
+- User report (r291, "Object setting"): support options stay greyed after enabling support. Cause: object/part/range
+  editors used the process's option states. 44f68d9: `optionStates` takes the editor's settings and applies them over
+  the process (GUI_ObjectSettings.cpp update_config_values). WSA r293: object support off -> rows `off`; on -> editable.

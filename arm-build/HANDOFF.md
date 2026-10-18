@@ -18,24 +18,24 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 ## State
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
-- Android main = ab790b9 (PR #30, r276, merged 2026-10-16); work branch up to d290fd1 (r281-r291: UI fixes, printer controls, MCP slice/view, pen), unmerged.
-- Installed: r291 (MCP view fixes) on phone, SHIELD, WSA; Chromebook offline (lacks r271+). `install-build.ps1 -Run <id> -Device <serial>`.
+- Android main = ab790b9 (PR #30, r276, merged 2026-10-16); work branch up to 44f68d9 (r281-r293: UI fixes, printer controls, MCP slice/view, pen, settings labels/greying), unmerged.
+- Installed: r293 (settings fixes) on phone, SHIELD, WSA; Chromebook offline (lacks r271+). `install-build.ps1 -Run <id> -Device <serial>`.
 - Devices: phone = wireless `adb-...` entry; Chromebook ARC `<chromebook-ip>:5555` (reference); WSA `127.0.0.1:58526`; **USB serial = the user's
   SHIELD TV** (rooted; installs only).
 - User done gaming (2026-10-17) but away from the printer: no printer tests. Phone = test device (SHIELD installs only); WSA ok again. User wants /clear cues often.
 - User sessions backed up: phone `/data/local/tmp/phone-session-backup.{3mf,json}` (8 plates), WSA `/data/local/tmp/session-backup.{3mf,json}`.
   Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook. LAN access code was given in chat: never write it anywhere.
 ## Next task
-- **NEXT (user 2026-10-17, high priority, safety):** settings-editor audit: bed temperature "First layer"/"Other layers"
-  repeated in the right panel's process + filament editors; verify every row maps to the real Orca/Bambu key (backlog line).
+- Settings audit (row labels "Cool Plate · First layer", 1bfe89f) + object-editor support greying (44f68d9): Claude-verified
+  on WSA r293 (archive "settings audit"); user to look on the phone.
 - r285 (dff57e4) Claude-verified (archive "r285 fixes"); user to judge preview look while moving the camera.
 - Printer controls r286-r288 (archive): commands immediate (user r287); r288 light switch shows the tap at once, user to
   judge. Unanswered: fan 93 glitch, extrude/jog motion, speed chips mid-print (user away from the printer).
 - User hasn't seen: bead look, part shadows, light sliders, tool row (r276). User-only: r283/r284 top bar + flick, r280 pinch lock.
 - Pen input r290 (7d3a263, built, installed): More > Pen; user to test with an S Pen. Sketch mode idea: backlog.
 - MCP: test tools `mcpao.sh view_state` (3D), `phone-ui.py <serial> layout` (2D). Rin demo gaps in `DEMO-rin.md`.
-  r291 (a99e13c): Rin gaps #1 #2 #4 #5 fixed, Claude-verified on WSA (archive); d290fd1 (fit+object check) unbuilt.
-  Then: gap #3 (floating/protruding-part text check), #6 docs (DEMO-rin.md), then a Rin replay to measure savings.
+  r291 (a99e13c): Rin gaps #1 #2 #4 #5 fixed, Claude-verified on WSA (archive); d290fd1 (fit+object check) in r293, untested.
+  **Next:** test d290fd1 via `mcpao.sh view_set`, then gap #3 (floating/protruding-part text check), #6 docs (DEMO-rin.md), then a Rin replay to measure savings.
 - Quest port skipped (backlog). Waiting on the user: plate switcher pick; verdicts above.
 
 ## User decisions (2026-10-13)
