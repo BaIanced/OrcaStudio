@@ -18,23 +18,23 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 ## State
 - Both repos work on `claude/handoff-continuation-rseql3`. Autonomy (user, 2026-10-11): decide branches and next steps
   yourself; **main merges / releases need the user**. Offer a merge when a batch is verified.
-- Android main = ab790b9 (PR #30, r276, merged 2026-10-16); work branch up to dff57e4 (r281-r285: grip/top bar/fling, lab crash, preview fixes), unmerged.
-- Installed: r285 on phone + SHIELD, r280 on WSA; Chromebook offline (lacks r271+). `install-build.ps1 -Run <id> -Device <serial>`.
+- Android main = ab790b9 (PR #30, r276, merged 2026-10-16); work branch up to d290fd1 (r281-r291: UI fixes, printer controls, MCP slice/view, pen), unmerged.
+- Installed: r291 (MCP view fixes) on phone, SHIELD, WSA; Chromebook offline (lacks r271+). `install-build.ps1 -Run <id> -Device <serial>`.
 - Devices: phone = wireless `adb-...` entry; Chromebook ARC `<chromebook-ip>:5555` (reference); WSA `127.0.0.1:58526`; **USB serial = the user's
   SHIELD TV** (rooted; installs only).
-- **User gaming (2026-10-17, 1-2 h): test on the phone (user: "Abandon shield", installs only); if the user is on it, wait
-  60 s and retry. Don't use WSA (PC busy).** User wants /clear cues often.
+- User done gaming (2026-10-17) but away from the printer: no printer tests. Phone = test device (SHIELD installs only); WSA ok again. User wants /clear cues often.
 - User sessions backed up: phone `/data/local/tmp/phone-session-backup.{3mf,json}` (8 plates), WSA `/data/local/tmp/session-backup.{3mf,json}`.
   Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook. LAN access code was given in chat: never write it anywhere.
 ## Next task
-**r285 (run 39017596686, dff57e4; phone + SHIELD):** Claude-verified (archive "r285 fixes"): Layout lab opens; Preview is
-camera-only; preview crack dots + seam glitch gone. User to judge: preview look while moving the camera.
-Answered in chat: shadows are Prepare-only by design (desktop has none; AO removed r27x); zoom: user to try the lab's pinch
-speed slider before a zoom-dependent curve. **Next: printer controls on the Device tab like Handy's** (backlog spec, HIGH).
-User hasn't seen: bead look, part shadows, light sliders, tool row move/collapse (r276, merged). Haptics verified.
-r283/r284 top bar + flick feel, r280 pinch lock feel: user-only. WSA still on r280 (install when the user is off the PC).
-Test tools: `mcpao.sh view_state` (3D), `phone-ui.py <serial> layout` (2D); reference "Build and tools". MCP ideas: backlog.
-Waiting on the user: plate switcher pick.
+- r285 (dff57e4) Claude-verified (archive "r285 fixes"); user to judge preview look while moving the camera.
+- Printer controls r286-r288 (archive): commands immediate (user r287); r288 light switch shows the tap at once, user to
+  judge. Unanswered: fan 93 glitch, extrude/jog motion, speed chips mid-print (user away from the printer).
+- User hasn't seen: bead look, part shadows, light sliders, tool row (r276). User-only: r283/r284 top bar + flick, r280 pinch lock.
+- Pen input r290 (7d3a263, built, installed): More > Pen; user to test with an S Pen. Sketch mode idea: backlog.
+- MCP: test tools `mcpao.sh view_state` (3D), `phone-ui.py <serial> layout` (2D). Rin demo gaps in `DEMO-rin.md`.
+  r291 (a99e13c): Rin gaps #1 #2 #4 #5 fixed, Claude-verified on WSA (archive); d290fd1 (fit+object check) unbuilt.
+  **Next:** gap #3 (floating/protruding-part text check), #6 docs (DEMO-rin.md), then a Rin replay to measure savings.
+- Quest port skipped (backlog). Waiting on the user: plate switcher pick; verdicts above.
 
 ## User decisions (2026-10-13)
 - (2026-10-14) Each newly imported file gets its own plate (active if empty, else first empty, else new; `FileController.useEmptyPlate`).

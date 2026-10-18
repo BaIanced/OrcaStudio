@@ -2200,3 +2200,32 @@ User: "you just tested something we already confirmed worked". Cross-checked eac
   zoom with contrast stretch (GPU dither?). Full-height view normal. Claude-verified; the user's moving-camera look pending.
 - Answered in chat: shadows are Prepare-only by design (desktop has none; AO removed r27x), asked if wanted in Preview;
   zoom: user to try the lab's pinch speed slider before a zoom-dependent curve.
+
+## 2026-10-17 r286 printer controls (Claude-tested on phone, idle A1)
+- Run 39018606739 (a9ace29). Device tab Controls card renders (Control/XYZ tabs, nozzle/bed, speed chips, light, part fan, camera).
+- Light toggle verified on the real printer: the ledctrl `system` payload works over obn (chip follows the printer's lights_report); toggled back off.
+- Speed chip (Silent) did NOT change spd_lvl while idle: probably the printer ignores print_speed outside a print (untested during a print).
+- Not tested: heating, extrude/retract, jog/home, fan > 0 (need the user's OK).
+- 2026-10-17: speed chips now `enabled = status.isActive` (06b958b, unbuilt); mid-print behaviour still untested.
+
+## 2026-10-17 r286 printer controls, active tests (Claude, phone, idle A1, user OK given)
+- Nozzle target 180: temp rose 22 -> 75 in 20 s, 180 in ~45 s; Extrude/Retract enabled at >=170. Bed target 40: 25 -> 41 in ~60 s. WORKS.
+- Extrude 10 / Retract 10, Home, X+10, X-10 sent without UI error; physical motion NOT confirmed (Claude cannot see the printer): user-only check.
+- Part fan slider 50 %: after a tab toggle the label returned to 0 %, so the printer's report shows 0 (command not applied, or the report lags): unresolved.
+- Target 0 for nozzle/bed sent twice: nozzle cooled steadily (180 -> 81 in ~3 min) but the tile kept showing "/ 180°" even after Refresh: stale target display or 0 not applied (A1 may auto-cool idle). Unresolved; check BambuReport.kt:82 merge of nozzle_target_temper.
+- User verdict 2026-10-17 (r286): "fan works for me"; setting fan to 0 turned it off but the slider jumped to 93 while the fan stayed off (stale/misscaled report). Commands tested by the user all sent (Claude's Home worked); EXTREMELY SLOW: hardware responds in ~2 s min, app takes ~5 s min to update; user suspects the commands aren't going over LAN. Handy has a similar bug (10 % steps, buttons lock while waiting, UI reverts if the message fails): the user finds it very annoying.
+- Root causes found 2026-10-17 (source): every control used withHost = connect + disconnect (TLS+MQTT), the 5 s poll reconnected too; the A1 pushes only deltas and ObnHost kept the old snapshot (pushall only if empty), so changes made while disconnected (fan, nozzle target 0) stayed stale. Desktop reads the fan from `fan_gear` low byte (0..255), not cooling_fan_speed (DevFan.cpp:103).
+- Fix c38c197 (run 39022527632): DeviceController.pollStatus holds one host while the Device tab polls (1 s); commands reuse it; ObnHost/BambuHost `synced` flag asks for a pushall (`fullCount`, >=20 keys, untested threshold) after each (re)connect; fan from fan_gear; fan slider holds the user's value 5 s. UNTESTED on device.
+- r287 (c38c197) Claude-tested on phone 2026-10-17: installed on phone + SHIELD. Stale nozzle target gone after reconnect (pushall resync works); bed target 30 and 0 shown correctly; fan slider 50 / ~2 / 0 stayed put for 13 s with no jump. Latency NOT measured precisely (uiautomator dump = 3.1 s per sample; the change showed within ~1-2 samples): user to judge speed. Extrude/jog motion still unconfirmed.
+- User verdict 2026-10-17 on r287: "Printer messages from phone basically immediate, UI on light toggle isn't. Light turns off, UI takes around 3 seconds to update." Command latency fixed; light-switch UI lag ~3 s open (fan 93 glitch and extrude/jog not yet answered).
+- r288 (c9299c2, run 39023335180) 2026-10-17: light switch shows the tap at once (5 s hold, clears when the printer report matches). Compiled and built; installed on phone, SHIELD and WSA. Not device-tested (user away from the printer): user to judge.
+- r289 (bdc39c9, run 39058968284) 2026-10-17: MCP `slice` + `slice_result` tools (McpTools.kt; slice waits up to 10 min, returns time/filament/layers/per-role/warnings, errors for empty plate, bad plate, no result). Claude-verified on WSA: plate 1 sliced in one call (1h 53m, 24 g, 450 layers, no warnings); error cases ok. Installed WSA + SHIELD (phone offline, user at work, WSA = test device). Remaining MCP ideas: `app_state`, `log_tail`, `perf`.
+
+## 2026-10-17 r291 MCP Rin-demo gaps #1 #2 #4 #5 (a99e13c, run 39091753615; Claude-verified on WSA)
+- Installed r291 on WSA, phone, SHIELD. With the design editor open (design_describe), view_state answered at once: plateView()
+  (McpTools.kt) switches to Prepare (unless Preview) and sets scadHidden; AppScaffold wide branch now honours scadHidden with
+  the OpenSCAD reopen button (seen in the WSA layout dump).
+- view_set {view front, object 1}: yaw -90 pitch 0, figure fills 336x588 of the 726 px view; left keeps yaw 180. Errors: object 9
+  -> "No object 9", fit + object -> error (d290fd1, pushed, unbuilt: checks before the camera moves).
+- design_set name "Rin figure" shows in design_describe. shape_update extra.revolve on a sketch refits (20x20x10 -> 20x20x20);
+  revolve 0 keeps the height (same fitSketch as sketch_set); on a cylinder -> "only for sketch shapes". Test sketch deleted.
