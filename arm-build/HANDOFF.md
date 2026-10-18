@@ -26,6 +26,8 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 - User sessions backed up: phone `/data/local/tmp/phone-session-backup.{3mf,json}` (8 plates), WSA `/data/local/tmp/session-backup.{3mf,json}`.
   Test zip `scadzip-test.zip` stays in `/sdcard/Download` on phone + Chromebook. LAN access code was given in chat: never write it anywhere.
 ## Next task
+- **NEXT (user 2026-10-17, high priority, safety):** settings-editor audit: bed temperature "First layer"/"Other layers"
+  repeated in the right panel's process + filament editors; verify every row maps to the real Orca/Bambu key (backlog line).
 - r285 (dff57e4) Claude-verified (archive "r285 fixes"); user to judge preview look while moving the camera.
 - Printer controls r286-r288 (archive): commands immediate (user r287); r288 light switch shows the tap at once, user to
   judge. Unanswered: fan 93 glitch, extrude/jog motion, speed chips mid-print (user away from the printer).
@@ -33,7 +35,7 @@ Read this first. Don't use any title for the user ("Supreme Master" was a joke; 
 - Pen input r290 (7d3a263, built, installed): More > Pen; user to test with an S Pen. Sketch mode idea: backlog.
 - MCP: test tools `mcpao.sh view_state` (3D), `phone-ui.py <serial> layout` (2D). Rin demo gaps in `DEMO-rin.md`.
   r291 (a99e13c): Rin gaps #1 #2 #4 #5 fixed, Claude-verified on WSA (archive); d290fd1 (fit+object check) unbuilt.
-  **Next:** gap #3 (floating/protruding-part text check), #6 docs (DEMO-rin.md), then a Rin replay to measure savings.
+  Then: gap #3 (floating/protruding-part text check), #6 docs (DEMO-rin.md), then a Rin replay to measure savings.
 - Quest port skipped (backlog). Waiting on the user: plate switcher pick; verdicts above.
 
 ## User decisions (2026-10-13)
