@@ -57,3 +57,5 @@ Start OrcaStudio once, close it, then start it again. The plugin is enabled from
 - `NOTES-obn.md`: how OrcaStudio loads the plugin, what the launcher does, paths.
 - `NOTES-ci.md`: build design, runner limits, timing.
 - `NOTES-updates.md`: tag tracking, fork sync, Chromebook updater.
+
+Android work handoff docs (HANDOFF*.md) moved to the OrcaStudio-Android repo, `docs/handoff/` (2026-10-19).
